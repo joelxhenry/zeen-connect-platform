@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { User } from '@/types/models';
+import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
 
 defineProps<{
     title?: string;
@@ -48,7 +49,7 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
             <div class="footer-content">
                 <p>&copy; {{ new Date().getFullYear() }} Zeen. All rights reserved.</p>
                 <div class="footer-right">
-                    <span class="made-in-jamaica">Made in Jamaica 🇯🇲</span>
+                    <MadeInJamaica />
                     <div class="footer-links">
                         <a href="#">Privacy Policy</a>
                         <a href="#">Terms of Service</a>
@@ -161,11 +162,6 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
     display: flex;
     align-items: center;
     gap: 2rem;
-}
-
-.made-in-jamaica {
-    font-size: 0.875rem;
-    color: #6b7280;
 }
 
 .footer-links {

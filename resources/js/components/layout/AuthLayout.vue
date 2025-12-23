@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
 
 defineProps<{
     title?: string;
@@ -31,9 +32,7 @@ defineProps<{
                 </div>
             </div>
 
-            <p class="marketing-footer">
-                Made in Jamaica 🇯🇲
-            </p>
+            <MadeInJamaica />
         </div>
 
         <!-- Right Panel - Form -->
@@ -141,12 +140,6 @@ defineProps<{
 
 .pattern-block:nth-child(3) {
     border-radius: 12px 40px 12px 12px;
-}
-
-.marketing-footer {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
 }
 
 /* Right Form Panel */

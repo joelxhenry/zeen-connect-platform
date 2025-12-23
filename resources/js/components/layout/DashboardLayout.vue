@@ -1,79 +1,26 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import type { PageProps } from '@/types/models';
-import { ref, computed } from 'vue';
-import Avatar from 'primevue/avatar';
-import Menu from 'primevue/menu';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps<{
     title?: string;
 }>();
 
-const page = usePage<PageProps>();
-const user = page.props.auth?.user;
-const userMenu = ref();
-
-const currentPath = computed(() => {
-    if (typeof window !== 'undefined') {
-        return window.location.pathname;
-    }
-    return '/dashboard';
-});
-
 const navItems = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
-    { label: 'My Bookings', icon: 'pi pi-calendar', route: '/dashboard/bookings' },
+    { label: 'Profile', icon: 'pi pi-user', route: '/dashboard/profile' },
+    { label: 'Bookings', icon: 'pi pi-calendar', route: '/dashboard/bookings' },
+    { label: 'Reviews', icon: 'pi pi-star', route: '/dashboard/reviews' },
     { label: 'Favorites', icon: 'pi pi-heart', route: '/dashboard/favorites' },
 ];
-
-const userMenuItems = ref([
-    {
-        label: 'Profile',
-        icon: 'pi pi-user',
-        command: () => window.location.href = '/dashboard/profile'
-    },
-    {
-        label: 'Settings',
-        icon: 'pi pi-cog',
-        command: () => window.location.href = '/dashboard/settings'
-    },
-    { separator: true },
-    {
-        label: 'Logout',
-        icon: 'pi pi-sign-out',
-        command: () => {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/logout';
-            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (csrf) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_token';
-                input.value = csrf;
-                form.appendChild(input);
-            }
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-]);
-
-const toggleUserMenu = (event: Event) => {
-    userMenu.value.toggle(event);
-};
-
-const isActive = (route: string) => {
-    return currentPath.value === route;
-};
 </script>
 
 <template>
     <Head :title="title" />
+
     <div class="dashboard-layout">
-        <!-- Navigation -->
-        <header class="dashboard-header">
-            <div class="header-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
                 <div class="header-left">
                     <Link href="/" class="logo">Zeen</Link>
 
@@ -82,39 +29,24 @@ const isActive = (route: string) => {
                             v-for="item in navItems"
                             :key="item.route"
                             :href="item.route"
-                            :class="['nav-link', { 'nav-link-active': isActive(item.route) }]"
+                            class="nav-link"
                         >
-                            <i :class="[item.icon, 'mr-2']"></i>
+                            <i :class="item.icon"></i>
                             {{ item.label }}
                         </Link>
                     </nav>
                 </div>
 
                 <div class="header-right">
-                    <Link href="/explore" class="explore-link">
-                        <i class="pi pi-search mr-2"></i>
-                        Find Services
-                    </Link>
-
-                    <div class="user-menu-trigger" @click="toggleUserMenu">
-                        <Avatar
-                            :label="user?.name?.charAt(0)"
-                            shape="circle"
-                            class="user-avatar"
-                        />
-                        <span class="user-name">{{ user?.name }}</span>
-                        <i class="pi pi-chevron-down ml-2"></i>
-                    </div>
-                    <Menu ref="userMenu" :model="userMenuItems" :popup="true" />
+                    <Link href="/explore" class="explore-link">Find Services</Link>
+                    <Link href="/logout" method="post" as="button" class="logout-btn">Logout</Link>
                 </div>
             </div>
         </header>
 
-        <!-- Page Content -->
-        <main class="dashboard-content">
-            <div class="content-container">
-                <slot />
-            </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <slot />
         </main>
     </div>
 </template>
@@ -122,16 +54,16 @@ const isActive = (route: string) => {
 <style scoped>
 .dashboard-layout {
     min-height: 100vh;
-    background-color: var(--color-surface-alt);
+    background-color: #F5F5F5;
 }
 
-.dashboard-header {
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--p-surface-200);
+.header {
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.header-container {
-    max-width: 80rem;
+.header-content {
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 1.5rem;
     height: 64px;
@@ -148,93 +80,62 @@ const isActive = (route: string) => {
 
 .logo {
     font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--color-primary);
+    font-weight: 700;
+    color: #106B4F;
     text-decoration: none;
 }
 
 .main-nav {
     display: flex;
-    align-items: center;
     gap: 0.5rem;
 }
 
 .nav-link {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 1rem;
-    color: var(--color-text-secondary);
+    color: #6b7280;
     text-decoration: none;
     font-size: 0.875rem;
-    font-weight: 500;
     border-radius: 0.375rem;
-    transition: all 0.2s;
 }
 
 .nav-link:hover {
-    color: var(--color-text-primary);
-    background-color: var(--p-surface-100);
-}
-
-.nav-link-active {
-    color: var(--color-primary);
-    background-color: var(--color-primary-bg);
+    background-color: #F5F5F5;
+    color: #0D1F1B;
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .explore-link {
-    display: flex;
-    align-items: center;
     padding: 0.5rem 1rem;
-    color: var(--color-primary);
+    color: #106B4F;
     text-decoration: none;
     font-size: 0.875rem;
     font-weight: 500;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
 }
 
-.explore-link:hover {
-    background-color: var(--color-primary-bg);
-}
-
-.user-menu-trigger {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s;
-}
-
-.user-menu-trigger:hover {
-    background-color: var(--p-surface-100);
-}
-
-.user-avatar {
-    background-color: var(--color-primary);
-    color: white;
-}
-
-.user-name {
+.logout-btn {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: #6b7280;
     font-size: 0.875rem;
-    color: var(--color-text-primary);
-    font-weight: 500;
+    cursor: pointer;
 }
 
-.dashboard-content {
-    padding: 2.5rem 0;
+.logout-btn:hover {
+    color: #0D1F1B;
 }
 
-.content-container {
-    max-width: 80rem;
+.main-content {
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 2rem 1.5rem;
 }
 </style>

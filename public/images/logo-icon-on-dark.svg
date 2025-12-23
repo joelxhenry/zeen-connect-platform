@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 72" fill="none">
+  <!-- Zeen Z Icon - White on Dark Background -->
+
+  <!-- Dark rounded background -->
+  <rect width="56" height="72" rx="10" fill="#0D1F1B"/>
+
+  <!-- Icon centered -->
+  <g transform="translate(18, 8)" fill="#FFFFFF">
+    <!-- Top shape - "2" like curved block -->
+    <path d="
+      M4 4
+      Q4 0 8 0
+      L16 0
+      Q20 0 20 4
+      L20 8
+      Q20 12 16 12
+      L12 12
+      Q8 12 8 16
+      L8 20
+      Q8 24 4 24
+      L4 4
+      Z
+    "/>
+
+    <!-- Bottom shape - diagonal block -->
+    <path d="
+      M4 32
+      Q4 28 8 28
+      L8 32
+      Q8 36 12 36
+      L16 36
+      Q20 36 20 40
+      L20 52
+      Q20 56 16 56
+      L8 56
+      Q4 56 4 52
+      L4 32
+      Z
+    "/>
+  </g>
+</svg>

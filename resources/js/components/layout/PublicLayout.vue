@@ -1,107 +1,185 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import type { PageProps } from '@/types/models';
+import type { User } from '@/types/models';
 
 defineProps<{
     title?: string;
 }>();
 
-const page = usePage<PageProps>();
-const user = page.props.auth?.user;
+const page = usePage();
+const user = (page.props.auth as { user?: User } | undefined)?.user;
 </script>
 
 <template>
     <Head :title="title" />
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <!-- Navigation -->
-        <nav class="bg-white dark:bg-gray-800 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <Link href="/" class="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                            Zeen
-                        </Link>
-                        <div class="hidden md:ml-10 md:flex md:space-x-8">
-                            <Link
-                                href="/explore"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Explore
-                            </Link>
-                            <Link
-                                href="/become-provider"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Become a Provider
-                            </Link>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <template v-if="user">
-                            <Link
-                                v-if="user.role === 'provider'"
-                                href="/console"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Dashboard
-                            </Link>
-                            <Link
-                                v-else
-                                href="/dashboard"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Dashboard
-                            </Link>
-                            <Link
-                                href="/logout"
-                                method="post"
-                                as="button"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Logout
-                            </Link>
-                        </template>
-                        <template v-else>
-                            <Link
-                                href="/login"
-                                class="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white px-3 py-2 text-sm font-medium"
-                            >
-                                Login
-                            </Link>
-                            <Link
-                                href="/register"
-                                class="bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-2 rounded-md text-sm font-medium"
-                            >
-                                Sign Up
-                            </Link>
-                        </template>
-                    </div>
+
+    <div class="public-layout">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <Link href="/" class="logo">Zeen</Link>
+
+                <nav class="main-nav">
+                    <Link href="/explore" class="nav-link">Explore</Link>
+                    <Link href="/become-provider" class="nav-link">Become a Provider</Link>
+                </nav>
+
+                <div class="auth-nav">
+                    <template v-if="user">
+                        <Link v-if="user.role === 'provider'" href="/console" class="nav-link">Dashboard</Link>
+                        <Link v-else href="/dashboard" class="nav-link">Dashboard</Link>
+                        <Link href="/logout" method="post" as="button" class="logout-btn">Logout</Link>
+                    </template>
+                    <template v-else>
+                        <Link href="/login" class="nav-link">Login</Link>
+                        <Link href="/register" class="signup-btn">Sign Up</Link>
+                    </template>
                 </div>
             </div>
-        </nav>
+        </header>
 
         <!-- Main Content -->
-        <main>
+        <main class="main-content">
             <slot />
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto">
-            <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center">
-                    <p class="text-gray-500 dark:text-gray-400 text-sm">
-                        &copy; {{ new Date().getFullYear() }} Zeen. All rights reserved.
-                    </p>
-                    <div class="flex space-x-6">
-                        <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white text-sm">
-                            Privacy Policy
-                        </a>
-                        <a href="#" class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white text-sm">
-                            Terms of Service
-                        </a>
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; {{ new Date().getFullYear() }} Zeen. All rights reserved.</p>
+                <div class="footer-right">
+                    <span class="made-in-jamaica">Made in Jamaica 🇯🇲</span>
+                    <div class="footer-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
                     </div>
                 </div>
             </div>
         </footer>
     </div>
 </template>
+
+<style scoped>
+.public-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background-color: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.header-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #106B4F;
+    text-decoration: none;
+}
+
+.main-nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-link {
+    padding: 0.5rem 1rem;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.nav-link:hover {
+    color: #0D1F1B;
+}
+
+.auth-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.logout-btn {
+    padding: 0.5rem 1rem;
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.signup-btn {
+    padding: 0.5rem 1rem;
+    background-color: #106B4F;
+    color: white;
+    text-decoration: none;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+.signup-btn:hover {
+    background-color: #0D5A42;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    background-color: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 2rem 0;
+}
+
+.footer-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.footer-right {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.made-in-jamaica {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.footer-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.footer-links a {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.footer-links a:hover {
+    color: #0D1F1B;
+}
+</style>

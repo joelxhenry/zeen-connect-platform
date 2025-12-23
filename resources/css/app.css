@@ -1,11 +1,26 @@
 @import 'tailwindcss';
 
+/* Zeen Brand Variables */
+:root {
+    /* Brand Colors */
+    --zeen-primary: #106B4F;
+    --zeen-primary-dark: #0D5A42;
+    --zeen-dark: #0D1F1B;
+    --zeen-bright: #1ABC9C;
+    --zeen-accent: #5B5BD6;
+    --zeen-light: #F5F5F5;
+
+    /* Semantic Colors */
+    --color-surface-alt: #F5F5F5;
+    --color-text-primary: #0D1F1B;
+}
 
 html {
     color-scheme: light;
 }
 
 body {
+    font-family: 'Outfit', sans-serif;
     background-color: var(--color-surface-alt);
     color: var(--color-text-primary);
 }

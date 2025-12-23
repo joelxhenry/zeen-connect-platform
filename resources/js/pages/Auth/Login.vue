@@ -1,213 +1,204 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
-import Card from 'primevue/card';
+import { useForm, Link } from '@inertiajs/vue3';
+import AuthLayout from '@/components/layout/AuthLayout.vue';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
 import Button from 'primevue/button';
-import Divider from 'primevue/divider';
+import Checkbox from 'primevue/checkbox';
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const submit = () => {
+    form.post('/login', {
+        onFinish: () => {
+            form.reset('password');
+        },
+    });
+};
 </script>
 
 <template>
-    <Head title="Sign In" />
-    <div class="login-selector">
-        <div class="logo-container">
-            <Link href="/" class="logo-link">
-                <span class="logo">Zeen</span>
-            </Link>
+    <AuthLayout title="Login">
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Welcome to Zeen</h2>
+                <p>Let's sign you in</p>
+            </div>
+
+            <form @submit.prevent="submit">
+                <div class="form-field">
+                    <label for="email">Email address</label>
+                    <InputText
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        placeholder="Enter your email"
+                        :class="{ 'p-invalid': form.errors.email }"
+                        autofocus
+                    />
+                    <small v-if="form.errors.email" class="p-error">{{ form.errors.email }}</small>
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <Password
+                        id="password"
+                        v-model="form.password"
+                        placeholder="Enter your password"
+                        :feedback="false"
+                        toggleMask
+                        :class="{ 'p-invalid': form.errors.password }"
+                        inputClass="w-full"
+                    />
+                    <small v-if="form.errors.password" class="p-error">{{ form.errors.password }}</small>
+                </div>
+
+                <div class="form-options">
+                    <div class="remember-me">
+                        <Checkbox
+                            v-model="form.remember"
+                            inputId="remember"
+                            :binary="true"
+                        />
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <Link href="/forgot-password" class="forgot-link">Forgot password?</Link>
+                </div>
+
+                <Button
+                    type="submit"
+                    label="Login"
+                    :loading="form.processing"
+                    class="submit-btn"
+                />
+            </form>
+
+            <p class="register-link">
+                Don't have an account? <Link href="/register">Sign up</Link>
+            </p>
         </div>
-
-        <div class="card-container">
-            <Card class="selector-card">
-                <template #content>
-                    <div class="text-center mb-6">
-                        <h2 class="page-title">Welcome Back</h2>
-                        <p class="page-subtitle">Choose how you'd like to sign in</p>
-                    </div>
-
-                    <div class="options-grid">
-                        <!-- Client Login Option -->
-                        <Link href="/login/client" class="option-link">
-                            <Card class="option-card">
-                                <template #content>
-                                    <div class="option-content">
-                                        <i class="pi pi-user option-icon"></i>
-                                        <h3 class="option-title">I'm a Client</h3>
-                                        <p class="option-text">
-                                            Book services and manage your appointments
-                                        </p>
-                                    </div>
-                                </template>
-                            </Card>
-                        </Link>
-
-                        <!-- Provider Login Option -->
-                        <Link href="/login/provider" class="option-link">
-                            <Card class="option-card">
-                                <template #content>
-                                    <div class="option-content">
-                                        <i class="pi pi-shop option-icon"></i>
-                                        <h3 class="option-title">I'm a Provider</h3>
-                                        <p class="option-text">
-                                            Manage your business and bookings
-                                        </p>
-                                    </div>
-                                </template>
-                            </Card>
-                        </Link>
-                    </div>
-
-                    <Divider align="center">
-                        <span class="divider-text">New to Zeen?</span>
-                    </Divider>
-
-                    <div class="signup-buttons">
-                        <Link href="/register" class="signup-link">
-                            <Button label="Sign up as Client" severity="secondary" outlined class="w-full" />
-                        </Link>
-                        <Link href="/register/provider" class="signup-link">
-                            <Button label="Become a Provider" severity="secondary" outlined class="w-full" />
-                        </Link>
-                    </div>
-                </template>
-            </Card>
-        </div>
-    </div>
+    </AuthLayout>
 </template>
 
 <style scoped>
-.login-selector {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 3rem 1rem;
-    background-color: var(--color-surface-alt);
+.login-form {
+    text-align: left;
 }
 
-.logo-container {
+.form-header {
     text-align: center;
     margin-bottom: 2rem;
 }
 
-.logo-link {
-    display: inline-block;
-}
-
-.logo {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--color-primary);
-}
-
-.card-container {
-    margin: 0 auto;
-    width: 100%;
-    max-width: 32rem;
-}
-
-.selector-card {
-    background-color: var(--color-surface);
-    border-radius: 0.75rem;
-}
-
-.selector-card :deep(.p-card-body) {
-    padding: 2rem;
-}
-
-.selector-card :deep(.p-card-content) {
-    padding: 0;
-}
-
-.page-title {
+.form-header h2 {
     font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--color-text-primary);
-    margin: 0;
-}
-
-.page-subtitle {
-    margin-top: 0.5rem;
-    color: var(--color-text-secondary);
-    font-size: 0.875rem;
-}
-
-.options-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-@media (max-width: 640px) {
-    .options-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.option-link {
-    text-decoration: none;
-    display: block;
-}
-
-.option-card {
-    height: 100%;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 2px solid transparent;
-}
-
-.option-card:hover {
-    border-color: var(--color-primary);
-    transform: translateY(-2px);
-}
-
-.option-card :deep(.p-card-body) {
-    padding: 1.5rem;
-}
-
-.option-card :deep(.p-card-content) {
-    padding: 0;
-}
-
-.option-content {
-    text-align: center;
-}
-
-.option-icon {
-    font-size: 2.5rem;
-    color: var(--color-primary);
-    margin-bottom: 1rem;
-}
-
-.option-title {
-    font-size: 1.125rem;
     font-weight: 600;
-    color: var(--color-text-primary);
+    color: #0D1F1B;
     margin: 0 0 0.5rem 0;
 }
 
-.option-text {
+.form-header p {
     font-size: 0.875rem;
-    color: var(--color-text-secondary);
+    color: #6b7280;
     margin: 0;
 }
 
-.divider-text {
-    color: var(--color-text-muted);
+.form-field {
+    margin-bottom: 1.25rem;
+}
+
+.form-field label {
+    display: block;
     font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
 }
 
-.signup-buttons {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+.form-field :deep(.p-inputtext) {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
 }
 
-@media (max-width: 640px) {
-    .signup-buttons {
-        grid-template-columns: 1fr;
-    }
+.form-field :deep(.p-password) {
+    width: 100%;
 }
 
-.signup-link {
+.form-field :deep(.p-password-input) {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.p-error {
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.remember-me label {
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+}
+
+.forgot-link {
+    font-size: 0.875rem;
+    color: #106B4F;
     text-decoration: none;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background-color: #106B4F;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    justify-content: center;
+}
+
+.submit-btn:hover {
+    background-color: #0D5A42;
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.register-link a {
+    color: #106B4F;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
 }
 </style>

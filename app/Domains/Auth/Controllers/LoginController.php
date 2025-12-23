@@ -44,6 +44,23 @@ class LoginController extends Controller
     }
 
     /**
+     * Handle unified login request (auto-detects role).
+     */
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $user = $this->loginAction->execute(
+            $request->only('email', 'password'),
+            $request->boolean('remember')
+        );
+
+        return match ($user->role) {
+            UserRole::Admin => redirect()->intended(route('admin.dashboard')),
+            UserRole::Provider => redirect()->intended(route('provider.dashboard')),
+            default => redirect()->intended(route('client.dashboard')),
+        };
+    }
+
+    /**
      * Handle client login request.
      */
     public function storeClient(LoginRequest $request): RedirectResponse

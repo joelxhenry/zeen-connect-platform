@@ -55,8 +55,9 @@ Route::post('/webhooks/powertranz', [WebhookController::class, 'handlePowerTranz
 */
 
 Route::middleware('guest')->group(function () {
-    // Login selector page
+    // Unified login
     Route::get('/login', [LoginController::class, 'show'])->name('login');
+    Route::post('/login', [LoginController::class, 'store']);
 
     // Client login
     Route::get('/login/client', [LoginController::class, 'showClient'])->name('login.client');

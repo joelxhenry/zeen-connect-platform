@@ -25,3 +25,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Ignore generated Wayfinder files
+/resources/js/actions
+/resources/js/wayfinder
+/resources/js/routes
+

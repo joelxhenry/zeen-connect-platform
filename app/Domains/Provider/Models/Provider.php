@@ -32,6 +32,12 @@ class Provider extends Model
         'status',
         'commission_rate',
         'is_featured',
+        'requires_approval',
+        'deposit_type',
+        'deposit_amount',
+        'cancellation_policy',
+        'advance_booking_days',
+        'min_booking_notice_hours',
     ];
 
     protected function casts(): array
@@ -42,6 +48,25 @@ class Provider extends Model
             'rating_avg' => 'decimal:2',
             'is_featured' => 'boolean',
             'verified_at' => 'datetime',
+            'requires_approval' => 'boolean',
+            'deposit_amount' => 'decimal:2',
+            'advance_booking_days' => 'integer',
+            'min_booking_notice_hours' => 'integer',
+        ];
+    }
+
+    /**
+     * Get booking settings as an array.
+     */
+    public function getBookingSettings(): array
+    {
+        return [
+            'requires_approval' => $this->requires_approval ?? false,
+            'deposit_type' => $this->deposit_type ?? 'none',
+            'deposit_amount' => $this->deposit_amount,
+            'cancellation_policy' => $this->cancellation_policy ?? 'flexible',
+            'advance_booking_days' => $this->advance_booking_days ?? 30,
+            'min_booking_notice_hours' => $this->min_booking_notice_hours ?? 24,
         ];
     }
 

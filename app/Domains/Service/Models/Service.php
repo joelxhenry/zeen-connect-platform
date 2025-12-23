@@ -22,6 +22,13 @@ class Service extends Model
         'price',
         'is_active',
         'sort_order',
+        'use_provider_defaults',
+        'requires_approval',
+        'deposit_type',
+        'deposit_amount',
+        'cancellation_policy',
+        'advance_booking_days',
+        'min_booking_notice_hours',
     ];
 
     protected function casts(): array
@@ -31,6 +38,30 @@ class Service extends Model
             'price' => 'decimal:2',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'use_provider_defaults' => 'boolean',
+            'requires_approval' => 'boolean',
+            'deposit_amount' => 'decimal:2',
+            'advance_booking_days' => 'integer',
+            'min_booking_notice_hours' => 'integer',
+        ];
+    }
+
+    /**
+     * Get effective booking settings (from provider if using defaults, otherwise from service).
+     */
+    public function getEffectiveBookingSettings(): array
+    {
+        if ($this->use_provider_defaults) {
+            return $this->provider->getBookingSettings();
+        }
+
+        return [
+            'requires_approval' => $this->requires_approval ?? false,
+            'deposit_type' => $this->deposit_type ?? 'none',
+            'deposit_amount' => $this->deposit_amount,
+            'cancellation_policy' => $this->cancellation_policy ?? 'flexible',
+            'advance_booking_days' => $this->advance_booking_days ?? 30,
+            'min_booking_notice_hours' => $this->min_booking_notice_hours ?? 24,
         ];
     }
 

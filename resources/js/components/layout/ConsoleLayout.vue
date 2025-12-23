@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import Provider from '@/actions/App/Domains/Provider';
+import SettingsController from '@/actions/App/Domains/Provider/Controllers/SettingsController';
 
 defineProps<{
     title?: string;
@@ -12,11 +13,12 @@ const sidebarOpen = ref(false);
 const navItems = [
     { label: 'Dashboard', icon: 'pi pi-home', route: Provider.Controllers.DashboardController.url() },
     { label: 'Profile', icon: 'pi pi-user', route: '/console/profile' },
-    { label: 'Services', icon: 'pi pi-th-large', route: '/console/services' },
+    { label: 'Services', icon: 'pi pi-th-large', route: Provider.Controllers.ServiceController.index().url },
     { label: 'Availability', icon: 'pi pi-clock', route: Provider.Controllers.AvailabilityController.edit().url },
     { label: 'Bookings', icon: 'pi pi-calendar', route: '/console/bookings' },
     { label: 'Payments', icon: 'pi pi-wallet', route: '/console/payments' },
     { label: 'Reviews', icon: 'pi pi-star', route: '/console/reviews' },
+    { label: 'Settings', icon: 'pi pi-cog', route: SettingsController.edit().url },
 ];
 
 const toggleSidebar = () => {
@@ -38,8 +40,8 @@ const closeSidebar = () => {
 
         <!-- Sidebar -->
         <aside
-            class="fixed lg:static inset-y-0 left-0 z-50 w-64 lg:w-60 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none"
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+            class="fixed inset-y-0 left-0 z-50 w-64 lg:w-60 h-screen bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <Link href="/" class="text-xl font-bold text-[#106B4F] no-underline">Zeen</Link>
@@ -71,7 +73,7 @@ const closeSidebar = () => {
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col bg-neutral-100 min-w-0">
+        <div class="flex-1 flex flex-col bg-neutral-100 min-w-0 lg:ml-60">
             <header
                 class="py-3 px-4 lg:py-4 lg:px-6 bg-white border-b border-gray-200 flex justify-between items-center gap-4">
                 <!-- Mobile menu button -->

@@ -31,15 +31,18 @@ class ServiceController extends Controller
 
         return Inertia::render('Provider/Services/Index', [
             'services' => $services,
+            'providerDefaults' => $provider->getBookingSettings(),
         ]);
     }
 
     public function create(): Response
     {
+        $provider = Auth::user()->provider;
         $categories = Category::active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Create', [
             'categories' => $categories,
+            'providerDefaults' => $provider->getBookingSettings(),
         ]);
     }
 
@@ -68,6 +71,7 @@ class ServiceController extends Controller
         return Inertia::render('Provider/Services/Edit', [
             'service' => $service->load('category'),
             'categories' => $categories,
+            'providerDefaults' => $provider->getBookingSettings(),
         ]);
     }
 
@@ -101,5 +105,23 @@ class ServiceController extends Controller
         return redirect()
             ->route('provider.services.index')
             ->with('success', 'Service deleted successfully.');
+    }
+
+    public function toggleActive(Service $service): RedirectResponse
+    {
+        $provider = Auth::user()->provider;
+
+        // Ensure the service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            abort(403);
+        }
+
+        $service->update(['is_active' => ! $service->is_active]);
+
+        $status = $service->is_active ? 'activated' : 'deactivated';
+
+        return redirect()
+            ->route('provider.services.index')
+            ->with('success', "Service {$status} successfully.");
     }
 }

@@ -8,6 +8,8 @@ class UpdateServiceAction
 {
     public function execute(Service $service, array $data): Service
     {
+        $useDefaults = $data['use_provider_defaults'] ?? true;
+
         $service->update([
             'category_id' => $data['category_id'],
             'name' => $data['name'],
@@ -16,6 +18,14 @@ class UpdateServiceAction
             'price' => $data['price'],
             'is_active' => $data['is_active'] ?? true,
             'sort_order' => $data['sort_order'] ?? $service->sort_order,
+            // Booking settings
+            'use_provider_defaults' => $useDefaults,
+            'requires_approval' => $useDefaults ? null : ($data['requires_approval'] ?? null),
+            'deposit_type' => $useDefaults ? null : ($data['deposit_type'] ?? null),
+            'deposit_amount' => $useDefaults ? null : ($data['deposit_amount'] ?? null),
+            'cancellation_policy' => $useDefaults ? null : ($data['cancellation_policy'] ?? null),
+            'advance_booking_days' => $useDefaults ? null : ($data['advance_booking_days'] ?? null),
+            'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
         ]);
 
         return $service->fresh('category');

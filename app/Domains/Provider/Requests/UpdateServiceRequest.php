@@ -22,6 +22,14 @@ class UpdateServiceRequest extends FormRequest
             'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            // Booking settings
+            'use_provider_defaults' => ['boolean'],
+            'requires_approval' => ['nullable', 'boolean'],
+            'deposit_type' => ['nullable', 'in:none,fixed,percentage'],
+            'deposit_amount' => ['nullable', 'numeric', 'min:0'],
+            'cancellation_policy' => ['nullable', 'in:flexible,moderate,strict'],
+            'advance_booking_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'min_booking_notice_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
         ];
     }
 
@@ -40,6 +48,11 @@ class UpdateServiceRequest extends FormRequest
             'price.required' => 'Please enter a price.',
             'price.min' => 'Price cannot be negative.',
             'price.max' => 'Price cannot exceed $999,999.99.',
+            'deposit_amount.min' => 'Deposit amount cannot be negative.',
+            'advance_booking_days.min' => 'Advance booking days must be at least 1.',
+            'advance_booking_days.max' => 'Advance booking days cannot exceed 365.',
+            'min_booking_notice_hours.min' => 'Minimum booking notice must be at least 1 hour.',
+            'min_booking_notice_hours.max' => 'Minimum booking notice cannot exceed 168 hours (1 week).',
         ];
     }
 }

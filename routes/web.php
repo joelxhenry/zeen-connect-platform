@@ -14,6 +14,7 @@ use App\Domains\Provider\Controllers\AvailabilityController;
 use App\Domains\Provider\Controllers\DashboardController as ProviderDashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
+use App\Domains\Provider\Controllers\SettingsController;
 use App\Domains\Review\Controllers\ClientReviewController;
 use App\Domains\Review\Controllers\ProviderReviewController;
 use App\Http\Controllers\ProviderListingController;
@@ -147,6 +148,11 @@ Route::middleware(['auth', 'role:provider'])->prefix('console')->name('provider.
 
     // Service management
     Route::resource('services', ServiceController::class)->except(['show']);
+    Route::post('/services/{service}/toggle-active', [ServiceController::class, 'toggleActive'])->name('services.toggle-active');
+
+    // Settings management
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings/booking', [SettingsController::class, 'updateBookingSettings'])->name('settings.booking');
 
     // Availability management
     Route::get('/availability', [AvailabilityController::class, 'edit'])->name('availability.edit');

@@ -9,6 +9,8 @@ class CreateServiceAction
 {
     public function execute(Provider $provider, array $data): Service
     {
+        $useDefaults = $data['use_provider_defaults'] ?? true;
+
         return $provider->services()->create([
             'category_id' => $data['category_id'],
             'name' => $data['name'],
@@ -17,6 +19,14 @@ class CreateServiceAction
             'price' => $data['price'],
             'is_active' => $data['is_active'] ?? true,
             'sort_order' => $data['sort_order'] ?? 0,
+            // Booking settings
+            'use_provider_defaults' => $useDefaults,
+            'requires_approval' => $useDefaults ? null : ($data['requires_approval'] ?? null),
+            'deposit_type' => $useDefaults ? null : ($data['deposit_type'] ?? null),
+            'deposit_amount' => $useDefaults ? null : ($data['deposit_amount'] ?? null),
+            'cancellation_policy' => $useDefaults ? null : ($data['cancellation_policy'] ?? null),
+            'advance_booking_days' => $useDefaults ? null : ($data['advance_booking_days'] ?? null),
+            'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
         ]);
     }
 }

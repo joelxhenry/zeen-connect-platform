@@ -13,9 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed locations first
+        // Seed locations and categories first
         $this->call([
             LocationSeeder::class,
+            CategorySeeder::class,
         ]);
 
         // Create test user

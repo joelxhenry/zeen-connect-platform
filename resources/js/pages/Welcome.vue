@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Tag from 'primevue/tag';
+import Divider from 'primevue/divider';
 </script>
 
 <template>
@@ -24,10 +28,10 @@ import { Head, Link } from '@inertiajs/vue3';
                     </nav>
                     <div class="flex items-center space-x-4">
                         <Link href="/login">
-                            <el-button text>Sign In</el-button>
+                            <Button label="Sign In" text />
                         </Link>
                         <Link href="/register/provider">
-                            <el-button type="primary">Start Free Trial</el-button>
+                            <Button label="Start Free Trial" />
                         </Link>
                     </div>
                 </div>
@@ -37,7 +41,7 @@ import { Head, Link } from '@inertiajs/vue3';
         <!-- Hero Section - Provider Focused -->
         <section class="hero-section pt-32 pb-20 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto text-center">
-                <el-tag type="success" size="large" class="mb-6">Now Available in Jamaica</el-tag>
+                <Tag severity="success" class="mb-6">Now Available in Jamaica</Tag>
                 <h1 class="hero-title text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-6">
                     Grow Your Service Business
                     <span class="brand-text block">With Zeen</span>
@@ -47,29 +51,32 @@ import { Head, Link } from '@inertiajs/vue3';
                 </p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4 mb-12">
                     <Link href="/register/provider">
-                        <el-button type="primary" size="large" class="px-8">
-                            <el-icon class="mr-2"><Shop /></el-icon>
+                        <Button size="large" class="px-8">
+                            <i class="pi pi-shop mr-2"></i>
                             Get Started Free
-                        </el-button>
+                        </Button>
                     </Link>
                     <Link href="/how-it-works">
-                        <el-button size="large" class="px-8">
-                            <el-icon class="mr-2"><VideoPlay /></el-icon>
+                        <Button severity="secondary" outlined size="large" class="px-8">
+                            <i class="pi pi-play mr-2"></i>
                             See How It Works
-                        </el-button>
+                        </Button>
                     </Link>
                 </div>
 
                 <!-- Stats - Provider Focused -->
                 <div class="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
                     <div class="text-center">
-                        <el-statistic title="Active Providers" :value="500" suffix="+" />
+                        <div class="stat-value text-3xl font-bold">500+</div>
+                        <div class="stat-label text-sm">Active Providers</div>
                     </div>
                     <div class="text-center">
-                        <el-statistic title="Service Areas" :value="54" suffix="+" />
+                        <div class="stat-value text-3xl font-bold">54+</div>
+                        <div class="stat-label text-sm">Service Areas</div>
                     </div>
                     <div class="text-center">
-                        <el-statistic title="Monthly Revenue" :value="2" prefix="$" suffix="M+" />
+                        <div class="stat-value text-3xl font-bold">$2M+</div>
+                        <div class="stat-label text-sm">Monthly Revenue</div>
                     </div>
                 </div>
             </div>
@@ -87,86 +94,91 @@ import { Head, Link } from '@inertiajs/vue3';
                     </p>
                 </div>
 
-                <el-row :gutter="24">
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><Calendar /></el-icon>
-                                    <span class="font-semibold">Smart Scheduling</span>
-                                </div>
-                            </template>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-calendar text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Smart Scheduling</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Let clients book 24/7. Set your availability, service duration, and buffer times. Automatic reminders reduce no-shows.
                             </p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><Wallet /></el-icon>
-                                    <span class="font-semibold">Accept Payments</span>
-                                </div>
-                            </template>
+                        </template>
+                    </Card>
+
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-wallet text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Accept Payments</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Get paid instantly via Power Tranz. Accept credit cards and local payment methods. Direct deposits to your bank account.
                             </p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><Location /></el-icon>
-                                    <span class="font-semibold">Multi-Location Support</span>
-                                </div>
-                            </template>
+                        </template>
+                    </Card>
+
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-map-marker text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Multi-Location Support</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Serve multiple parishes and towns. Perfect for mobile barbers, beauticians, and service professionals who travel.
                             </p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><Picture /></el-icon>
-                                    <span class="font-semibold">Portfolio Showcase</span>
-                                </div>
-                            </template>
+                        </template>
+                    </Card>
+
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-images text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Portfolio Showcase</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Display your best work with a professional portfolio. Upload photos, highlight certifications, and attract new clients.
                             </p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><Star /></el-icon>
-                                    <span class="font-semibold">Build Your Reputation</span>
-                                </div>
-                            </template>
+                        </template>
+                    </Card>
+
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-star text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Build Your Reputation</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Collect verified reviews from real clients. Higher ratings mean more visibility and more bookings.
                             </p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="8" class="mb-6">
-                        <el-card shadow="hover" class="h-full">
-                            <template #header>
-                                <div class="flex items-center">
-                                    <el-icon size="24" class="icon-primary mr-3"><DataLine /></el-icon>
-                                    <span class="font-semibold">Business Insights</span>
-                                </div>
-                            </template>
+                        </template>
+                    </Card>
+
+                    <Card class="feature-card">
+                        <template #title>
+                            <div class="flex items-center">
+                                <i class="pi pi-chart-line text-2xl icon-primary mr-3"></i>
+                                <span class="font-semibold">Business Insights</span>
+                            </div>
+                        </template>
+                        <template #content>
                             <p class="card-text">
                                 Track your earnings, busiest times, and top services. Make data-driven decisions to grow your business.
                             </p>
-                        </el-card>
-                    </el-col>
-                </el-row>
+                        </template>
+                    </Card>
+                </div>
             </div>
         </section>
 
@@ -182,44 +194,49 @@ import { Head, Link } from '@inertiajs/vue3';
                     </p>
                 </div>
 
-                <el-row :gutter="16">
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-1 mb-2"><Scissor /></el-icon>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-user text-4xl category-icon-1 mb-2"></i>
                             <p class="font-medium">Barbers</p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-2 mb-2"><User /></el-icon>
+                        </template>
+                    </Card>
+
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-user text-4xl category-icon-2 mb-2"></i>
                             <p class="font-medium">Hair Stylists</p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-3 mb-2"><Brush /></el-icon>
+                        </template>
+                    </Card>
+
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-palette text-4xl category-icon-3 mb-2"></i>
                             <p class="font-medium">Makeup Artists</p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-4 mb-2"><MagicStick /></el-icon>
+                        </template>
+                    </Card>
+
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-star text-4xl category-icon-4 mb-2"></i>
                             <p class="font-medium">Nail Techs</p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-5 mb-2"><FirstAidKit /></el-icon>
+                        </template>
+                    </Card>
+
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-heart text-4xl category-icon-5 mb-2"></i>
                             <p class="font-medium">Massage Therapists</p>
-                        </el-card>
-                    </el-col>
-                    <el-col :xs="12" :sm="8" :md="6" :lg="4" class="mb-4">
-                        <el-card shadow="hover" class="text-center cursor-pointer category-card">
-                            <el-icon size="40" class="category-icon-6 mb-2"><MoreFilled /></el-icon>
+                        </template>
+                    </Card>
+
+                    <Card class="category-card text-center cursor-pointer">
+                        <template #content>
+                            <i class="pi pi-ellipsis-h text-4xl category-icon-6 mb-2"></i>
                             <p class="font-medium">And More...</p>
-                        </el-card>
-                    </el-col>
-                </el-row>
+                        </template>
+                    </Card>
+                </div>
             </div>
         </section>
 
@@ -235,8 +252,8 @@ import { Head, Link } from '@inertiajs/vue3';
                     </p>
                 </div>
 
-                <el-row :gutter="32" justify="center">
-                    <el-col :xs="24" :sm="8" class="mb-6 text-center">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="text-center">
                         <div class="step-circle w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
                             <span class="text-2xl font-bold">1</span>
                         </div>
@@ -244,8 +261,8 @@ import { Head, Link } from '@inertiajs/vue3';
                         <p class="section-subtitle">
                             Sign up free, add your services, pricing, and upload your portfolio photos.
                         </p>
-                    </el-col>
-                    <el-col :xs="24" :sm="8" class="mb-6 text-center">
+                    </div>
+                    <div class="text-center">
                         <div class="step-circle w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
                             <span class="text-2xl font-bold">2</span>
                         </div>
@@ -253,8 +270,8 @@ import { Head, Link } from '@inertiajs/vue3';
                         <p class="section-subtitle">
                             Define your availability, service areas, and let clients book online 24/7.
                         </p>
-                    </el-col>
-                    <el-col :xs="24" :sm="8" class="mb-6 text-center">
+                    </div>
+                    <div class="text-center">
                         <div class="step-circle w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center">
                             <span class="text-2xl font-bold">3</span>
                         </div>
@@ -262,8 +279,8 @@ import { Head, Link } from '@inertiajs/vue3';
                         <p class="section-subtitle">
                             Accept bookings, deliver great service, and receive payments directly to your account.
                         </p>
-                    </el-col>
-                </el-row>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -276,40 +293,40 @@ import { Head, Link } from '@inertiajs/vue3';
                 <p class="section-subtitle mb-8">
                     Only pay when you get paid. No monthly fees, no hidden costs.
                 </p>
-                <el-card shadow="hover" class="max-w-md mx-auto">
-                    <div class="text-center py-6">
-                        <p class="text-muted mb-2">Commission per booking</p>
-                        <p class="pricing-value text-5xl font-bold mb-2">15%</p>
-                        <p class="text-muted text-sm mb-6">Only charged on completed bookings</p>
-                        <ul class="text-left space-y-3 mb-8">
-                            <li class="flex items-center">
-                                <el-icon class="icon-success mr-2"><Check /></el-icon>
-                                Unlimited bookings
-                            </li>
-                            <li class="flex items-center">
-                                <el-icon class="icon-success mr-2"><Check /></el-icon>
-                                Online payment processing
-                            </li>
-                            <li class="flex items-center">
-                                <el-icon class="icon-success mr-2"><Check /></el-icon>
-                                Professional profile page
-                            </li>
-                            <li class="flex items-center">
-                                <el-icon class="icon-success mr-2"><Check /></el-icon>
-                                SMS & email notifications
-                            </li>
-                            <li class="flex items-center">
-                                <el-icon class="icon-success mr-2"><Check /></el-icon>
-                                Business analytics dashboard
-                            </li>
-                        </ul>
-                        <Link href="/register/provider">
-                            <el-button type="primary" size="large" class="w-full">
-                                Start Free Today
-                            </el-button>
-                        </Link>
-                    </div>
-                </el-card>
+                <Card class="pricing-card max-w-md mx-auto">
+                    <template #content>
+                        <div class="text-center py-6">
+                            <p class="text-muted mb-2">Commission per booking</p>
+                            <p class="pricing-value text-5xl font-bold mb-2">15%</p>
+                            <p class="text-muted text-sm mb-6">Only charged on completed bookings</p>
+                            <ul class="text-left space-y-3 mb-8">
+                                <li class="flex items-center">
+                                    <i class="pi pi-check icon-success mr-2"></i>
+                                    Unlimited bookings
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="pi pi-check icon-success mr-2"></i>
+                                    Online payment processing
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="pi pi-check icon-success mr-2"></i>
+                                    Professional profile page
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="pi pi-check icon-success mr-2"></i>
+                                    SMS & email notifications
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="pi pi-check icon-success mr-2"></i>
+                                    Business analytics dashboard
+                                </li>
+                            </ul>
+                            <Link href="/register/provider">
+                                <Button label="Start Free Today" size="large" class="w-full" />
+                            </Link>
+                        </div>
+                    </template>
+                </Card>
             </div>
         </section>
 
@@ -324,14 +341,14 @@ import { Head, Link } from '@inertiajs/vue3';
                 </p>
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
                     <Link href="/register/provider">
-                        <el-button size="large" class="cta-btn-primary px-8">
+                        <Button size="large" class="cta-btn-primary px-8">
                             Create Your Free Account
-                        </el-button>
+                        </Button>
                     </Link>
                     <Link href="/contact">
-                        <el-button size="large" class="cta-btn-secondary px-8">
+                        <Button severity="secondary" outlined size="large" class="cta-btn-secondary px-8">
                             Contact Sales
-                        </el-button>
+                        </Button>
                     </Link>
                 </div>
             </div>
@@ -340,14 +357,14 @@ import { Head, Link } from '@inertiajs/vue3';
         <!-- Footer -->
         <footer class="footer py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <el-row :gutter="24">
-                    <el-col :xs="24" :sm="12" :md="6" class="mb-8">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                    <div class="mb-8">
                         <h3 class="footer-brand text-lg font-semibold mb-4">Zeen</h3>
                         <p class="footer-text text-sm">
                             The booking platform built for service professionals in Jamaica.
                         </p>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="6" class="mb-8">
+                    </div>
+                    <div class="mb-8">
                         <h4 class="footer-heading font-medium mb-4">For Providers</h4>
                         <ul class="space-y-2 text-sm">
                             <li><Link href="/register/provider" class="footer-link">Get Started</Link></li>
@@ -355,15 +372,15 @@ import { Head, Link } from '@inertiajs/vue3';
                             <li><Link href="/how-it-works" class="footer-link">How It Works</Link></li>
                             <li><Link href="/provider-resources" class="footer-link">Resources</Link></li>
                         </ul>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="6" class="mb-8">
+                    </div>
+                    <div class="mb-8">
                         <h4 class="footer-heading font-medium mb-4">For Clients</h4>
                         <ul class="space-y-2 text-sm">
                             <li><Link href="/explore" class="footer-link">Find Services</Link></li>
                             <li><Link href="/register" class="footer-link">Create Account</Link></li>
                         </ul>
-                    </el-col>
-                    <el-col :xs="24" :sm="12" :md="6" class="mb-8">
+                    </div>
+                    <div class="mb-8">
                         <h4 class="footer-heading font-medium mb-4">Support</h4>
                         <ul class="space-y-2 text-sm">
                             <li><Link href="/help" class="footer-link">Help Center</Link></li>
@@ -371,9 +388,9 @@ import { Head, Link } from '@inertiajs/vue3';
                             <li><Link href="/privacy" class="footer-link">Privacy Policy</Link></li>
                             <li><Link href="/terms" class="footer-link">Terms of Service</Link></li>
                         </ul>
-                    </el-col>
-                </el-row>
-                <el-divider class="footer-divider my-8" />
+                    </div>
+                </div>
+                <Divider class="footer-divider my-8" />
                 <div class="text-center text-sm footer-copyright">
                     <p>&copy; {{ new Date().getFullYear() }} Zeen. All rights reserved.</p>
                 </div>
@@ -391,7 +408,7 @@ import { Head, Link } from '@inertiajs/vue3';
 /* Header */
 .header {
     background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
-    border-color: var(--el-border-color-lighter);
+    border-color: var(--p-surface-200);
 }
 
 .brand-text {
@@ -420,6 +437,15 @@ import { Head, Link } from '@inertiajs/vue3';
     color: var(--color-text-secondary);
 }
 
+/* Stats */
+.stat-value {
+    color: var(--color-primary);
+}
+
+.stat-label {
+    color: var(--color-text-secondary);
+}
+
 /* Sections */
 .section-alt {
     background-color: var(--color-surface-alt);
@@ -437,6 +463,22 @@ import { Head, Link } from '@inertiajs/vue3';
     color: var(--color-text-secondary);
 }
 
+/* Feature Cards */
+.feature-card {
+    height: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card :deep(.p-card-title) {
+    font-size: 1rem;
+    padding-bottom: 0;
+}
+
 /* Icons */
 .icon-primary {
     color: var(--color-primary);
@@ -447,24 +489,41 @@ import { Head, Link } from '@inertiajs/vue3';
 }
 
 /* Category Icons */
-.category-icon-1 { color: var(--color-category-1); }
-.category-icon-2 { color: var(--color-category-2); }
-.category-icon-3 { color: var(--color-category-3); }
-.category-icon-4 { color: var(--color-category-4); }
-.category-icon-5 { color: var(--color-category-5); }
-.category-icon-6 { color: var(--color-category-6); }
+.category-icon-1 { color: var(--color-category-1, #3b82f6); }
+.category-icon-2 { color: var(--color-category-2, #ec4899); }
+.category-icon-3 { color: var(--color-category-3, #f59e0b); }
+.category-icon-4 { color: var(--color-category-4, #8b5cf6); }
+.category-icon-5 { color: var(--color-category-5, #10b981); }
+.category-icon-6 { color: var(--color-category-6, #6b7280); }
+
+.category-card {
+    transition: transform 0.2s, border-color 0.2s;
+}
 
 .category-card:hover {
+    transform: translateY(-2px);
     border-color: var(--color-primary);
+}
+
+.category-card :deep(.p-card-body) {
+    padding: 1rem;
+}
+
+.category-card :deep(.p-card-content) {
+    padding: 0;
 }
 
 /* Step Circle */
 .step-circle {
-    background-color: var(--color-primary-bg);
+    background-color: var(--color-primary-bg, color-mix(in srgb, var(--color-primary) 15%, transparent));
     color: var(--color-primary);
 }
 
 /* Pricing */
+.pricing-card {
+    border: 2px solid var(--color-primary);
+}
+
 .pricing-value {
     color: var(--color-primary);
 }
@@ -487,23 +546,23 @@ import { Head, Link } from '@inertiajs/vue3';
 }
 
 .cta-btn-primary {
-    background-color: var(--color-surface);
-    color: var(--color-primary);
-    border-color: var(--color-surface);
+    background-color: var(--color-surface) !important;
+    color: var(--color-primary) !important;
+    border-color: var(--color-surface) !important;
 }
 
 .cta-btn-primary:hover {
-    background-color: var(--color-surface-alt);
+    background-color: var(--color-surface-alt) !important;
 }
 
 .cta-btn-secondary {
-    background-color: transparent;
-    color: var(--color-text-inverse);
-    border-color: var(--color-text-inverse);
+    background-color: transparent !important;
+    color: var(--color-text-inverse) !important;
+    border-color: var(--color-text-inverse) !important;
 }
 
 .cta-btn-secondary:hover {
-    background-color: var(--color-primary-dark);
+    background-color: var(--color-primary-dark) !important;
 }
 
 /* Footer */

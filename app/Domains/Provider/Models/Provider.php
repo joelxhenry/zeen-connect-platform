@@ -3,6 +3,8 @@
 namespace App\Domains\Provider\Models;
 
 use App\Domains\Location\Models\Location;
+use App\Domains\Review\Models\Review;
+use App\Domains\Service\Models\Service;
 use App\Models\User;
 use App\Support\Traits\HasSlug;
 use App\Support\Traits\HasUuid;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
@@ -83,6 +86,46 @@ class Provider extends Model
         return $this->belongsToMany(Location::class, 'location_provider')
             ->withPivot('is_primary')
             ->withTimestamps();
+    }
+
+    /**
+     * Get all services offered by this provider.
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Get the provider's availability schedule.
+     */
+    public function availability(): HasMany
+    {
+        return $this->hasMany(ProviderAvailability::class);
+    }
+
+    /**
+     * Get the provider's blocked dates.
+     */
+    public function blockedDates(): HasMany
+    {
+        return $this->hasMany(BlockedDate::class);
+    }
+
+    /**
+     * Get the provider's reviews.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get visible reviews only.
+     */
+    public function visibleReviews(): HasMany
+    {
+        return $this->reviews()->visible();
     }
 
     /**
@@ -207,9 +250,60 @@ class Provider extends Model
      */
     public function updateRatingStats(): void
     {
-        // This will be implemented when Review model is created
-        // $this->rating_avg = $this->reviews()->avg('rating') ?? 0;
-        // $this->rating_count = $this->reviews()->count();
-        // $this->save();
+        $stats = $this->visibleReviews()
+            ->selectRaw('AVG(rating) as avg, COUNT(*) as count')
+            ->first();
+
+        $this->update([
+            'rating_avg' => round($stats->avg ?? 0, 2),
+            'rating_count' => $stats->count ?? 0,
+        ]);
+    }
+
+    /**
+     * Get the rating display string.
+     */
+    public function getRatingDisplayAttribute(): string
+    {
+        if ($this->rating_count === 0) {
+            return 'New';
+        }
+
+        return number_format($this->rating_avg, 1);
+    }
+
+    /**
+     * Get the reviews summary text.
+     */
+    public function getReviewsSummaryAttribute(): string
+    {
+        if ($this->rating_count === 0) {
+            return 'No reviews yet';
+        }
+
+        $reviewWord = $this->rating_count === 1 ? 'review' : 'reviews';
+
+        return "{$this->rating_display} ({$this->rating_count} {$reviewWord})";
+    }
+
+    /**
+     * Get users who have favorited this provider.
+     */
+    public function favoritedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'favorites',
+            'provider_id',
+            'user_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Get the number of users who have favorited this provider.
+     */
+    public function getFavoritesCountAttribute(): int
+    {
+        return $this->favoritedBy()->count();
     }
 }

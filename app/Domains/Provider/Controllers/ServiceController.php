@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Domains\Provider\Controllers;
+
+use App\Domains\Provider\Actions\CreateServiceAction;
+use App\Domains\Provider\Actions\UpdateServiceAction;
+use App\Domains\Provider\Requests\StoreServiceRequest;
+use App\Domains\Provider\Requests\UpdateServiceRequest;
+use App\Domains\Service\Models\Category;
+use App\Domains\Service\Models\Service;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ServiceController extends Controller
+{
+    public function __construct(
+        private CreateServiceAction $createAction,
+        private UpdateServiceAction $updateAction,
+    ) {}
+
+    public function index(): Response
+    {
+        $provider = Auth::user()->provider;
+        $services = $provider->services()
+            ->with('category')
+            ->ordered()
+            ->get();
+
+        return Inertia::render('Provider/Services/Index', [
+            'services' => $services,
+        ]);
+    }
+
+    public function create(): Response
+    {
+        $categories = Category::active()->ordered()->get();
+
+        return Inertia::render('Provider/Services/Create', [
+            'categories' => $categories,
+        ]);
+    }
+
+    public function store(StoreServiceRequest $request): RedirectResponse
+    {
+        $provider = Auth::user()->provider;
+
+        $this->createAction->execute($provider, $request->validated());
+
+        return redirect()
+            ->route('provider.services.index')
+            ->with('success', 'Service created successfully.');
+    }
+
+    public function edit(Service $service): Response
+    {
+        $provider = Auth::user()->provider;
+
+        // Ensure the service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            abort(403);
+        }
+
+        $categories = Category::active()->ordered()->get();
+
+        return Inertia::render('Provider/Services/Edit', [
+            'service' => $service->load('category'),
+            'categories' => $categories,
+        ]);
+    }
+
+    public function update(UpdateServiceRequest $request, Service $service): RedirectResponse
+    {
+        $provider = Auth::user()->provider;
+
+        // Ensure the service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            abort(403);
+        }
+
+        $this->updateAction->execute($service, $request->validated());
+
+        return redirect()
+            ->route('provider.services.index')
+            ->with('success', 'Service updated successfully.');
+    }
+
+    public function destroy(Service $service): RedirectResponse
+    {
+        $provider = Auth::user()->provider;
+
+        // Ensure the service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            abort(403);
+        }
+
+        $service->delete();
+
+        return redirect()
+            ->route('provider.services.index')
+            ->with('success', 'Service deleted successfully.');
+    }
+}

@@ -1,12 +1,15 @@
 import '../css/app.css';
-import 'element-plus/dist/index.css';
+import 'primeicons/primeicons.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
-import ElementPlus from 'element-plus';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import PrimeVue from 'primevue/config';
+import Aura from '@primevue/themes/aura';
+import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice';
+import { ZiggyVue } from 'ziggy-js';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Zeen';
 
@@ -16,18 +19,31 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         const app = createApp({ render: () => h(App, props) });
 
-        // Register Element Plus
+        // Register Inertia plugin
         app.use(plugin);
-        app.use(ElementPlus);
 
-        // Register all Element Plus icons globally
-        for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-            app.component(key, component);
-        }
+        // Register Ziggy for route() helper
+        app.use(ZiggyVue);
+
+        // Register PrimeVue with Aura theme
+        app.use(PrimeVue, {
+            theme: {
+                preset: Aura,
+                options: {
+                    prefix: 'p',
+                    darkModeSelector: '.dark',
+                    cssLayer: false,
+                },
+            },
+        });
+
+        // Register PrimeVue services
+        app.use(ToastService);
+        app.use(ConfirmationService);
 
         app.mount(el);
     },
     progress: {
-        color: '#409EFF',
+        color: '#4f46e5',
     },
 });

@@ -1,58 +1,11 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
 
-@theme inline {
-    --font-sans: Instrument Sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
-    /* Brand Colors */
-    --color-primary: #4f46e5;
-    --color-primary-light: #818cf8;
-    --color-primary-dark: #3730a3;
-    --color-primary-bg: #eef2ff;
-
-    /* Semantic Colors */
-    --color-success: #10b981;
-    --color-warning: #f59e0b;
-    --color-danger: #ef4444;
-    --color-info: #3b82f6;
-
-    /* Category Colors */
-    --color-category-1: var(--color-primary);
-    --color-category-2: #ec4899;
-    --color-category-3: #8b5cf6;
-    --color-category-4: #ef4444;
-    --color-category-5: #10b981;
-    --color-category-6: #3b82f6;
-
-    /* Surface Colors */
-    --color-surface: #ffffff;
-    --color-surface-alt: #f9fafb;
-    --color-surface-dark: #111827;
-
-    /* Text Colors */
-    --color-text-primary: #111827;
-    --color-text-secondary: #4b5563;
-    --color-text-muted: #9ca3af;
-    --color-text-inverse: #ffffff;
+html {
+    color-scheme: light;
 }
 
-/* Dark mode overrides */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-primary-bg: #1e1b4b;
-        --color-surface: #1f2937;
-        --color-surface-alt: #111827;
-        --color-text-primary: #f9fafb;
-        --color-text-secondary: #d1d5db;
-        --color-text-muted: #6b7280;
-    }
-}
-
-/* Element Plus theme overrides */
-:root {
-    --el-color-primary: var(--color-primary);
-    --el-color-primary-light-3: var(--color-primary-light);
-    --el-color-primary-dark-2: var(--color-primary-dark);
+body {
+    background-color: var(--color-surface-alt);
+    color: var(--color-text-primary);
 }

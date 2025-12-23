@@ -1,176 +1,200 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import type { PageProps } from '@/types/models';
+import Button from 'primevue/button';
+import ProgressBar from 'primevue/progressbar';
 
 const page = usePage<PageProps>();
 const user = page.props.auth?.user;
+const provider = page.props.auth?.provider;
+
+// Setup checklist items
+const setupItems = [
+    { id: 'account', label: 'Create your account', icon: 'pi-user-plus', completed: true, route: '' },
+    { id: 'profile', label: 'Complete your profile', icon: 'pi-id-card', completed: !!provider?.bio, route: route('provider.profile.edit') },
+    { id: 'services', label: 'Add your first service', icon: 'pi-box', completed: false, route: route('provider.services.index') },
+    { id: 'availability', label: 'Set your availability', icon: 'pi-calendar', completed: false, route: '/console/availability' },
+    { id: 'portfolio', label: 'Upload portfolio images', icon: 'pi-images', completed: false, route: '/console/portfolios' },
+];
+
+const completedCount = setupItems.filter(item => item.completed).length;
+const setupProgress = Math.round((completedCount / setupItems.length) * 100);
+
+const stats = [
+    { label: 'Pending', value: '0', icon: 'pi-clock', color: 'orange' },
+    { label: 'Completed', value: '0', icon: 'pi-check-circle', color: 'green' },
+    { label: 'Earnings', value: '$0', icon: 'pi-wallet', color: 'purple' },
+    { label: 'Rating', value: '--', icon: 'pi-star-fill', color: 'yellow' },
+];
+
+const quickActions = [
+    { label: 'Add Service', icon: 'pi-plus', route: route('provider.services.create'), desc: 'Create a new service' },
+    { label: 'Set Hours', icon: 'pi-clock', route: '/console/availability', desc: 'Manage availability' },
+    { label: 'Upload Photos', icon: 'pi-images', route: '/console/portfolios', desc: 'Show your work' },
+    { label: 'Edit Profile', icon: 'pi-user-edit', route: route('provider.profile.edit'), desc: 'Update your info' },
+];
 </script>
 
 <template>
-    <ConsoleLayout title="Provider Dashboard">
-        <div class="mb-8">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                Welcome back, {{ user?.name }}!
-            </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Here's an overview of your business performance.
-            </p>
-        </div>
+    <ConsoleLayout title="Dashboard">
+        <div>
+            <!-- Welcome Banner -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 bg-gradient-to-r from-[var(--p-primary-color)] to-[var(--p-primary-400)] rounded-2xl mb-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-13 h-13 bg-white/20 rounded-xl flex items-center justify-center text-xl font-bold text-white">
+                        {{ user?.name?.charAt(0) || 'U' }}
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white m-0">Welcome back, {{ user?.name?.split(' ')[0] }}!</h1>
+                        <p class="text-sm text-white/80 mt-1 m-0">Here's an overview of your business</p>
+                    </div>
+                </div>
+                <Button
+                    label="View Public Profile"
+                    icon="pi pi-external-link"
+                    severity="secondary"
+                    outlined
+                    size="small"
+                    class="welcome-action w-full sm:w-auto"
+                />
+            </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                    Pending Bookings
-                                </dt>
-                                <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                    0
-                                </dd>
-                            </dl>
-                        </div>
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+                <div v-for="stat in stats" :key="stat.label" class="flex items-center gap-3 p-4 bg-[var(--p-surface-0)] border border-[var(--p-surface-200)] rounded-xl">
+                    <div
+                        class="w-10 h-10 rounded-lg flex items-center justify-center text-base"
+                        :class="{
+                            'bg-orange-50 text-orange-500': stat.color === 'orange',
+                            'bg-emerald-50 text-emerald-500': stat.color === 'green',
+                            'bg-violet-50 text-violet-500': stat.color === 'purple',
+                            'bg-amber-50 text-amber-500': stat.color === 'yellow'
+                        }"
+                    >
+                        <i :class="`pi ${stat.icon}`"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xl font-bold text-[var(--p-surface-900)] leading-tight">{{ stat.value }}</span>
+                        <span class="text-xs text-[var(--p-surface-500)] mt-0.5">{{ stat.label }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+                <!-- Left Column -->
+                <div class="flex flex-col gap-6">
+                    <!-- Recent Activity -->
+                    <div class="bg-[var(--p-surface-0)] border border-[var(--p-surface-200)] rounded-xl overflow-hidden">
+                        <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--p-surface-100)]">
+                            <h2 class="text-[0.9375rem] font-semibold text-[var(--p-surface-900)] m-0">Recent Activity</h2>
+                            <Link href="/console/bookings">
+                                <Button label="View all" text size="small" icon="pi pi-arrow-right" iconPos="right" />
+                            </Link>
                         </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                    Completed
-                                </dt>
-                                <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                    0
-                                </dd>
-                            </dl>
+                        <div class="p-5">
+                            <div class="text-center py-8 px-4">
+                                <div class="w-16 h-16 bg-[var(--p-surface-100)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <i class="pi pi-inbox text-2xl text-[var(--p-surface-400)]"></i>
+                                </div>
+                                <h3 class="text-[0.9375rem] font-semibold text-[var(--p-surface-900)] m-0 mb-1.5">No activity yet</h3>
+                                <p class="text-[0.8125rem] text-[var(--p-surface-500)] m-0">Your recent bookings and messages will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="bg-[var(--p-surface-0)] border border-[var(--p-surface-200)] rounded-xl overflow-hidden">
+                        <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--p-surface-100)]">
+                            <h2 class="text-[0.9375rem] font-semibold text-[var(--p-surface-900)] m-0">Quick Actions</h2>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex flex-col gap-2">
+                                <Link
+                                    v-for="action in quickActions"
+                                    :key="action.label"
+                                    :href="action.route"
+                                    class="flex items-center gap-3.5 p-3.5 rounded-lg no-underline transition-colors hover:bg-[var(--p-surface-50)]"
+                                >
+                                    <div class="w-10 h-10 bg-gradient-to-br from-[var(--p-primary-color)] to-[var(--p-primary-400)] rounded-lg flex items-center justify-center text-white text-base shrink-0">
+                                        <i :class="`pi ${action.icon}`"></i>
+                                    </div>
+                                    <div class="flex-1 flex flex-col">
+                                        <span class="text-sm font-medium text-[var(--p-surface-900)]">{{ action.label }}</span>
+                                        <span class="text-xs text-[var(--p-surface-500)] mt-0.5">{{ action.desc }}</span>
+                                    </div>
+                                    <i class="pi pi-chevron-right text-[var(--p-surface-400)] text-xs"></i>
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                <!-- Right Column -->
+                <div class="flex flex-col gap-6">
+                    <!-- Setup Progress -->
+                    <div class="bg-[var(--p-surface-0)] border border-[var(--p-surface-200)] rounded-xl overflow-hidden">
+                        <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--p-surface-100)]">
+                            <h2 class="text-[0.9375rem] font-semibold text-[var(--p-surface-900)] m-0">Complete Your Profile</h2>
+                            <span class="text-xs font-semibold text-[var(--p-primary-color)] bg-[var(--p-primary-50)] px-2.5 py-1 rounded-full">{{ setupProgress }}%</span>
                         </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                    Total Earnings
-                                </dt>
-                                <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                    $0.00
-                                </dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        <div class="p-5 pt-4">
+                            <ProgressBar :value="setupProgress" :showValue="false" class="h-1.5 rounded mb-5" />
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                        </div>
-                        <div class="ml-5 w-0 flex-1">
-                            <dl>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                    Average Rating
-                                </dt>
-                                <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                                    --
-                                </dd>
-                            </dl>
+                            <div class="flex flex-col">
+                                <div
+                                    v-for="item in setupItems"
+                                    :key="item.id"
+                                    class="flex items-center gap-3 py-3 border-b border-[var(--p-surface-100)] last:border-b-0 first:pt-0 last:pb-0"
+                                >
+                                    <div
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
+                                        :class="item.completed ? 'bg-emerald-50 text-emerald-500' : 'bg-[var(--p-surface-100)] text-[var(--p-surface-500)]'"
+                                    >
+                                        <i :class="item.completed ? 'pi pi-check' : `pi ${item.icon}`"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <span
+                                            class="text-[0.8125rem]"
+                                            :class="item.completed ? 'text-[var(--p-surface-500)] line-through' : 'text-[var(--p-surface-700)]'"
+                                        >{{ item.label }}</span>
+                                    </div>
+                                    <Link v-if="!item.completed && item.route" :href="item.route">
+                                        <Button label="Start" size="small" text />
+                                    </Link>
+                                    <span v-else-if="item.completed" class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-[0.625rem]">
+                                        <i class="pi pi-check"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Recent Bookings -->
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                        Recent Booking Requests
-                    </h3>
-                </div>
-                <div class="px-4 py-12 text-center">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No booking requests</h3>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        New booking requests will appear here.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Quick Setup -->
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
-                <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                        Setup Checklist
-                    </h3>
-                </div>
-                <div class="p-4">
-                    <ul class="space-y-3">
-                        <li class="flex items-center text-sm">
-                            <svg class="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                            <span class="text-gray-700 dark:text-gray-300">Create your account</span>
-                        </li>
-                        <li class="flex items-center text-sm">
-                            <svg class="h-5 w-5 text-gray-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-                            </svg>
-                            <a href="/console/profile" class="text-indigo-600 dark:text-indigo-400 hover:underline">Complete your profile</a>
-                        </li>
-                        <li class="flex items-center text-sm">
-                            <svg class="h-5 w-5 text-gray-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-                            </svg>
-                            <a href="/console/services" class="text-indigo-600 dark:text-indigo-400 hover:underline">Add your first service</a>
-                        </li>
-                        <li class="flex items-center text-sm">
-                            <svg class="h-5 w-5 text-gray-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-                            </svg>
-                            <a href="/console/availability" class="text-indigo-600 dark:text-indigo-400 hover:underline">Set your availability</a>
-                        </li>
-                        <li class="flex items-center text-sm">
-                            <svg class="h-5 w-5 text-gray-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd" />
-                            </svg>
-                            <a href="/console/portfolios" class="text-indigo-600 dark:text-indigo-400 hover:underline">Upload portfolio images</a>
-                        </li>
-                    </ul>
+                    <!-- Tips -->
+                    <div class="flex items-start gap-4 p-5 bg-gradient-to-br from-amber-100 to-yellow-100 border border-amber-300 rounded-xl">
+                        <div class="w-10 h-10 bg-amber-500/15 rounded-lg flex items-center justify-center text-amber-600 text-lg shrink-0">
+                            <i class="pi pi-lightbulb"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-amber-900 m-0 mb-1.5">Pro Tip</h3>
+                            <p class="text-[0.8125rem] text-amber-700 m-0 leading-relaxed">Complete your profile to increase visibility and attract more clients. Providers with complete profiles get 3x more bookings!</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </ConsoleLayout>
 </template>
+
+<style scoped>
+.welcome-action {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+}
+
+.welcome-action:hover {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+}
+</style>

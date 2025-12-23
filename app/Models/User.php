@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domains\User\Enums\UserRole;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -29,6 +30,8 @@ class User extends Authenticatable
         'avatar',
         'role',
         'is_active',
+        'preferred_location_id',
+        'notification_preferences',
     ];
 
     /**
@@ -54,6 +57,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -104,5 +108,40 @@ class User extends Authenticatable
     {
         $this->last_login_at = now();
         $this->save();
+    }
+
+    /**
+     * Get the user's favorite providers.
+     */
+    public function favoriteProviders(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            \App\Domains\Provider\Models\Provider::class,
+            'favorites',
+            'user_id',
+            'provider_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Check if the user has favorited a provider.
+     */
+    public function hasFavorited(\App\Domains\Provider\Models\Provider $provider): bool
+    {
+        return $this->favoriteProviders()->where('provider_id', $provider->id)->exists();
+    }
+
+    /**
+     * Toggle favorite status for a provider.
+     */
+    public function toggleFavorite(\App\Domains\Provider\Models\Provider $provider): bool
+    {
+        if ($this->hasFavorited($provider)) {
+            $this->favoriteProviders()->detach($provider->id);
+            return false;
+        }
+
+        $this->favoriteProviders()->attach($provider->id);
+        return true;
     }
 }

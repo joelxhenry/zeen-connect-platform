@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'powertranz' => [
+        'id' => env('POWERTRANZ_ID'),
+        'password' => env('POWERTRANZ_PASSWORD'),
+        'test_mode' => env('POWERTRANZ_TEST_MODE', true),
+    ],
+
 ];

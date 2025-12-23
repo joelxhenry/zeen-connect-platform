@@ -11,6 +11,7 @@ use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Payment\Controllers\ProviderEarningsController;
 use App\Domains\Payment\Controllers\WebhookController;
 use App\Domains\Provider\Controllers\AvailabilityController;
+use App\Domains\Provider\Controllers\DashboardController as ProviderDashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Review\Controllers\ClientReviewController;
@@ -138,9 +139,7 @@ Route::middleware(['auth', 'role:client'])->prefix('dashboard')->name('client.')
 */
 
 Route::middleware(['auth', 'role:provider'])->prefix('console')->name('provider.')->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('Provider/Dashboard');
-    })->name('dashboard');
+    Route::get('/', ProviderDashboardController::class)->name('dashboard');
 
     // Profile management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

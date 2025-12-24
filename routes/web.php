@@ -172,6 +172,8 @@ Route::middleware(['auth', 'role:provider'])->prefix('console')->name('provider.
     Route::put('/bookings/{uuid}/status', [ProviderBookingController::class, 'updateStatus'])->name('bookings.status');
     Route::post('/bookings/{uuid}/confirm', [ProviderBookingController::class, 'confirm'])->name('bookings.confirm');
     Route::post('/bookings/{uuid}/complete', [ProviderBookingController::class, 'complete'])->name('bookings.complete');
+    Route::post('/bookings/{uuid}/cancel', [ProviderBookingController::class, 'cancel'])->name('bookings.cancel');
+    Route::post('/bookings/{uuid}/no-show', [ProviderBookingController::class, 'noShow'])->name('bookings.no-show');
 
     // Earnings/Payment management
     Route::get('/payments', [ProviderEarningsController::class, 'index'])->name('payments.index');
@@ -243,4 +245,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/locations/{uuid}', [\App\Domains\Admin\Controllers\LocationController::class, 'update'])->name('locations.update');
     Route::post('/locations/{uuid}/toggle-status', [\App\Domains\Admin\Controllers\LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::delete('/locations/{uuid}', [\App\Domains\Admin\Controllers\LocationController::class, 'destroy'])->name('locations.destroy');
+
+    // System Settings management
+    Route::get('/settings', [\App\Domains\Admin\Controllers\SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [\App\Domains\Admin\Controllers\SettingsController::class, 'update'])->name('settings.update');
 });

@@ -106,10 +106,30 @@ const maxDate = computed(() => {
     return date;
 });
 
-const isDateDisabled = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    return !availableDatesSet.value.has(dateStr);
+// Format date to YYYY-MM-DD in local timezone (avoids UTC shift issues)
+const formatDateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
+
+// Generate disabled dates for the calendar (dates NOT in availableDates)
+const disabledDates = computed(() => {
+    const disabled: Date[] = [];
+    const current = new Date(minDate.value);
+    const end = new Date(maxDate.value);
+
+    while (current <= end) {
+        const dateStr = formatDateLocal(current);
+        if (!availableDatesSet.value.has(dateStr)) {
+            disabled.push(new Date(current));
+        }
+        current.setDate(current.getDate() + 1);
+    }
+
+    return disabled;
+});
 
 const canSubmit = computed(() => {
     if (!selectedService.value || !selectedDate.value || !selectedSlot.value) {
@@ -136,7 +156,7 @@ watch(selectedDate, async (date) => {
         return;
     }
 
-    form.date = date.toISOString().split('T')[0];
+    form.date = formatDateLocal(date);
     await fetchSlots();
 });
 
@@ -221,9 +241,7 @@ const submit = () => {
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
                                     <Calendar v-model="selectedDate" inline :minDate="minDate" :maxDate="maxDate"
-                                        :disabledDates="[]"
-                                        :dateTemplate="({ date }) => isDateDisabled(new Date(date.year, date.month, date.day)) ? 'disabled' : null"
-                                        class="w-full" />
+                                        :disabledDates="disabledDates" class="w-full" />
                                 </div>
 
                                 <!-- Time Slots -->

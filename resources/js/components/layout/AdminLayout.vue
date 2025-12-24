@@ -15,6 +15,7 @@ const navItems = [
     { label: 'Reviews', icon: 'pi pi-star', route: '/admin/reviews' },
     { label: 'Categories', icon: 'pi pi-tags', route: '/admin/categories' },
     { label: 'Locations', icon: 'pi pi-map-marker', route: '/admin/locations' },
+    { label: 'Settings', icon: 'pi pi-cog', route: '/admin/settings' },
 ];
 </script>
 

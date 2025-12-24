@@ -55,8 +55,8 @@ class DashboardController extends Controller
             ->map(fn($booking) => [
                 'uuid' => $booking->uuid,
                 'client' => [
-                    'name' => $booking->client->name,
-                    'avatar' => $booking->client->avatar,
+                    'name' => $booking->client?->name ?? $booking->guest_name,
+                    'avatar' => $booking->client?->avatar,
                 ],
                 'service' => [
                     'name' => $booking->service->name,

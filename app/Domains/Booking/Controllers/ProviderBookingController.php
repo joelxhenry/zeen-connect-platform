@@ -52,11 +52,18 @@ class ProviderBookingController extends Controller
         $bookings->getCollection()->transform(fn ($booking) => [
             'id' => $booking->id,
             'uuid' => $booking->uuid,
-            'client' => [
-                'name' => $booking->client->name,
-                'email' => $booking->client->email,
-                'phone' => $booking->client->phone,
-                'avatar' => $booking->client->avatar,
+            'client' => $booking->isGuestBooking() ? [
+                'name' => $booking->guest_name,
+                'email' => $booking->guest_email,
+                'phone' => $booking->guest_phone,
+                'avatar' => null,
+                'is_guest' => true,
+            ] : [
+                'name' => $booking->client?->name,
+                'email' => $booking->client?->email,
+                'phone' => $booking->client?->phone,
+                'avatar' => $booking->client?->avatar,
+                'is_guest' => false,
             ],
             'service' => [
                 'name' => $booking->service->name,
@@ -75,6 +82,7 @@ class ProviderBookingController extends Controller
             'can_confirm' => $booking->canBeConfirmed(),
             'can_complete' => $booking->canBeCompleted(),
             'can_cancel' => $booking->canBeCancelled(),
+            'is_guest_booking' => $booking->isGuestBooking(),
         ]);
 
         // Get counts for status tabs
@@ -107,6 +115,7 @@ class ProviderBookingController extends Controller
             ->with([
                 'client:id,name,email,phone,avatar',
                 'service:id,name,description,duration_minutes,price',
+                'payment',
             ])
             ->firstOrFail();
 
@@ -114,17 +123,24 @@ class ProviderBookingController extends Controller
             'booking' => [
                 'id' => $booking->id,
                 'uuid' => $booking->uuid,
-                'client' => [
-                    'name' => $booking->client->name,
-                    'email' => $booking->client->email,
-                    'phone' => $booking->client->phone,
-                    'avatar' => $booking->client->avatar,
+                'client' => $booking->isGuestBooking() ? [
+                    'name' => $booking->guest_name,
+                    'email' => $booking->guest_email,
+                    'phone' => $booking->guest_phone,
+                    'avatar' => null,
+                    'is_guest' => true,
+                ] : [
+                    'name' => $booking->client?->name,
+                    'email' => $booking->client?->email,
+                    'phone' => $booking->client?->phone,
+                    'avatar' => $booking->client?->avatar,
+                    'is_guest' => false,
                 ],
                 'service' => [
                     'name' => $booking->service->name,
                     'description' => $booking->service->description,
                     'duration_minutes' => $booking->service->duration_minutes,
-                    'price' => $booking->service->price,
+                    'price' => (float) $booking->service->price,
                 ],
                 'booking_date' => $booking->booking_date->format('Y-m-d'),
                 'formatted_date' => $booking->formatted_date,
@@ -132,9 +148,9 @@ class ProviderBookingController extends Controller
                 'status' => $booking->status->value,
                 'status_label' => $booking->status->label(),
                 'status_color' => $booking->status->color(),
-                'service_price' => $booking->service_price,
-                'platform_fee' => $booking->platform_fee,
-                'total_amount' => $booking->total_amount,
+                'service_price' => (float) $booking->service_price,
+                'platform_fee' => (float) $booking->platform_fee,
+                'total_amount' => (float) $booking->total_amount,
                 'total_display' => $booking->total_display,
                 'client_notes' => $booking->client_notes,
                 'provider_notes' => $booking->provider_notes,
@@ -148,6 +164,21 @@ class ProviderBookingController extends Controller
                 'completed_at' => $booking->completed_at?->format('M j, Y g:i A'),
                 'cancelled_at' => $booking->cancelled_at?->format('M j, Y g:i A'),
                 'created_at' => $booking->created_at->format('M j, Y g:i A'),
+                // Guest booking fields
+                'is_guest_booking' => $booking->isGuestBooking(),
+                // Payment/deposit fields
+                'deposit_amount' => (float) ($booking->deposit_amount ?? 0),
+                'deposit_paid' => $booking->isDepositPaid(),
+                'balance_amount' => $booking->balance_amount,
+                'payment' => $booking->payment ? [
+                    'uuid' => $booking->payment->uuid,
+                    'amount' => (float) $booking->payment->amount,
+                    'status' => $booking->payment->status->value,
+                    'status_label' => $booking->payment->status->label(),
+                    'payment_type' => $booking->payment->payment_type ?? 'full',
+                    'card_display' => $booking->payment->card_display,
+                    'paid_at' => $booking->payment->paid_at?->format('M j, Y g:i A'),
+                ] : null,
             ],
         ]);
     }
@@ -217,6 +248,50 @@ class ProviderBookingController extends Controller
             $action->execute($booking, BookingStatus::COMPLETED);
 
             return back()->with('success', 'Booking marked as completed.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['status' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Cancel a booking (decline).
+     */
+    public function cancel(Request $request, string $uuid, UpdateBookingStatusAction $action): RedirectResponse
+    {
+        $provider = $request->user()->provider;
+
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $booking = Booking::where('uuid', $uuid)
+            ->where('provider_id', $provider->id)
+            ->firstOrFail();
+
+        try {
+            $action->execute($booking, BookingStatus::CANCELLED, $request->reason);
+
+            return back()->with('success', 'Booking cancelled successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['status' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Mark a booking as no-show.
+     */
+    public function noShow(Request $request, string $uuid, UpdateBookingStatusAction $action): RedirectResponse
+    {
+        $provider = $request->user()->provider;
+
+        $booking = Booking::where('uuid', $uuid)
+            ->where('provider_id', $provider->id)
+            ->firstOrFail();
+
+        try {
+            $action->execute($booking, BookingStatus::NO_SHOW);
+
+            return back()->with('success', 'Booking marked as no-show.');
         } catch (\Exception $e) {
             return back()->withErrors(['status' => $e->getMessage()]);
         }

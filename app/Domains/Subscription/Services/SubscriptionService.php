@@ -63,11 +63,12 @@ class SubscriptionService
         $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
         $platformFee = round($servicePrice * $platformFeeRate, 2);
 
-        // For enterprise, calculate processing fee (~2.9% + $0.30 JMD equivalent)
-        // Using approximate PowerTranz rates
+        // For enterprise, calculate processing fee from settings
         $processingFee = 0.0;
         if ($tier === SubscriptionTier::ENTERPRISE) {
-            $processingFee = round($servicePrice * 0.029 + 50, 2); // ~$50 JMD flat fee
+            $processingFeeRate = (float) SystemSetting::get('enterprise_processing_fee_rate', 2.9) / 100;
+            $processingFeeFlat = (float) SystemSetting::get('enterprise_processing_fee_flat', 50);
+            $processingFee = round($servicePrice * $processingFeeRate + $processingFeeFlat, 2);
         }
 
         $providerPayout = $servicePrice - $platformFee;
@@ -150,5 +151,41 @@ class SubscriptionService
             'tier' => SubscriptionTier::FREE,
             'started_at' => now(),
         ]);
+    }
+
+    /**
+     * Calculate no-show deposit distribution.
+     */
+    public function calculateNoShowSplit(float $depositAmount): array
+    {
+        $providerPercentage = (float) SystemSetting::get('no_show_deposit_provider_percentage', 50);
+        $platformPercentage = (float) SystemSetting::get('no_show_deposit_platform_percentage', 50);
+
+        return [
+            'provider_amount' => round($depositAmount * $providerPercentage / 100, 2),
+            'platform_amount' => round($depositAmount * $platformPercentage / 100, 2),
+            'provider_percentage' => $providerPercentage,
+            'platform_percentage' => $platformPercentage,
+        ];
+    }
+
+    /**
+     * Get minimum deposit amount for Free tier.
+     */
+    public function getMinimumDepositAmount(): float
+    {
+        return (float) SystemSetting::get('minimum_deposit_amount', 500);
+    }
+
+    /**
+     * Get tier monthly subscription price.
+     */
+    public function getTierMonthlyPrice(SubscriptionTier $tier): float
+    {
+        return match ($tier) {
+            SubscriptionTier::FREE => 0.0,
+            SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_monthly_price', 3500),
+            SubscriptionTier::ENTERPRISE => (float) SystemSetting::get('enterprise_tier_monthly_price', 20000),
+        };
     }
 }

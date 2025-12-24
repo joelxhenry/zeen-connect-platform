@@ -35,7 +35,7 @@ const isActive = (path: string) => {
     if (path === '/') {
         return currentPath.value === '/';
     }
-    return currentPath.value.startsWith(path);
+    return currentPath.value.includes(path);
 };
 
 const getInitials = (name: string) => {

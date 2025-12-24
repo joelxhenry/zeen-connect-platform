@@ -12,6 +12,7 @@ import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import ServiceController from '@/actions/App/Domains/Provider/Controllers/ServiceController';
+import FeeCalculator from '@/components/service/FeeCalculator.vue';
 
 interface Category {
     id: number;
@@ -44,10 +45,21 @@ interface BookingSettings {
     min_booking_notice_hours: number;
 }
 
+interface FeeInfo {
+    tier: string;
+    tier_label: string;
+    deposit_percentage: number;
+    platform_fee_rate: number;
+    processing_fee_rate?: number;
+    processing_fee_flat?: number;
+    processing_fee_payer?: 'client' | 'provider';
+}
+
 interface Props {
     service: Service;
     categories: Category[];
     providerDefaults: BookingSettings;
+    feeInfo: FeeInfo;
 }
 
 const props = defineProps<Props>();
@@ -230,6 +242,13 @@ const deleteService = () => {
                                 <small v-if="form.errors.price" class="text-red-500">{{ form.errors.price }}</small>
                             </div>
                         </div>
+
+                        <!-- Fee Calculator -->
+                        <FeeCalculator
+                            v-if="form.price && form.price > 0"
+                            :price="form.price"
+                            :fee-rates="feeInfo"
+                        />
 
                         <!-- Active Toggle -->
                         <div class="flex items-center gap-3">

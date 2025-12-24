@@ -2,12 +2,15 @@
 
 namespace App\Domains\Provider\Controllers;
 
+use App\Domains\Admin\Models\SystemSetting;
 use App\Domains\Provider\Actions\CreateServiceAction;
 use App\Domains\Provider\Actions\UpdateServiceAction;
+use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Requests\StoreServiceRequest;
 use App\Domains\Provider\Requests\UpdateServiceRequest;
 use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
+use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +22,7 @@ class ServiceController extends Controller
     public function __construct(
         private CreateServiceAction $createAction,
         private UpdateServiceAction $updateAction,
+        private SubscriptionService $subscriptionService,
     ) {}
 
     public function index(): Response
@@ -43,7 +47,21 @@ class ServiceController extends Controller
         return Inertia::render('Provider/Services/Create', [
             'categories' => $categories,
             'providerDefaults' => $provider->getBookingSettings(),
+            'feeInfo' => $this->getFeeInfo($provider),
         ]);
+    }
+
+    private function getFeeInfo(Provider $provider): array
+    {
+        return [
+            'tier' => $provider->getTier()->value,
+            'tier_label' => $provider->getTier()->label(),
+            'deposit_percentage' => $this->subscriptionService->getEffectiveDepositPercentage($provider),
+            'platform_fee_rate' => $this->subscriptionService->getPlatformFeeRate($provider) * 100,
+            'processing_fee_rate' => (float) SystemSetting::get('enterprise_processing_fee_rate', 2.9),
+            'processing_fee_flat' => (float) SystemSetting::get('enterprise_processing_fee_flat', 50),
+            'processing_fee_payer' => $provider->processing_fee_payer,
+        ];
     }
 
     public function store(StoreServiceRequest $request): RedirectResponse
@@ -72,6 +90,7 @@ class ServiceController extends Controller
             'service' => $service->load('category'),
             'categories' => $categories,
             'providerDefaults' => $provider->getBookingSettings(),
+            'feeInfo' => $this->getFeeInfo($provider),
         ]);
     }
 

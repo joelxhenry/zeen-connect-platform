@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'Zeen'),
 
     /*
     |--------------------------------------------------------------------------
@@ -54,7 +54,16 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'domain' => env('APP_DOMAIN', 'localhost:8000'),
+    'domain' => env('APP_DOMAIN', 'localhost'),
+
+    'admin_domain' => env('ADMIN_DOMAIN', 'admin.localhost'),
+
+    'console_domain' => env('CONSOLE_DOMAIN', 'console.localhost'),
+
+    'auth_domain' => env('AUTH_DOMAIN', 'auth.localhost'),
+
+    'payments_domain' => env('PAYMENTS_DOMAIN', 'payments.localhost'),
+
 
     /*
     |--------------------------------------------------------------------------

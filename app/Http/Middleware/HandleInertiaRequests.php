@@ -57,8 +57,27 @@ class HandleInertiaRequests extends Middleware
                 'avatar' => $providerSiteProvider->user?->avatar,
                 'cover_image' => $providerSiteProvider->cover_image,
             ] : null,
-            'mainPlatformUrl' => 'https://' . config('app.domain'),
+            // Domain URLs
+            'domains' => [
+                'main' => config('app.url'),
+                'admin' => $this->buildDomainUrl(config('app.admin_domain')),
+                'console' => $this->buildDomainUrl(config('app.console_domain')),
+                'auth' => $this->buildDomainUrl(config('app.auth_domain')),
+                'payments' => $this->buildDomainUrl(config('app.payments_domain')),
+            ],
+            'mainPlatformUrl' => config('app.url'),
             'appDomain' => config('app.domain'),
         ];
+    }
+
+    /**
+     * Build a full URL for a domain, using http for local development.
+     */
+    protected function buildDomainUrl(string $domain): string
+    {
+        $scheme = app()->environment('local') ? 'http' : 'https';
+        $port = app()->environment('local') ? ':8000' : '';
+
+        return "{$scheme}://{$domain}{$port}";
     }
 }

@@ -11,26 +11,17 @@ class ResolveProviderFromSubdomain
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // $host = $request->getHost();
-        // $appDomain = $this->getBaseDomain();
+        // Get provider slug from subdomain route parameter
+        // The {provider} in Route::domain('{provider}.zeen.com') binds to this
+        $slug = $request->route('provider');
 
-        // // Extract subdomain by removing the app domain
-        // $subdomain = str_replace('.' . $appDomain, '', $host);
-
-        // // If no subdomain found (same as host) or empty, abort
-        // if ($subdomain === $host || empty($subdomain)) {
-        //     abort(404, 'Provider not found');
-        // }
-
-
-        $slug = $request->provider;
-
+        if (!$slug) {
+            abort(404, 'Provider not found');
+        }
 
         // Find provider by slug
         $provider = Provider::where('slug', $slug)
-            ->with(['user', 'services' => function ($query) {
-                $query->where('is_active', true)->orderBy('name');
-            }])
+            ->with(['user', 'services' => fn($query) => $query->where('is_active', true)->orderBy('name')])
             ->first();
 
         if (!$provider) {
@@ -39,9 +30,6 @@ class ResolveProviderFromSubdomain
 
         // Share provider globally via service container
         app()->instance('providersite.provider', $provider);
-
-        // Also bind the slug for route parameter resolution
-        $request->route()->setParameter('provider', $slug);
 
         return $next($request);
     }

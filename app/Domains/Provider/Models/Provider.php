@@ -5,6 +5,8 @@ namespace App\Domains\Provider\Models;
 use App\Domains\Location\Models\Location;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
+use App\Domains\Subscription\Enums\SubscriptionTier;
+use App\Domains\Subscription\Models\Subscription;
 use App\Models\User;
 use App\Support\Traits\HasSlug;
 use App\Support\Traits\HasUuid;
@@ -13,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
@@ -38,6 +41,8 @@ class Provider extends Model
         'cancellation_policy',
         'advance_booking_days',
         'min_booking_notice_hours',
+        'processing_fee_payer',
+        'deposit_percentage',
     ];
 
     protected function casts(): array
@@ -52,6 +57,7 @@ class Provider extends Model
             'deposit_amount' => 'decimal:2',
             'advance_booking_days' => 'integer',
             'min_booking_notice_hours' => 'integer',
+            'deposit_percentage' => 'decimal:2',
         ];
     }
 
@@ -151,6 +157,54 @@ class Provider extends Model
     public function visibleReviews(): HasMany
     {
         return $this->reviews()->visible();
+    }
+
+    /**
+     * Get the provider's active subscription.
+     */
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    /**
+     * Get all subscriptions for this provider.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the provider's subscription tier.
+     */
+    public function getTier(): SubscriptionTier
+    {
+        return $this->subscription?->tier ?? SubscriptionTier::FREE;
+    }
+
+    /**
+     * Check if provider is on free tier.
+     */
+    public function isFreeTier(): bool
+    {
+        return $this->getTier() === SubscriptionTier::FREE;
+    }
+
+    /**
+     * Check if provider is on premium tier.
+     */
+    public function isPremiumTier(): bool
+    {
+        return $this->getTier() === SubscriptionTier::PREMIUM;
+    }
+
+    /**
+     * Check if provider is on enterprise tier.
+     */
+    public function isEnterpriseTier(): bool
+    {
+        return $this->getTier() === SubscriptionTier::ENTERPRISE;
     }
 
     /**

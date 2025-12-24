@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Domains\Booking\Controllers;
+namespace App\Http\Controllers\ProviderSite;
 
 use App\Domains\Booking\Actions\CreateBookingAction;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Requests\StoreBookingRequest;
 use App\Domains\Booking\Services\AvailabilityService;
+use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Services\SubscriptionService;
@@ -16,7 +17,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class ClientBookingController extends Controller
+class ProviderSiteBookingController extends Controller
 {
     public function __construct(
         protected AvailabilityService $availabilityService,
@@ -24,64 +25,11 @@ class ClientBookingController extends Controller
     ) {}
 
     /**
-     * Display client's booking history.
+     * Get the provider from the provider site middleware.
      */
-    public function index(Request $request): Response
+    protected function getProvider(): Provider
     {
-        $user = $request->user();
-        $status = $request->get('status', 'all');
-
-        $query = Booking::forClient($user->id)
-            ->with([
-                'provider:id,business_name,slug',
-                'provider.user:id,avatar',
-                'service:id,name,duration_minutes',
-            ]);
-
-        if ($status === 'upcoming') {
-            $query->upcoming();
-        } elseif ($status === 'past') {
-            $query->past();
-        } else {
-            $query->orderByDesc('booking_date')->orderByDesc('start_time');
-        }
-
-        $bookings = $query->paginate(10)->withQueryString();
-
-        // Transform for frontend
-        $bookings->getCollection()->transform(fn ($booking) => [
-            'id' => $booking->id,
-            'uuid' => $booking->uuid,
-            'provider' => [
-                'business_name' => $booking->provider->business_name,
-                'slug' => $booking->provider->slug,
-                'avatar' => $booking->provider->user?->avatar,
-            ],
-            'service' => [
-                'name' => $booking->service->name,
-                'duration_minutes' => $booking->service->duration_minutes,
-            ],
-            'booking_date' => $booking->booking_date->format('Y-m-d'),
-            'formatted_date' => $booking->formatted_date,
-            'formatted_time' => $booking->formatted_time,
-            'status' => $booking->status->value,
-            'status_label' => $booking->status->label(),
-            'status_color' => $booking->status->color(),
-            'total_display' => $booking->total_display,
-            'is_past' => $booking->isPast(),
-            'is_today' => $booking->isToday(),
-            'can_cancel' => $booking->canBeCancelled(),
-            // Payment info
-            'requires_deposit' => $booking->requiresDeposit(),
-            'deposit_amount' => $booking->deposit_amount,
-            'deposit_paid' => $booking->isDepositPaid(),
-            'can_pay' => $booking->canProceedToPayment(),
-        ]);
-
-        return Inertia::render('Client/Bookings/Index', [
-            'bookings' => $bookings,
-            'currentStatus' => $status,
-        ]);
+        return app('providersite.provider');
     }
 
     /**
@@ -89,16 +37,14 @@ class ClientBookingController extends Controller
      */
     public function create(Request $request): Response
     {
-        $provider = Provider::where('slug', $request->provider)
-            ->active()
-            ->with([
-                'user:id,name,avatar',
-                'primaryLocation.region',
-                'services' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
-                'services.category:id,name,icon',
-                'subscription',
-            ])
-            ->firstOrFail();
+        $provider = $this->getProvider();
+
+        // Load additional data needed for booking
+        $provider->load([
+            'user:id,name,avatar',
+            'primaryLocation.region',
+            'subscription',
+        ]);
 
         // Get available dates for the next 30 days
         $startDate = now()->format('Y-m-d');
@@ -111,7 +57,7 @@ class ClientBookingController extends Controller
             ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price)
             : null;
 
-        return Inertia::render('Booking/Create', [
+        return Inertia::render('ProviderSite/Book', [
             'provider' => [
                 'id' => $provider->id,
                 'business_name' => $provider->business_name,
@@ -129,11 +75,11 @@ class ClientBookingController extends Controller
                 'duration_display' => $service->duration_display,
                 'price' => (float) $service->price,
                 'price_display' => $service->price_display,
-                'category' => [
+                'category' => $service->category ? [
                     'id' => $service->category->id,
                     'name' => $service->category->name,
                     'icon' => $service->category->icon,
-                ],
+                ] : null,
                 // Pre-calculate fees for each service
                 'fees' => $this->subscriptionService->calculateFees($provider, (float) $service->price),
             ]),
@@ -153,14 +99,19 @@ class ClientBookingController extends Controller
      */
     public function getSlots(Request $request): JsonResponse
     {
+        $provider = $this->getProvider();
+
         $request->validate([
-            'provider_id' => 'required|exists:providers,id',
             'service_id' => 'required|exists:services,id',
             'date' => 'required|date|after_or_equal:today',
         ]);
 
-        $provider = Provider::findOrFail($request->provider_id);
         $service = Service::findOrFail($request->service_id);
+
+        // Verify service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            return response()->json(['error' => 'Service not found'], 404);
+        }
 
         $slots = $this->availabilityService->getAvailableSlots($provider, $service, $request->date);
 
@@ -172,8 +123,13 @@ class ClientBookingController extends Controller
      */
     public function store(StoreBookingRequest $request, CreateBookingAction $action): RedirectResponse
     {
-        $provider = Provider::findOrFail($request->provider_id);
+        $provider = $this->getProvider();
         $service = Service::findOrFail($request->service_id);
+
+        // Verify service belongs to this provider
+        if ($service->provider_id !== $provider->id) {
+            return back()->withErrors(['service' => 'Service not found']);
+        }
 
         try {
             // Handle guest vs authenticated booking
@@ -189,9 +145,12 @@ class ClientBookingController extends Controller
                     notes: $request->notes
                 );
 
-                // For guests, redirect to public booking confirmation page
+                // Redirect to provider site confirmation
                 return redirect()
-                    ->route('booking.confirmation', $booking->uuid)
+                    ->route('providersite.book.confirmation', [
+                        'provider' => $provider->slug,
+                        'uuid' => $booking->uuid,
+                    ])
                     ->with('success', $this->getSuccessMessage($booking));
             }
 
@@ -204,12 +163,85 @@ class ClientBookingController extends Controller
                 $request->notes
             );
 
+            // Redirect to provider site confirmation or main platform dashboard
+            if ($request->user()) {
+                return redirect()
+                    ->route('client.bookings.show', $booking->uuid)
+                    ->with('success', $this->getSuccessMessage($booking));
+            }
+
             return redirect()
-                ->route('client.bookings.show', $booking->uuid)
+                ->route('providersite.book.confirmation', [
+                    'provider' => $provider->slug,
+                    'uuid' => $booking->uuid,
+                ])
                 ->with('success', $this->getSuccessMessage($booking));
         } catch (\Exception $e) {
             return back()->withErrors(['slot' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Show booking confirmation page.
+     */
+    public function confirmation(string $provider, string $uuid): Response
+    {
+        $providerModel = $this->getProvider();
+
+        $booking = Booking::where('uuid', $uuid)
+            ->where('provider_id', $providerModel->id)
+            ->with([
+                'provider:id,business_name,slug,address',
+                'provider.user:id,name,avatar,email',
+                'provider.primaryLocation.region',
+                'service:id,name,description,duration_minutes',
+                'payment',
+            ])
+            ->firstOrFail();
+
+        return Inertia::render('ProviderSite/Confirmation', [
+            'booking' => $this->formatBookingForShow($booking),
+        ]);
+    }
+
+    /**
+     * Cancel a guest booking.
+     */
+    public function cancelGuest(Request $request, string $provider, string $uuid): RedirectResponse
+    {
+        $providerModel = $this->getProvider();
+
+        $request->validate([
+            'reason' => 'required|string|max:500',
+            'email' => 'required|email',
+        ]);
+
+        $booking = Booking::where('uuid', $uuid)
+            ->where('provider_id', $providerModel->id)
+            ->whereNull('client_id')
+            ->where('guest_email', $request->email)
+            ->firstOrFail();
+
+        if (! $booking->canBeCancelled()) {
+            return back()->withErrors(['booking' => 'This booking cannot be cancelled.']);
+        }
+
+        $booking->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $request->reason,
+            'cancelled_at' => now(),
+        ]);
+
+        return back()->with('success', 'Booking cancelled successfully.');
+    }
+
+    /**
+     * Redirect to payment checkout.
+     */
+    public function checkout(Request $request, string $provider, string $bookingUuid)
+    {
+        // Delegate to the main PaymentController
+        return app(PaymentController::class)->checkout($bookingUuid);
     }
 
     /**
@@ -226,47 +258,6 @@ class ClientBookingController extends Controller
         }
 
         return 'Booking created successfully! Awaiting provider confirmation.';
-    }
-
-    /**
-     * Show a specific booking.
-     */
-    public function show(string $uuid): Response
-    {
-        $booking = Booking::where('uuid', $uuid)
-            ->where('client_id', auth()->id())
-            ->with([
-                'provider:id,business_name,slug,address',
-                'provider.user:id,name,avatar,email',
-                'provider.primaryLocation.region',
-                'service:id,name,description,duration_minutes',
-                'payment',
-            ])
-            ->firstOrFail();
-
-        return Inertia::render('Client/Bookings/Show', [
-            'booking' => $this->formatBookingForShow($booking),
-        ]);
-    }
-
-    /**
-     * Show booking confirmation page (for guests).
-     */
-    public function confirmation(string $uuid): Response
-    {
-        $booking = Booking::where('uuid', $uuid)
-            ->with([
-                'provider:id,business_name,slug,address',
-                'provider.user:id,name,avatar,email',
-                'provider.primaryLocation.region',
-                'service:id,name,description,duration_minutes',
-                'payment',
-            ])
-            ->firstOrFail();
-
-        return Inertia::render('Booking/Confirmation', [
-            'booking' => $this->formatBookingForShow($booking),
-        ]);
     }
 
     /**
@@ -299,14 +290,10 @@ class ClientBookingController extends Controller
             'total_amount' => (float) $booking->total_amount,
             'total_display' => $booking->total_display,
             'client_notes' => $booking->client_notes,
-            'provider_notes' => $booking->provider_notes,
-            'cancellation_reason' => $booking->cancellation_reason,
             'is_past' => $booking->isPast(),
             'is_today' => $booking->isToday(),
             'can_cancel' => $booking->canBeCancelled(),
             'confirmed_at' => $booking->confirmed_at?->format('M j, Y g:i A'),
-            'completed_at' => $booking->completed_at?->format('M j, Y g:i A'),
-            'cancelled_at' => $booking->cancelled_at?->format('M j, Y g:i A'),
             'created_at' => $booking->created_at->format('M j, Y g:i A'),
             // Payment/deposit info
             'is_guest_booking' => $booking->isGuestBooking(),
@@ -316,8 +303,6 @@ class ClientBookingController extends Controller
             'deposit_amount' => (float) $booking->deposit_amount,
             'deposit_paid' => $booking->isDepositPaid(),
             'balance_amount' => $booking->balance_amount,
-            'platform_fee_amount' => (float) $booking->platform_fee_amount,
-            'processing_fee_amount' => (float) $booking->processing_fee_amount,
             'can_pay' => $booking->canProceedToPayment(),
             'payment' => $booking->payment ? [
                 'status' => $booking->payment->status,
@@ -326,59 +311,5 @@ class ClientBookingController extends Controller
                 'paid_at' => $booking->payment->paid_at?->format('M j, Y g:i A'),
             ] : null,
         ];
-    }
-
-    /**
-     * Cancel a booking.
-     */
-    public function cancel(Request $request, string $uuid): RedirectResponse
-    {
-        $request->validate([
-            'reason' => 'required|string|max:500',
-        ]);
-
-        $booking = Booking::where('uuid', $uuid)
-            ->where('client_id', auth()->id())
-            ->firstOrFail();
-
-        if (! $booking->canBeCancelled()) {
-            return back()->withErrors(['booking' => 'This booking cannot be cancelled.']);
-        }
-
-        $booking->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->reason,
-            'cancelled_at' => now(),
-        ]);
-
-        return back()->with('success', 'Booking cancelled successfully.');
-    }
-
-    /**
-     * Cancel a guest booking.
-     */
-    public function cancelGuest(Request $request, string $uuid): RedirectResponse
-    {
-        $request->validate([
-            'reason' => 'required|string|max:500',
-            'email' => 'required|email',
-        ]);
-
-        $booking = Booking::where('uuid', $uuid)
-            ->whereNull('client_id')
-            ->where('guest_email', $request->email)
-            ->firstOrFail();
-
-        if (! $booking->canBeCancelled()) {
-            return back()->withErrors(['booking' => 'This booking cannot be cancelled.']);
-        }
-
-        $booking->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->reason,
-            'cancelled_at' => now(),
-        ]);
-
-        return back()->with('success', 'Booking cancelled successfully.');
     }
 }

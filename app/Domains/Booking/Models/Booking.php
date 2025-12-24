@@ -3,6 +3,7 @@
 namespace App\Domains\Booking\Models;
 
 use App\Domains\Booking\Enums\BookingStatus;
+use App\Domains\Payment\Models\Payment;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
@@ -34,12 +35,24 @@ class Booking extends Model
         'confirmed_at',
         'completed_at',
         'cancelled_at',
+        // Guest booking fields
+        'guest_email',
+        'guest_name',
+        'guest_phone',
+        // Deposit tracking
+        'deposit_amount',
+        'deposit_paid',
+        // Fee tracking
+        'platform_fee_amount',
+        'processing_fee_amount',
     ];
 
     protected function casts(): array
     {
         return [
             'booking_date' => 'date',
+            'start_time' => 'datetime',
+            'end_time' => 'datetime',
             'service_price' => 'decimal:2',
             'platform_fee' => 'decimal:2',
             'total_amount' => 'decimal:2',
@@ -47,6 +60,10 @@ class Booking extends Model
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'status' => BookingStatus::class,
+            'deposit_amount' => 'decimal:2',
+            'deposit_paid' => 'boolean',
+            'platform_fee_amount' => 'decimal:2',
+            'processing_fee_amount' => 'decimal:2',
         ];
     }
 
@@ -72,6 +89,22 @@ class Booking extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Get the payment for this booking.
+     */
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    /**
+     * Get all payments for this booking.
+     */
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**
@@ -236,5 +269,85 @@ class Booking extends Model
     public function isToday(): bool
     {
         return $this->booking_date->isToday();
+    }
+
+    /**
+     * Check if this is a guest booking (no registered user).
+     */
+    public function isGuestBooking(): bool
+    {
+        return is_null($this->client_id);
+    }
+
+    /**
+     * Check if booking requires a deposit.
+     */
+    public function requiresDeposit(): bool
+    {
+        return $this->deposit_amount > 0;
+    }
+
+    /**
+     * Check if the deposit has been paid.
+     */
+    public function isDepositPaid(): bool
+    {
+        return $this->deposit_paid ?? false;
+    }
+
+    /**
+     * Get the client email (works for both guest and registered users).
+     */
+    public function getClientEmailAttribute(): ?string
+    {
+        if ($this->isGuestBooking()) {
+            return $this->guest_email;
+        }
+
+        return $this->client?->email;
+    }
+
+    /**
+     * Get the client name (works for both guest and registered users).
+     */
+    public function getClientNameAttribute(): ?string
+    {
+        if ($this->isGuestBooking()) {
+            return $this->guest_name;
+        }
+
+        return $this->client?->name;
+    }
+
+    /**
+     * Get the client phone (works for both guest and registered users).
+     */
+    public function getClientPhoneAttribute(): ?string
+    {
+        if ($this->isGuestBooking()) {
+            return $this->guest_phone;
+        }
+
+        return $this->client?->phone;
+    }
+
+    /**
+     * Check if booking can proceed to payment.
+     */
+    public function canProceedToPayment(): bool
+    {
+        return $this->requiresDeposit() && ! $this->isDepositPaid();
+    }
+
+    /**
+     * Get the balance remaining after deposit.
+     */
+    public function getBalanceAmountAttribute(): float
+    {
+        if (! $this->requiresDeposit()) {
+            return (float) $this->total_amount;
+        }
+
+        return (float) ($this->total_amount - $this->deposit_amount);
     }
 }

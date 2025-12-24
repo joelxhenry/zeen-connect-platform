@@ -52,7 +52,7 @@ class DashboardController extends Controller
             ->orderBy('start_time')
             ->limit(5)
             ->get()
-            ->map(fn ($booking) => [
+            ->map(fn($booking) => [
                 'uuid' => $booking->uuid,
                 'client' => [
                     'name' => $booking->client->name,
@@ -61,7 +61,7 @@ class DashboardController extends Controller
                 'service' => [
                     'name' => $booking->service->name,
                 ],
-                'date' => $booking->date->format('l, M j'),
+                'date' => $booking->booking_date->format('l, M j'),
                 'time' => $booking->start_time->format('g:i A'),
                 'total_amount' => $booking->total_display,
                 'status' => $booking->status->value,
@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
-            ->map(fn ($payment) => [
+            ->map(fn($payment) => [
                 'uuid' => $payment->uuid,
                 'amount' => number_format($payment->provider_amount / 100, 2),
                 'service_name' => $payment->booking->service->name ?? 'Service',
@@ -90,7 +90,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
-            ->map(fn ($review) => [
+            ->map(fn($review) => [
                 'uuid' => $review->uuid,
                 'rating' => $review->rating,
                 'comment' => $review->comment,

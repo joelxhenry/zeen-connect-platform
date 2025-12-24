@@ -8,23 +8,28 @@ use App\Domains\Payment\Models\Payment;
 class CreatePaymentAction
 {
     /**
-     * Create a payment record for a booking.
+     * Create a payment record for a booking with tier-based fees.
      */
-    public function execute(Booking $booking): Payment
-    {
-        // Calculate platform fee (15%)
-        $platformFeeRate = 0.15;
-        $platformFee = round($booking->total_amount * $platformFeeRate, 2);
-        $providerAmount = $booking->total_amount - $platformFee;
-
+    public function execute(
+        Booking $booking,
+        float $amount,
+        string $paymentType = 'full',
+        float $platformFee = 0.0,
+        float $providerAmount = 0.0,
+        float $processingFee = 0.0,
+        ?string $processingFeePayer = null
+    ): Payment {
         return Payment::create([
             'booking_id' => $booking->id,
             'client_id' => $booking->client_id,
             'provider_id' => $booking->provider_id,
-            'amount' => $booking->total_amount,
+            'amount' => $amount,
             'platform_fee' => $platformFee,
-            'provider_amount' => $providerAmount,
+            'provider_amount' => $providerAmount ?: ($amount - $platformFee),
             'currency' => 'JMD',
+            'payment_type' => $paymentType,
+            'processing_fee' => $processingFee,
+            'processing_fee_payer' => $processingFeePayer,
         ]);
     }
 }

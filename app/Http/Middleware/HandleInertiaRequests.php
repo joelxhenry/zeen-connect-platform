@@ -35,6 +35,9 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $isProviderSite = app()->bound('providersite.provider');
+        $providerSiteProvider = $isProviderSite ? app('providersite.provider') : null;
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -45,6 +48,17 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            // Provider site context
+            'isProviderSite' => $isProviderSite,
+            'providerSiteProvider' => $providerSiteProvider ? [
+                'id' => $providerSiteProvider->id,
+                'business_name' => $providerSiteProvider->business_name,
+                'slug' => $providerSiteProvider->slug,
+                'avatar' => $providerSiteProvider->user?->avatar,
+                'cover_image' => $providerSiteProvider->cover_image,
+            ] : null,
+            'mainPlatformUrl' => 'https://' . config('app.domain'),
+            'appDomain' => config('app.domain'),
         ];
     }
 }

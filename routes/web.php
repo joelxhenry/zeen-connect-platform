@@ -21,6 +21,7 @@ use App\Http\Controllers\ProviderListingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -31,14 +32,33 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-// Provider Discovery
-Route::get('/explore', [ProviderListingController::class, 'index'])->name('explore');
-Route::get('/providers/{slug}', [ProviderListingController::class, 'show'])->name('provider.public');
 
-// Become a Provider redirect
-Route::get('/become-provider', function () {
-    return redirect()->route('register.provider');
-})->name('become-provider');
+
+/*
+|--------------------------------------------------------------------------
+| Booking Routes (Guests & Authenticated)
+|--------------------------------------------------------------------------
+*/
+
+// Booking creation - open to both guests and authenticated users
+// Route::get('/booking', [ClientBookingController::class, 'create'])->name('booking.create');
+// Route::get('/booking/slots', [ClientBookingController::class, 'getSlots'])->name('booking.slots');
+// Route::post('/booking', [ClientBookingController::class, 'store'])->name('booking.store');
+// Route::get('/booking/{uuid}/confirmation', [ClientBookingController::class, 'confirmation'])->name('booking.confirmation');
+// Route::post('/booking/{uuid}/cancel', [ClientBookingController::class, 'cancelGuest'])->name('booking.cancel.guest');
+
+/*
+|--------------------------------------------------------------------------
+| Payment Routes (Guests & Authenticated)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/payment/{bookingUuid}/checkout', [PaymentController::class, 'checkout'])->name('payment.checkout');
+Route::post('/payment/{bookingUuid}/process', [PaymentController::class, 'process'])->name('payment.process');
+Route::get('/payment/{paymentUuid}/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+Route::get('/payment/{paymentUuid}/success', [PaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/{paymentUuid}/failed', [PaymentController::class, 'failed'])->name('payment.failed');
+Route::get('/payment/{paymentUuid}/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
 
 /*
 |--------------------------------------------------------------------------
@@ -86,19 +106,6 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
-
-    // Booking creation (accessible to logged-in clients)
-    Route::get('/book', [ClientBookingController::class, 'create'])->name('booking.create');
-    Route::get('/book/slots', [ClientBookingController::class, 'getSlots'])->name('booking.slots');
-    Route::post('/book', [ClientBookingController::class, 'store'])->name('booking.store');
-
-    // Payment routes
-    Route::get('/pay/{bookingUuid}', [PaymentController::class, 'checkout'])->name('payment.checkout');
-    Route::post('/pay/{bookingUuid}', [PaymentController::class, 'process'])->name('payment.process');
-    Route::get('/payment/{paymentUuid}/callback', [PaymentController::class, 'callback'])->name('payment.callback');
-    Route::get('/payment/{paymentUuid}/success', [PaymentController::class, 'success'])->name('payment.success');
-    Route::get('/payment/{paymentUuid}/failed', [PaymentController::class, 'failed'])->name('payment.failed');
-    Route::get('/payment/{paymentUuid}/cancel', [PaymentController::class, 'cancel'])->name('payment.cancel');
 });
 
 /*
@@ -107,7 +114,7 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'role:client'])->prefix('dashboard')->name('client.')->group(function () {
+Route::middleware(['auth'])->prefix('dashboard')->name('client.')->group(function () {
     Route::get('/', ClientDashboardController::class)->name('dashboard');
 
     // Profile management

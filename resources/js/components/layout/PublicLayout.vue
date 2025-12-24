@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { User } from '@/types/models';
-import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
+import SiteFooter from '@/components/common/SiteFooter.vue';
 
 defineProps<{
     title?: string;
@@ -45,18 +45,7 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
         </main>
 
         <!-- Footer -->
-        <footer class="footer">
-            <div class="footer-content">
-                <p>&copy; {{ new Date().getFullYear() }} Zeen. All rights reserved.</p>
-                <div class="footer-right">
-                    <MadeInJamaica />
-                    <div class="footer-links">
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
+        <SiteFooter />
     </div>
 </template>
 
@@ -135,47 +124,5 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
 
 .main-content {
     flex: 1;
-}
-
-.footer {
-    background-color: white;
-    border-top: 1px solid #e5e7eb;
-    padding: 2rem 0;
-}
-
-.footer-content {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.footer p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.875rem;
-}
-
-.footer-right {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-}
-
-.footer-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.footer-links a {
-    color: #6b7280;
-    text-decoration: none;
-    font-size: 0.875rem;
-}
-
-.footer-links a:hover {
-    color: #0D1F1B;
 }
 </style>

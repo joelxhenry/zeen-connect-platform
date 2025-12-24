@@ -6,6 +6,7 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Actions\CreatePaymentAction;
 use App\Domains\Payment\Actions\ProcessPaymentAction;
 use App\Domains\Payment\Models\Payment;
+use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,36 +15,44 @@ use Inertia\Response;
 
 class PaymentController extends Controller
 {
+    public function __construct(
+        protected SubscriptionService $subscriptionService
+    ) {}
+
     /**
      * Show the checkout page for a booking.
      */
-    public function checkout(Request $request, string $bookingUuid): Response
+    public function checkout(Request $request, string $bookingUuid): Response|RedirectResponse
     {
-        $booking = Booking::where('uuid', $bookingUuid)
-            ->where('client_id', $request->user()->id)
-            ->with(['provider:id,business_name,slug', 'service:id,name,duration_minutes,price'])
-            ->firstOrFail();
+        $booking = $this->findBookingForPayment($request, $bookingUuid);
 
         // Check if booking is in a payable state
-        if (! $booking->status->value === 'pending') {
-            return redirect()->route('client.bookings.show', $booking->uuid)
+        if ($booking->status->value !== 'pending' && $booking->status->value !== 'confirmed') {
+            return $this->redirectToBooking($booking, $request)
                 ->with('error', 'This booking cannot be paid for.');
         }
 
-        // Check if payment already exists
+        // Check if deposit payment already exists
         $existingPayment = Payment::where('booking_id', $booking->id)
             ->whereIn('status', ['completed', 'processing'])
             ->first();
 
-        if ($existingPayment) {
-            return redirect()->route('client.bookings.show', $booking->uuid)
-                ->with('info', 'Payment has already been processed for this booking.');
+        if ($existingPayment && $booking->isDepositPaid()) {
+            return $this->redirectToBooking($booking, $request)
+                ->with('info', 'Deposit has already been paid for this booking.');
         }
 
-        // Calculate fees
-        $platformFeeRate = 0.15;
-        $platformFee = round($booking->total_amount * $platformFeeRate, 2);
-        $providerAmount = $booking->total_amount - $platformFee;
+        // Determine payment type based on deposit status
+        $paymentType = $booking->requiresDeposit() && ! $booking->isDepositPaid()
+            ? 'deposit'
+            : 'full';
+
+        // Calculate payment amount using SubscriptionService
+        $paymentInfo = $this->subscriptionService->calculatePaymentAmount(
+            $booking->provider,
+            (float) $booking->service_price,
+            $paymentType
+        );
 
         return Inertia::render('Payment/Checkout', [
             'booking' => [
@@ -58,12 +67,60 @@ class PaymentController extends Controller
                 ],
                 'formatted_date' => $booking->formatted_date,
                 'formatted_time' => $booking->formatted_time,
-                'service_price' => $booking->service_price,
-                'platform_fee' => $platformFee,
-                'total_amount' => $booking->total_amount,
+                'service_price' => (float) $booking->service_price,
+                'total_amount' => (float) $booking->total_amount,
                 'total_display' => $booking->total_display,
+                'is_guest' => $booking->isGuestBooking(),
+                'client_name' => $booking->client_name,
+                'client_email' => $booking->client_email,
             ],
+            'payment' => [
+                'type' => $paymentType,
+                'amount' => $paymentInfo['amount'],
+                'client_processing_fee' => $paymentInfo['client_processing_fee'],
+                'total_to_charge' => $paymentInfo['total_to_charge'],
+                'deposit_percentage' => $paymentInfo['deposit_percentage'],
+                'platform_fee' => $paymentInfo['platform_fee'],
+                'platform_fee_rate' => $paymentInfo['platform_fee_rate'],
+                'processing_fee' => $paymentInfo['processing_fee'],
+                'processing_fee_payer' => $paymentInfo['processing_fee_payer'],
+                'tier' => $paymentInfo['tier'],
+                'tier_label' => $paymentInfo['tier_label'],
+            ],
+            'isAuthenticated' => (bool) $request->user(),
         ]);
+    }
+
+    /**
+     * Find booking for payment, supporting both authenticated and guest users.
+     */
+    protected function findBookingForPayment(Request $request, string $bookingUuid): Booking
+    {
+        $query = Booking::where('uuid', $bookingUuid)
+            ->with([
+                'provider:id,business_name,slug,processing_fee_payer',
+                'provider.subscription',
+                'service:id,name,duration_minutes,price',
+            ]);
+
+        // For authenticated users, verify ownership
+        if ($request->user()) {
+            $query->where('client_id', $request->user()->id);
+        }
+
+        return $query->firstOrFail();
+    }
+
+    /**
+     * Redirect to appropriate booking page based on user type.
+     */
+    protected function redirectToBooking(Booking $booking, Request $request): RedirectResponse
+    {
+        if ($booking->isGuestBooking() || ! $request->user()) {
+            return redirect()->route('booking.confirmation', $booking->uuid);
+        }
+
+        return redirect()->route('client.bookings.show', $booking->uuid);
     }
 
     /**
@@ -75,12 +132,30 @@ class PaymentController extends Controller
         CreatePaymentAction $createPayment,
         ProcessPaymentAction $processPayment
     ): RedirectResponse {
-        $booking = Booking::where('uuid', $bookingUuid)
-            ->where('client_id', $request->user()->id)
-            ->firstOrFail();
+        $request->validate([
+            'payment_type' => 'sometimes|in:full,deposit,balance',
+        ]);
 
-        // Create payment record
-        $payment = $createPayment->execute($booking);
+        $booking = $this->findBookingForPayment($request, $bookingUuid);
+        $paymentType = $request->input('payment_type', 'deposit');
+
+        // Calculate payment amount
+        $paymentInfo = $this->subscriptionService->calculatePaymentAmount(
+            $booking->provider,
+            (float) $booking->service_price,
+            $paymentType
+        );
+
+        // Create payment record with tier-based amounts
+        $payment = $createPayment->execute(
+            booking: $booking,
+            amount: $paymentInfo['total_to_charge'],
+            paymentType: $paymentType,
+            platformFee: $paymentInfo['platform_fee'],
+            providerAmount: $paymentInfo['provider_payout'],
+            processingFee: $paymentInfo['processing_fee'],
+            processingFeePayer: $paymentInfo['processing_fee_payer']
+        );
 
         // Initialize payment with gateway
         $returnUrl = route('payment.callback', ['payment' => $payment->uuid]);
@@ -103,10 +178,12 @@ class PaymentController extends Controller
      */
     public function callback(Request $request, string $paymentUuid, ProcessPaymentAction $processPayment): RedirectResponse
     {
-        $payment = Payment::where('uuid', $paymentUuid)->firstOrFail();
+        $payment = Payment::where('uuid', $paymentUuid)
+            ->with('booking')
+            ->firstOrFail();
 
-        // Verify the user owns this payment
-        if ($payment->client_id !== $request->user()?->id) {
+        // Verify the user owns this payment (skip for guest bookings)
+        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
             abort(403);
         }
 
@@ -138,14 +215,14 @@ class PaymentController extends Controller
     {
         $payment = Payment::where('uuid', $paymentUuid)
             ->with([
-                'booking:id,uuid,booking_date,start_time,end_time',
+                'booking:id,uuid,booking_date,start_time,end_time,client_id,guest_name,guest_email',
                 'booking.provider:id,business_name,slug',
                 'booking.service:id,name',
             ])
             ->firstOrFail();
 
-        // Verify the user owns this payment
-        if ($payment->client_id !== $request->user()->id) {
+        // Verify ownership (skip for guest bookings)
+        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
             abort(403);
         }
 
@@ -155,6 +232,7 @@ class PaymentController extends Controller
                 'amount_display' => $payment->amount_display,
                 'card_display' => $payment->card_display,
                 'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
+                'payment_type' => $payment->payment_type ?? 'full',
             ],
             'booking' => [
                 'uuid' => $payment->booking->uuid,
@@ -162,7 +240,9 @@ class PaymentController extends Controller
                 'service_name' => $payment->booking->service->name,
                 'formatted_date' => $payment->booking->formatted_date,
                 'formatted_time' => $payment->booking->formatted_time,
+                'is_guest' => $payment->booking->isGuestBooking(),
             ],
+            'isAuthenticated' => (bool) $request->user(),
         ]);
     }
 
@@ -172,11 +252,11 @@ class PaymentController extends Controller
     public function failed(Request $request, string $paymentUuid): Response
     {
         $payment = Payment::where('uuid', $paymentUuid)
-            ->with(['booking:id,uuid'])
+            ->with(['booking:id,uuid,client_id'])
             ->firstOrFail();
 
-        // Verify the user owns this payment
-        if ($payment->client_id !== $request->user()->id) {
+        // Verify ownership (skip for guest bookings)
+        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
             abort(403);
         }
 
@@ -187,7 +267,9 @@ class PaymentController extends Controller
                 'failure_reason' => $payment->failure_reason,
             ],
             'booking_uuid' => $payment->booking->uuid,
+            'is_guest' => $payment->booking->isGuestBooking(),
             'error' => session('error'),
+            'isAuthenticated' => (bool) $request->user(),
         ]);
     }
 
@@ -196,10 +278,12 @@ class PaymentController extends Controller
      */
     public function cancel(Request $request, string $paymentUuid): RedirectResponse
     {
-        $payment = Payment::where('uuid', $paymentUuid)->firstOrFail();
+        $payment = Payment::where('uuid', $paymentUuid)
+            ->with('booking')
+            ->firstOrFail();
 
-        // Verify the user owns this payment
-        if ($payment->client_id !== $request->user()->id) {
+        // Verify ownership (skip for guest bookings)
+        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
             abort(403);
         }
 
@@ -211,7 +295,7 @@ class PaymentController extends Controller
         // Clear session token
         session()->forget('payment_spi_token_' . $payment->uuid);
 
-        return redirect()->route('client.bookings.show', $payment->booking->uuid)
+        return $this->redirectToBooking($payment->booking, $request)
             ->with('info', 'Payment was cancelled.');
     }
 }

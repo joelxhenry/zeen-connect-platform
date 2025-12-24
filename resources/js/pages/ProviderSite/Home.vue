@@ -1,0 +1,339 @@
+<script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import Button from 'primevue/button';
+import Rating from 'primevue/rating';
+import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
+import ProviderSiteController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteController';
+
+// Provider components
+import ProviderHero from '@/components/provider/ProviderHero.vue';
+import ProviderStats from '@/components/provider/ProviderStats.vue';
+import ServiceCard from '@/components/provider/ServiceCard.vue';
+import ReviewCard from '@/components/provider/ReviewCard.vue';
+import BusinessHours from '@/components/provider/BusinessHours.vue';
+
+interface Service {
+    id: number;
+    uuid: string;
+    name: string;
+    description?: string;
+    duration_minutes: number;
+    duration_display: string;
+    price: number;
+    price_display: string;
+}
+
+interface ServiceCategory {
+    category: {
+        id: number;
+        name: string;
+        icon?: string;
+        slug: string;
+    };
+    services: Service[];
+}
+
+interface Review {
+    id: number;
+    uuid: string;
+    client: {
+        name: string;
+        avatar?: string;
+    };
+    service_name: string;
+    rating: number;
+    comment?: string;
+    provider_response?: string;
+    formatted_date: string;
+    time_ago: string;
+}
+
+interface Availability {
+    day: string;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+}
+
+interface Props {
+    provider: {
+        id: number;
+        uuid: string;
+        slug: string;
+        business_name: string;
+        tagline?: string;
+        bio?: string;
+        avatar?: string;
+        cover_image?: string;
+        website?: string;
+        social_links?: Record<string, string>;
+        location?: string;
+        address?: string;
+        rating_avg: number;
+        rating_count: number;
+        rating_display: string;
+        total_bookings: number;
+        is_featured: boolean;
+        verified_at?: string;
+        services_count: number;
+    };
+    servicesByCategory: ServiceCategory[];
+    availability: Availability[];
+    reviews: Review[];
+    reviewStats: {
+        total: number;
+        average: number;
+        average_display: string;
+        distribution: Record<number, number>;
+    };
+}
+
+const props = defineProps<Props>();
+
+const bookingUrl = ProviderSiteBookingController.create({ provider: props.provider.slug }).url;
+
+const stats = {
+    bookings: props.provider.total_bookings,
+    rating: props.provider.rating_avg,
+    reviewCount: props.provider.rating_count,
+    servicesCount: props.provider.services_count,
+};
+
+const getServiceBookingUrl = (serviceId: number) => {
+    return ProviderSiteBookingController.create({ provider: props.provider.slug, service: serviceId }).url;
+};
+</script>
+
+<template>
+    <ProviderSiteLayout title="Home">
+        <template #hero>
+            <ProviderHero :provider="provider" :bookingUrl="bookingUrl" />
+        </template>
+
+        <div class="provider-home">
+
+            <!-- Stats Section -->
+            <ProviderStats :stats="stats" />
+
+            <!-- About Section -->
+            <section v-if="provider.bio" class="about-section">
+                <div class="section-container">
+                    <h2>About</h2>
+                    <p class="bio">{{ provider.bio }}</p>
+                </div>
+            </section>
+
+            <!-- Services Preview -->
+            <section v-if="servicesByCategory.length > 0" class="services-section">
+                <div class="section-container">
+                    <div class="section-header">
+                        <h2>Services</h2>
+                        <Link :href="ProviderSiteController.services({ provider: provider.slug }).url" class="view-all">
+                            View All <i class="pi pi-arrow-right"></i>
+                        </Link>
+                    </div>
+                    <div class="services-grid">
+                        <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
+                            <ServiceCard
+                                v-for="service in categoryGroup.services"
+                                :key="service.id"
+                                :service="service"
+                                :category="categoryGroup.category"
+                                :bookingUrl="getServiceBookingUrl(service.id)"
+                            />
+                        </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Availability Section -->
+            <section v-if="availability.length > 0" class="availability-section">
+                <div class="section-container">
+                    <h2>Business Hours</h2>
+                    <BusinessHours :hours="availability" :bookingUrl="bookingUrl" />
+                </div>
+            </section>
+
+            <!-- Reviews Preview -->
+            <section v-if="reviews.length > 0" class="reviews-section">
+                <div class="section-container">
+                    <div class="section-header">
+                        <div>
+                            <h2>Reviews</h2>
+                            <div class="review-summary">
+                                <Rating :modelValue="reviewStats.average" readonly :cancel="false" />
+                                <span>{{ reviewStats.average_display }} out of 5 ({{ reviewStats.total }} reviews)</span>
+                            </div>
+                        </div>
+                        <Link :href="ProviderSiteController.reviews({ provider: provider.slug }).url" class="view-all">
+                            View All <i class="pi pi-arrow-right"></i>
+                        </Link>
+                    </div>
+                    <div class="reviews-grid">
+                        <ReviewCard
+                            v-for="review in reviews"
+                            :key="review.id"
+                            :review="review"
+                        />
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="cta-section">
+                <div class="cta-content">
+                    <h2>Ready to book?</h2>
+                    <p>Choose a service and find a time that works for you.</p>
+                    <Link :href="bookingUrl">
+                        <Button
+                            label="Book an Appointment"
+                            icon="pi pi-calendar"
+                            size="large"
+                            class="!bg-white !text-[#106B4F] !border-white"
+                        />
+                    </Link>
+                </div>
+            </section>
+        </div>
+    </ProviderSiteLayout>
+</template>
+
+<style scoped>
+.provider-home {
+    min-height: 100%;
+}
+
+.section-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.about-section {
+    padding: 3rem 0;
+    background: white;
+}
+
+.about-section h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0D1F1B;
+}
+
+.bio {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.7;
+    max-width: 800px;
+}
+
+.services-section {
+    padding: 3rem 0;
+    background: #f9fafb;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0D1F1B;
+}
+
+.view-all {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #106B4F;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.availability-section {
+    padding: 3rem 0;
+    background: white;
+}
+
+.availability-section h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0D1F1B;
+}
+
+.reviews-section {
+    padding: 3rem 0;
+    background: #f9fafb;
+}
+
+.reviews-section h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0D1F1B;
+}
+
+.review-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, #106B4F 0%, #0D5A42 100%);
+    padding: 4rem 1.5rem;
+}
+
+.cta-content {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.cta-content h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.cta-content p {
+    margin: 0 0 1.5rem 0;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+    .services-grid,
+    .reviews-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

@@ -3,6 +3,7 @@
 namespace App\Domains\Payment\Actions;
 
 use App\Domains\Booking\Enums\BookingStatus;
+use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Models\Payment;
 use App\Domains\Payment\Services\PowerTranzGateway;
 use App\Mail\BookingConfirmed;
@@ -45,23 +46,33 @@ class ProcessPaymentAction
                     'card_brand' => $result['card_brand'],
                 ]);
 
-                // Confirm the booking
-                $payment->booking->update([
-                    'status' => BookingStatus::CONFIRMED,
-                    'confirmed_at' => now(),
-                ]);
+                // Load booking with relationships
+                $payment->load(['booking.service', 'booking.provider.user', 'client']);
+                $booking = $payment->booking;
 
-                // Load relationships for emails
-                $payment->load(['booking.service', 'client', 'provider']);
+                // Handle deposit payment
+                if ($payment->payment_type === 'deposit') {
+                    $booking->update(['deposit_paid' => true]);
+                }
+
+                // Auto-confirm booking if conditions are met
+                $this->handleBookingConfirmation($booking, $payment);
+
+                // Get client email (supports guest bookings)
+                $clientEmail = $booking->client_email;
 
                 // Send payment receipt to client
-                Mail::to($payment->client->email)->send(new PaymentReceived($payment, 'client'));
+                if ($clientEmail) {
+                    Mail::to($clientEmail)->send(new PaymentReceived($payment, 'client'));
+                }
 
                 // Notify provider of payment
-                Mail::to($payment->provider->user->email)->send(new PaymentReceived($payment, 'provider'));
+                Mail::to($booking->provider->user->email)->send(new PaymentReceived($payment, 'provider'));
 
-                // Send booking confirmation to client
-                Mail::to($payment->client->email)->send(new BookingConfirmed($payment->booking));
+                // Send booking confirmation if just confirmed
+                if ($booking->status === BookingStatus::CONFIRMED && $clientEmail) {
+                    Mail::to($clientEmail)->send(new BookingConfirmed($booking));
+                }
 
                 return [
                     'success' => true,
@@ -83,9 +94,37 @@ class ProcessPaymentAction
     }
 
     /**
+     * Handle booking confirmation based on payment and settings.
+     */
+    protected function handleBookingConfirmation(Booking $booking, Payment $payment): void
+    {
+        // Already confirmed, nothing to do
+        if ($booking->status === BookingStatus::CONFIRMED) {
+            return;
+        }
+
+        // Get effective booking settings
+        $settings = $booking->service->getEffectiveBookingSettings();
+        $requiresApproval = $settings['requires_approval'];
+
+        // If approval is required, booking stays pending
+        if ($requiresApproval) {
+            return;
+        }
+
+        // If no approval required and deposit is paid (or no deposit required), confirm
+        if (! $booking->requiresDeposit() || $booking->isDepositPaid()) {
+            $booking->update([
+                'status' => BookingStatus::CONFIRMED,
+                'confirmed_at' => now(),
+            ]);
+        }
+    }
+
+    /**
      * Process a refund for a payment.
      */
-    public function refund(Payment $payment, ?float $amount = null): array
+    public function refund(Payment $payment, ?float $amount = null, ?string $reason = null): array
     {
         if (! $payment->canBeRefunded()) {
             return [
@@ -97,12 +136,19 @@ class ProcessPaymentAction
         $result = $this->gateway->refund($payment, $amount);
 
         if ($result['success']) {
+            // Update payment refund status
+            $payment->update([
+                'is_refunded' => true,
+                'refund_reason' => $reason ?? 'Refunded',
+                'refund_transaction_id' => $result['refund_transaction_id'] ?? null,
+            ]);
+
             // Cancel the booking if full refund
             if ($amount === null || $amount >= $payment->amount) {
                 $payment->booking->update([
                     'status' => BookingStatus::CANCELLED,
                     'cancelled_at' => now(),
-                    'cancellation_reason' => 'Payment refunded',
+                    'cancellation_reason' => $reason ?? 'Payment refunded',
                 ]);
             }
         }

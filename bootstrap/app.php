@@ -32,9 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->middleware('web')
                 ->group(base_path('routes/payment.php'));
 
-            // Admin domain routes
+            // Admin domain routes (auth handled in routes file)
             Route::domain(config('app.admin_domain'))
-                ->middleware(['web', 'auth', 'role:admin'])
+                ->middleware('web')
                 ->group(base_path('routes/admin.php'));
 
             // Provider console domain routes

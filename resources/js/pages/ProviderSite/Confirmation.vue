@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -163,13 +163,13 @@ const getInitials = (name: string) => {
                             <span class="text-sm font-medium">Deposit Paid</span>
                         </div>
                         <div v-else>
-                            <Link :href="`/payment/${booking.uuid}/checkout`">
+                            <AppLink :href="`/payment/${booking.uuid}/checkout`">
                                 <Button
                                     label="Pay Deposit Now"
                                     icon="pi pi-credit-card"
                                     class="w-full !bg-[#106B4F] !border-[#106B4F]"
                                 />
-                            </Link>
+                            </AppLink>
                             <p class="text-xs text-center text-gray-400 mt-2 m-0">
                                 Pay your deposit to secure your appointment
                             </p>
@@ -224,12 +224,12 @@ const getInitials = (name: string) => {
 
                 <!-- Actions -->
                 <div class="flex justify-center gap-4 mt-6">
-                    <Link href="/">
+                    <AppLink href="/">
                         <Button label="Back to Home" severity="secondary" />
-                    </Link>
-                    <Link href="/services">
+                    </AppLink>
+                    <AppLink href="/services">
                         <Button label="Browse Services" outlined class="!border-[#106B4F] !text-[#106B4F]" />
-                    </Link>
+                    </AppLink>
                 </div>
             </div>
         </div>

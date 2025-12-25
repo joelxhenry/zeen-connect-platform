@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Link, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -113,10 +113,10 @@ const submitCancel = () => {
     <DashboardLayout :title="`Booking - ${booking.service.name}`">
         <div class="max-w-3xl mx-auto px-4 py-8">
             <!-- Back Link -->
-            <Link href="/dashboard/bookings" class="inline-flex items-center gap-2 text-gray-500 hover:text-[#0D1F1B] mb-6 no-underline">
+            <AppLink href="/dashboard/bookings" class="inline-flex items-center gap-2 text-gray-500 hover:text-[#0D1F1B] mb-6 no-underline">
                 <i class="pi pi-arrow-left"></i>
                 <span>Back to Bookings</span>
-            </Link>
+            </AppLink>
 
             <!-- Status Banner -->
             <div
@@ -130,9 +130,9 @@ const submitCancel = () => {
                         <p class="text-sm text-yellow-700 m-0">Pay ${{ booking.deposit_amount.toFixed(2) }} to secure your booking</p>
                     </div>
                 </div>
-                <Link :href="`/payment/${booking.uuid}/checkout`">
+                <AppLink :href="`/payment/${booking.uuid}/checkout`">
                     <Button label="Pay Now" icon="pi pi-credit-card" class="!bg-yellow-600 !border-yellow-600" />
-                </Link>
+                </AppLink>
             </div>
 
             <div
@@ -167,9 +167,9 @@ const submitCancel = () => {
                                 />
                                 <div>
                                     <h1 class="text-xl font-semibold text-[#0D1F1B] m-0">{{ booking.service.name }}</h1>
-                                    <Link :href="`/providers/${booking.provider.slug}`" class="text-[#106B4F] hover:underline no-underline">
+                                    <AppLink :href="`/providers/${booking.provider.slug}`" class="text-[#106B4F] hover:underline no-underline">
                                         {{ booking.provider.business_name }}
-                                    </Link>
+                                    </AppLink>
                                 </div>
                             </div>
                             <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" class="!text-sm !px-3 !py-1.5" />
@@ -326,9 +326,9 @@ const submitCancel = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap gap-3">
-                    <Link :href="`/providers/${booking.provider.slug}`">
+                    <AppLink :href="`/providers/${booking.provider.slug}`">
                         <Button label="View Provider" icon="pi pi-user" outlined class="!border-[#106B4F] !text-[#106B4F]" />
-                    </Link>
+                    </AppLink>
                     <Button
                         v-if="booking.can_cancel"
                         label="Cancel Booking"

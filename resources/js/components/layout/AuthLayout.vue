@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
 
@@ -16,7 +16,7 @@ defineProps<{
         <!-- Left Panel - Marketing -->
         <div class="auth-marketing">
             <div class="marketing-content">
-                <Link href="/" class="logo">Zeen</Link>
+                <AppLink href="/" class="logo">Zeen</AppLink>
 
                 <div class="marketing-text">
                     <h1>Book services<br />with ease</h1>
@@ -40,17 +40,17 @@ defineProps<{
         <!-- Right Panel - Form -->
         <div class="auth-form-panel">
             <div class="auth-form-container">
-                <Link href="/" class="mobile-logo">Zeen</Link>
+                <AppLink href="/" class="mobile-logo">Zeen</AppLink>
 
                 <div class="form-content">
                     <slot />
                 </div>
 
                 <p class="auth-footer">
-                    <Link href="/">
+                    <AppLink href="/">
                         <i class="pi pi-arrow-left"></i>
                         Back to Home
-                    </Link>
+                    </AppLink>
                 </p>
             </div>
         </div>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import register from '@/routes/register';
 </script>
 
@@ -9,10 +8,10 @@ import register from '@/routes/register';
         <div class="cta-content">
             <h2>Ready to Grow Your Business?</h2>
             <p>Join thousands of service providers already thriving on Zeen Connect.</p>
-            <Link :href="register.provider.url()" class="btn btn-cta">
+            <AppLink :href="register.provider.url()" class="btn btn-cta">
                 Start Your Free Account
                 <i class="pi pi-arrow-right"></i>
-            </Link>
+            </AppLink>
             <span class="cta-note">No credit card required &bull; Free to get started</span>
         </div>
     </section>

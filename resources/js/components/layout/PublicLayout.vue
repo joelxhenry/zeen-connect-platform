@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import type { User } from '@/types/models';
 import SiteFooter from '@/components/common/SiteFooter.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
@@ -23,23 +23,23 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
         <!-- Header -->
         <header class="site-header">
             <div class="header-container">
-                <Link :href="home.url()" class="logo">Zeen</Link>
+                <AppLink :href="home.url()" class="logo">Zeen</AppLink>
 
                 <nav class="main-nav">
-                    <Link :href="home.url()" class="nav-link">Home</Link>
-                    <Link :href="forYou.url()" class="nav-link">For You</Link>
-                    <Link :href="pricing.url()" class="nav-link">Pricing</Link>
+                    <AppLink :href="home.url()" class="nav-link">Home</AppLink>
+                    <AppLink :href="forYou.url()" class="nav-link">For You</AppLink>
+                    <AppLink :href="pricing.url()" class="nav-link">Pricing</AppLink>
                 </nav>
 
                 <div class="auth-nav">
                     <template v-if="user">
-                        <Link v-if="user.role === 'provider'" :href="provider.dashboard.url()" class="nav-link">Dashboard</Link>
-                        <Link v-else :href="client.dashboard.url()" class="nav-link">Dashboard</Link>
-                        <Link :href="logout.url()" method="post" as="button" class="logout-btn">Logout</Link>
+                        <AppLink v-if="user.role === 'provider'" :href="provider.dashboard.url()" class="nav-link">Dashboard</AppLink>
+                        <AppLink v-else :href="client.dashboard.url()" class="nav-link">Dashboard</AppLink>
+                        <AppLink :href="logout.url()" method="post" as="button" class="logout-btn">Logout</AppLink>
                     </template>
                     <template v-else>
-                        <Link :href="foundingMembers.url()" class="cta-btn outline">Join Waitlist</Link>
-                        <Link :href="login.url()" class="cta-btn filled">Log In</Link>
+                        <AppLink :href="foundingMembers.url()" class="cta-btn outline">Join Waitlist</AppLink>
+                        <AppLink :href="login.url()" class="cta-btn filled">Log In</AppLink>
                     </template>
                 </div>
             </div>

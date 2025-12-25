@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import provider from '@/routes/provider';
 import Button from 'primevue/button';
@@ -80,9 +80,9 @@ const toggleActive = (service: Service) => {
                         Manage the services you offer to clients
                     </p>
                 </div>
-                <Link :href="provider.services.create.url()">
+                <AppLink :href="provider.services.create.url()">
                     <Button label="Add Service" icon="pi pi-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
-                </Link>
+                </AppLink>
             </div>
 
             <!-- Empty State -->
@@ -92,9 +92,9 @@ const toggleActive = (service: Service) => {
                 <p class="text-gray-500 m-0 mb-6 max-w-md mx-auto">
                     Start by adding your first service. Services define what you offer and how much you charge.
                 </p>
-                <Link :href="provider.services.create.url()">
+                <AppLink :href="provider.services.create.url()">
                     <Button label="Add Your First Service" icon="pi pi-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
-                </Link>
+                </AppLink>
             </div>
 
             <!-- Services Grid -->
@@ -127,10 +127,10 @@ const toggleActive = (service: Service) => {
                         </div>
 
                         <div class="flex items-center gap-2 pt-3 border-t border-gray-100">
-                            <Link :href="provider.services.edit.url(service.uuid)" class="flex-1">
+                            <AppLink :href="provider.services.edit.url(service.uuid)" class="flex-1">
                                 <Button label="Edit" icon="pi pi-pencil" size="small" severity="secondary" outlined
                                     class="w-full" />
-                            </Link>
+                            </AppLink>
                             <Button :icon="service.is_active ? 'pi pi-eye-slash' : 'pi pi-eye'" size="small"
                                 severity="secondary" outlined v-tooltip="service.is_active ? 'Deactivate' : 'Activate'"
                                 @click="toggleActive(service)" />

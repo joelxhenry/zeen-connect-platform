@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import PublicLayout from '@/components/layout/PublicLayout.vue';
 import register from '@/routes/register';
 
@@ -124,9 +124,9 @@ const faqs = [
                             <span v-if="plan.feeNote" class="fee-note">{{ plan.feeNote }}</span>
                         </div>
 
-                        <Link :href="plan.ctaLink" class="card-cta" :class="{ primary: plan.highlighted }">
+                        <AppLink :href="plan.ctaLink" class="card-cta" :class="{ primary: plan.highlighted }">
                             {{ plan.cta }}
-                        </Link>
+                        </AppLink>
 
                         <ul class="features-list">
                             <li v-for="feature in plan.features" :key="feature">
@@ -153,10 +153,10 @@ const faqs = [
             <section class="cta-section">
                 <h2>Ready to grow your business?</h2>
                 <p>Join thousands of service providers in Jamaica using Zeen.</p>
-                <Link :href="register.provider.url()" class="cta-button">
+                <AppLink :href="register.provider.url()" class="cta-button">
                     Get Started for Free
                     <i class="pi pi-arrow-right"></i>
-                </Link>
+                </AppLink>
             </section>
         </div>
     </PublicLayout>

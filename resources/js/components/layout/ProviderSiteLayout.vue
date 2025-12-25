@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { computed, useSlots } from 'vue';
 import type { User } from '@/types/models';
 import Avatar from 'primevue/avatar';
@@ -53,49 +53,49 @@ const getInitials = (name: string) => {
         <header class="header">
             <div class="header-content">
                 <!-- Provider Logo/Name -->
-                <Link :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
+                <AppLink :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
                     class="provider-brand">
                     <Avatar v-if="providerSiteProvider?.avatar" :image="providerSiteProvider.avatar" shape="circle"
                         class="!w-10 !h-10" />
                     <Avatar v-else :label="getInitials(providerSiteProvider?.business_name || '')" shape="circle"
                         class="!w-10 !h-10 !bg-[#106B4F]" />
                     <span class="provider-name">{{ providerSiteProvider?.business_name }}</span>
-                </Link>
+                </AppLink>
 
                 <!-- Main Navigation -->
                 <nav class="main-nav">
-                    <Link :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
+                    <AppLink :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
                         class="nav-link"
                         :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
                         Home
-                    </Link>
-                    <Link :href="ProviderSiteController.services({ provider: providerSiteProvider?.slug ?? '' }).url"
+                    </AppLink>
+                    <AppLink :href="ProviderSiteController.services({ provider: providerSiteProvider?.slug ?? '' }).url"
                         class="nav-link" :class="{ active: isActive('/services') }">
                         Services
-                    </Link>
-                    <Link :href="ProviderSiteController.reviews({ provider: providerSiteProvider?.slug ?? '' }).url"
+                    </AppLink>
+                    <AppLink :href="ProviderSiteController.reviews({ provider: providerSiteProvider?.slug ?? '' }).url"
                         class="nav-link" :class="{ active: isActive('/reviews') }">
                         Reviews
-                    </Link>
+                    </AppLink>
                 </nav>
 
                 <!-- Right Side -->
                 <div class="header-right">
-                    <Link
+                    <AppLink
                         :href="ProviderSiteBookingController.create({ provider: providerSiteProvider?.slug ?? '' }).url">
                         <Button label="Book Now" class="!bg-[#106B4F] !border-[#106B4F]" />
-                    </Link>
+                    </AppLink>
 
                     <div class="auth-nav">
                         <template v-if="user">
-                            <Link :href="`${mainPlatformUrl}/dashboard`" class="nav-link text-sm">
+                            <AppLink :href="`${mainPlatformUrl}/dashboard`" class="nav-link text-sm">
                                 My Bookings
-                            </Link>
+                            </AppLink>
                         </template>
                         <template v-else>
-                            <Link :href="`${mainPlatformUrl}/login`" class="nav-link text-sm">
+                            <AppLink :href="`${mainPlatformUrl}/login`" class="nav-link text-sm">
                                 Login
-                            </Link>
+                            </AppLink>
                         </template>
                     </div>
                 </div>

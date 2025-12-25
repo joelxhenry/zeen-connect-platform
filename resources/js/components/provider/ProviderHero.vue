@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
@@ -88,13 +87,13 @@ const getInitials = (name: string) => {
 
                 <!-- CTA -->
                 <div class="provider-hero__actions">
-                    <Link :href="bookingUrl">
+                    <AppLink :href="bookingUrl">
                         <Button
                             label="Book Now"
                             icon="pi pi-calendar"
                             class="!bg-[#106B4F] !border-[#106B4F] !px-6"
                         />
-                    </Link>
+                    </AppLink>
                 </div>
             </div>
         </div>

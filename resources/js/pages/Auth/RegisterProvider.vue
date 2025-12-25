@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import AuthLayout from '@/components/layout/AuthLayout.vue';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -144,8 +144,8 @@ const socialAuth = (provider: string) => {
 
                 <p class="terms-text">
                     By creating an account, you agree to our
-                    <Link :href="terms.url()">Terms of Service</Link> and
-                    <Link :href="privacy.url()">Privacy Policy</Link>.
+                    <AppLink :href="terms.url()">Terms of Service</AppLink> and
+                    <AppLink :href="privacy.url()">Privacy Policy</AppLink>.
                 </p>
 
                 <Button
@@ -157,7 +157,7 @@ const socialAuth = (provider: string) => {
             </form>
 
             <p class="login-link">
-                Already have an account? <Link :href="login.url()">Sign in</Link>
+                Already have an account? <AppLink :href="login.url()">Sign in</AppLink>
             </p>
         </div>
     </AuthLayout>

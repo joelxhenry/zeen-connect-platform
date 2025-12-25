@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import PublicLayout from '@/components/layout/PublicLayout.vue';
 import { foundingMembers } from '@/routes';
 
@@ -103,10 +103,10 @@ const stats = [
                         </p>
 
                         <div class="hero-cta">
-                            <Link :href="foundingMembers.url()" class="btn-primary">
+                            <AppLink :href="foundingMembers.url()" class="btn-primary">
                                 Join the Waitlist
                                 <i class="pi pi-arrow-right"></i>
-                            </Link>
+                            </AppLink>
                             <span class="cta-note">Free during beta • No credit card required</span>
                         </div>
                     </div>
@@ -270,10 +270,10 @@ const stats = [
                                 <span><strong>Your own booking page</strong> to share anywhere</span>
                             </li>
                         </ul>
-                        <Link :href="foundingMembers.url()" class="btn-secondary">
+                        <AppLink :href="foundingMembers.url()" class="btn-secondary">
                             Tell Us Your Service
                             <i class="pi pi-arrow-right"></i>
-                        </Link>
+                        </AppLink>
                     </div>
                 </div>
             </section>
@@ -310,10 +310,10 @@ const stats = [
                         </div>
                     </div>
 
-                    <Link :href="foundingMembers.url()" class="btn-outline-light">
+                    <AppLink :href="foundingMembers.url()" class="btn-outline-light">
                         Share Your Story
                         <i class="pi pi-arrow-right"></i>
-                    </Link>
+                    </AppLink>
                 </div>
             </section>
 
@@ -327,10 +327,10 @@ const stats = [
                     </p>
 
                     <div class="cta-actions">
-                        <Link :href="foundingMembers.url()" class="btn-cta">
+                        <AppLink :href="foundingMembers.url()" class="btn-cta">
                             Become a Founding Member
                             <i class="pi pi-arrow-right"></i>
-                        </Link>
+                        </AppLink>
                     </div>
 
                     <div class="cta-features">

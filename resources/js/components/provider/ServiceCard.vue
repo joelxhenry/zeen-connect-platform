@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-
 interface Category {
     id: number;
     name: string;
@@ -31,7 +29,7 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <Link :href="bookingUrl" class="service-card">
+    <AppLink :href="bookingUrl" class="service-card">
         <div class="service-card__info">
             <h3>{{ service.name }}</h3>
             <p v-if="service.description" class="service-card__description">
@@ -50,7 +48,7 @@ withDefaults(defineProps<Props>(), {
         <div class="service-card__price">
             {{ service.price_display }}
         </div>
-    </Link>
+    </AppLink>
 </template>
 
 <style scoped>

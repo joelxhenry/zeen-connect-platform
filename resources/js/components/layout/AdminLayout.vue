@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import FlashMessages from '@/components/error/FlashMessages.vue';
 
 defineProps<{
@@ -28,11 +28,11 @@ const navItems = [
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <Link href="/admin" class="logo">Zeen Admin</Link>
+                <AppLink href="/admin" class="logo">Zeen Admin</AppLink>
             </div>
 
             <nav class="sidebar-nav">
-                <Link
+                <AppLink
                     v-for="item in navItems"
                     :key="item.route"
                     :href="item.route"
@@ -40,14 +40,14 @@ const navItems = [
                 >
                     <i :class="item.icon"></i>
                     <span>{{ item.label }}</span>
-                </Link>
+                </AppLink>
             </nav>
 
             <div class="sidebar-footer">
-                <Link href="/logout" method="post" as="button" class="logout-btn">
+                <AppLink href="/logout" method="post" as="button" class="logout-btn">
                     <i class="pi pi-sign-out"></i>
                     <span>Logout</span>
-                </Link>
+                </AppLink>
             </div>
         </aside>
 

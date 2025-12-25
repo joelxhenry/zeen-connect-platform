@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import provider from '@/routes/provider';
 import { logout } from '@/routes';
 import InstallPrompt from '@/components/console/InstallPrompt.vue';
@@ -55,7 +55,7 @@ const closeSidebar = () => {
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <Link href="/" class="text-xl font-bold text-[#106B4F] no-underline">Zeen</Link>
+                    <AppLink href="/" class="text-xl font-bold text-[#106B4F] no-underline">Zeen</AppLink>
                     <span class="text-xs px-2 py-0.5 bg-[#106B4F]/10 text-[#106B4F] rounded-full">Provider</span>
                 </div>
                 <!-- Close button for mobile -->
@@ -66,20 +66,20 @@ const closeSidebar = () => {
             </div>
 
             <nav class="flex-1 py-4 overflow-y-auto">
-                <Link v-for="item in navItems" :key="item.route" :href="item.route"
+                <AppLink v-for="item in navItems" :key="item.route" :href="item.route"
                     class="flex items-center gap-3 py-3 px-4 text-gray-500 no-underline hover:bg-neutral-100 hover:text-[#0D1F1B] transition-colors"
                     @click="closeSidebar">
                     <i :class="item.icon"></i>
                     <span>{{ item.label }}</span>
-                </Link>
+                </AppLink>
             </nav>
 
             <div class="p-4 border-t border-gray-200">
-                <Link :href="logout.url()" method="post" as="button"
+                <AppLink :href="logout.url()" method="post" as="button"
                     class="flex items-center gap-3 w-full py-3 bg-transparent border-none text-gray-500 cursor-pointer text-left hover:text-[#0D1F1B] transition-colors">
                     <i class="pi pi-sign-out"></i>
                     <span>Logout</span>
-                </Link>
+                </AppLink>
             </div>
         </aside>
 
@@ -94,7 +94,7 @@ const closeSidebar = () => {
                 </button>
 
                 <!-- Mobile logo (shown on mobile only) -->
-                <Link href="/" class="lg:hidden text-lg font-bold text-[#106B4F] no-underline">Zeen</Link>
+                <AppLink href="/" class="lg:hidden text-lg font-bold text-[#106B4F] no-underline">Zeen</AppLink>
 
                 <!-- Title (hidden on mobile, shown on desktop) -->
                 <h1 class="hidden lg:block m-0 text-xl font-semibold text-[#0D1F1B]">{{ title || 'Dashboard' }}</h1>

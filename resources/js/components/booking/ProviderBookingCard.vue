@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -131,7 +130,7 @@ const getInitials = (name: string) => {
                             class="!bg-[#106B4F] !border-[#106B4F]"
                             @click.stop="emit('confirm', booking)"
                         />
-                        <Link :href="ProviderBookingController.show({ uuid: booking.uuid }).url">
+                        <AppLink :href="ProviderBookingController.show({ uuid: booking.uuid }).url">
                             <Button
                                 label="View Details"
                                 icon="pi pi-arrow-right"
@@ -139,7 +138,7 @@ const getInitials = (name: string) => {
                                 outlined
                                 class="!border-gray-300 !text-gray-700"
                             />
-                        </Link>
+                        </AppLink>
                     </div>
                 </div>
             </div>

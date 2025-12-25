@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
@@ -129,9 +128,9 @@ const getServiceBookingUrl = (serviceId: number) => {
                 <div class="section-container">
                     <div class="section-header">
                         <h2>Services</h2>
-                        <Link :href="ProviderSiteController.services({ provider: provider.slug }).url" class="view-all">
+                        <AppLink :href="ProviderSiteController.services({ provider: provider.slug }).url" class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
-                        </Link>
+                        </AppLink>
                     </div>
                     <div class="services-grid">
                         <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
@@ -166,9 +165,9 @@ const getServiceBookingUrl = (serviceId: number) => {
                                 <span>{{ reviewStats.average_display }} out of 5 ({{ reviewStats.total }} reviews)</span>
                             </div>
                         </div>
-                        <Link :href="ProviderSiteController.reviews({ provider: provider.slug }).url" class="view-all">
+                        <AppLink :href="ProviderSiteController.reviews({ provider: provider.slug }).url" class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
-                        </Link>
+                        </AppLink>
                     </div>
                     <div class="reviews-grid">
                         <ReviewCard
@@ -185,14 +184,14 @@ const getServiceBookingUrl = (serviceId: number) => {
                 <div class="cta-content">
                     <h2>Ready to book?</h2>
                     <p>Choose a service and find a time that works for you.</p>
-                    <Link :href="bookingUrl">
+                    <AppLink :href="bookingUrl">
                         <Button
                             label="Book an Appointment"
                             icon="pi pi-calendar"
                             size="large"
                             class="!bg-white !text-[#106B4F] !border-white"
                         />
-                    </Link>
+                    </AppLink>
                 </div>
             </section>
         </div>

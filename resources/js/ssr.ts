@@ -8,6 +8,8 @@ import Aura from '@primevue/themes/aura';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import { ZiggyVue } from 'ziggy-js';
+import AppLink from '@/components/common/AppLink.vue';
+import { resolveUrl } from '@/utils/url';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Zeen';
 
@@ -42,6 +44,13 @@ createServer(
                 // Register PrimeVue services
                 app.use(ToastService);
                 app.use(ConfirmationService);
+
+                // Register global components
+                app.component('AppLink', AppLink);
+
+                // Provide global URL resolver
+                app.provide('resolveUrl', resolveUrl);
+                app.config.globalProperties.$resolveUrl = resolveUrl;
 
                 return app;
             },

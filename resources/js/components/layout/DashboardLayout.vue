@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 
 defineProps<{
     title?: string;
@@ -22,10 +22,10 @@ const navItems = [
         <header class="header">
             <div class="header-content">
                 <div class="header-left">
-                    <Link href="/" class="logo">Zeen</Link>
+                    <AppLink href="/" class="logo">Zeen</AppLink>
 
                     <nav class="main-nav">
-                        <Link
+                        <AppLink
                             v-for="item in navItems"
                             :key="item.route"
                             :href="item.route"
@@ -33,13 +33,13 @@ const navItems = [
                         >
                             <i :class="item.icon"></i>
                             {{ item.label }}
-                        </Link>
+                        </AppLink>
                     </nav>
                 </div>
 
                 <div class="header-right">
-                    <Link href="/explore" class="explore-link">Find Services</Link>
-                    <Link href="/logout" method="post" as="button" class="logout-btn">Logout</Link>
+                    <AppLink href="/explore" class="explore-link">Find Services</AppLink>
+                    <AppLink href="/logout" method="post" as="button" class="logout-btn">Logout</AppLink>
                 </div>
             </div>
         </header>

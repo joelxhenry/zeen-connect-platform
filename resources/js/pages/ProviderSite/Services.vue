@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Button from 'primevue/button';
 import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
@@ -74,9 +73,9 @@ const getBookingUrl = (serviceId: number) => {
                                 </div>
                                 <div class="service-actions">
                                     <span class="price">{{ service.price_display }}</span>
-                                    <Link :href="getBookingUrl(service.id)">
+                                    <AppLink :href="getBookingUrl(service.id)">
                                         <Button label="Book" size="small" class="!bg-[#106B4F] !border-[#106B4F]" />
-                                    </Link>
+                                    </AppLink>
                                 </div>
                             </div>
                         </div>

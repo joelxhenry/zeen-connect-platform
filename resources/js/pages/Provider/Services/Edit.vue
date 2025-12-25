@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useForm, Link, router } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -174,9 +174,9 @@ const deleteService = () => {
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex items-center gap-2 mb-2">
-                    <Link :href="provider.services.index.url()" class="text-gray-500 hover:text-[#0D1F1B]">
+                    <AppLink :href="provider.services.index.url()" class="text-gray-500 hover:text-[#0D1F1B]">
                         <i class="pi pi-arrow-left"></i>
-                    </Link>
+                    </AppLink>
                     <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0">Edit Service</h1>
                 </div>
                 <p class="text-gray-500 m-0 text-sm lg:text-base ml-6">
@@ -372,9 +372,9 @@ const deleteService = () => {
 
                 <!-- Form Actions -->
                 <div class="flex justify-end gap-3">
-                    <Link :href="provider.services.index.url()">
+                    <AppLink :href="provider.services.index.url()">
                         <Button label="Cancel" severity="secondary" type="button" />
-                    </Link>
+                    </AppLink>
                     <Button label="Save Changes" icon="pi pi-check" type="submit" :loading="form.processing"
                         class="!bg-[#106B4F] !border-[#106B4F]" />
                 </div>

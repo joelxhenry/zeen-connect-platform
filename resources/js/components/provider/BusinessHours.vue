@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 
 interface Availability {
@@ -62,13 +61,13 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
                         Closed
                     </span>
                 </div>
-                <Link v-if="bookingUrl" :href="bookingUrl" class="business-hours__book-link">
+                <AppLink v-if="bookingUrl" :href="bookingUrl" class="business-hours__book-link">
                     <Button
                         label="Book Now"
                         icon="pi pi-calendar"
                         class="!bg-[#106B4F] !border-[#106B4F] w-full"
                     />
-                </Link>
+                </AppLink>
             </div>
         </div>
 

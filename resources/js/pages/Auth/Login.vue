@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm, Link } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import AuthLayout from '@/components/layout/AuthLayout.vue';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
@@ -95,7 +95,7 @@ const socialAuth = (provider: string) => {
                         />
                         <label for="remember">Remember me</label>
                     </div>
-                    <Link href="/forgot-password" class="forgot-link">Forgot password?</Link>
+                    <AppLink href="/forgot-password" class="forgot-link">Forgot password?</AppLink>
                 </div>
 
                 <Button
@@ -107,7 +107,7 @@ const socialAuth = (provider: string) => {
             </form>
 
             <p class="register-link">
-                Don't have an account? <Link :href="register.url()">Sign up</Link>
+                Don't have an account? <AppLink :href="register.url()">Sign up</AppLink>
             </p>
         </div>
     </AuthLayout>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import FoundingHero from '@/components/founding/FoundingHero.vue';
 import FoundingVision from '@/components/founding/FoundingVision.vue';
 import FoundingFeatures from '@/components/founding/FoundingFeatures.vue';
@@ -20,17 +20,17 @@ const scrollToTop = () => {
         <!-- Header -->
         <header class="site-header">
             <div class="header-container">
-                <Link :href="home.url()" class="logo">Zeen</Link>
+                <AppLink :href="home.url()" class="logo">Zeen</AppLink>
 
                 <nav class="main-nav">
-                    <Link :href="home.url()" class="nav-link">Home</Link>
-                    <Link :href="forYou.url()" class="nav-link">For You</Link>
-                    <Link :href="pricing.url()" class="nav-link">Pricing</Link>
+                    <AppLink :href="home.url()" class="nav-link">Home</AppLink>
+                    <AppLink :href="forYou.url()" class="nav-link">For You</AppLink>
+                    <AppLink :href="pricing.url()" class="nav-link">Pricing</AppLink>
                 </nav>
 
                 <div class="auth-nav">
                     <span class="header-badge">Founding Members</span>
-                    <Link :href="login.url()" class="cta-btn">Log In</Link>
+                    <AppLink :href="login.url()" class="cta-btn">Log In</AppLink>
                 </div>
             </div>
         </header>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Link, router, useForm } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -183,10 +183,10 @@ const submitCancel = () => {
     <ConsoleLayout :title="`Booking - ${booking.service.name}`">
         <div class="max-w-4xl mx-auto">
             <!-- Back Link -->
-            <Link :href="ProviderBookingController.index().url" class="inline-flex items-center gap-2 text-gray-500 hover:text-[#0D1F1B] mb-6 no-underline">
+            <AppLink :href="ProviderBookingController.index().url" class="inline-flex items-center gap-2 text-gray-500 hover:text-[#0D1F1B] mb-6 no-underline">
                 <i class="pi pi-arrow-left"></i>
                 <span>Back to Bookings</span>
-            </Link>
+            </AppLink>
 
             <!-- Today Banner -->
             <div

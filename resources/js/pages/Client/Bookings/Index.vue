@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -79,9 +79,9 @@ const getInitials = (name: string) => {
                     <h1 class="text-2xl font-semibold text-[#0D1F1B] m-0">My Bookings</h1>
                     <p class="text-gray-500 m-0 mt-1">View and manage your appointments</p>
                 </div>
-                <Link href="/explore">
+                <AppLink href="/explore">
                     <Button label="Book New" icon="pi pi-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
-                </Link>
+                </AppLink>
             </div>
 
             <!-- Status Tabs -->
@@ -111,14 +111,14 @@ const getInitials = (name: string) => {
                             : "You haven't made any bookings yet"
                     }}
                 </p>
-                <Link href="/explore" class="inline-block mt-4">
+                <AppLink href="/explore" class="inline-block mt-4">
                     <Button label="Find Services" icon="pi pi-search" outlined class="!border-[#106B4F] !text-[#106B4F]" />
-                </Link>
+                </AppLink>
             </div>
 
             <!-- Bookings List -->
             <div v-else class="space-y-4">
-                <Link
+                <AppLink
                     v-for="booking in bookings.data"
                     :key="booking.uuid"
                     :href="`/dashboard/bookings/${booking.uuid}`"
@@ -171,13 +171,13 @@ const getInitials = (name: string) => {
                                 >
                                     <i class="pi pi-exclamation-circle"></i>
                                     <span>Deposit payment required - ${{ booking.deposit_amount.toFixed(2) }}</span>
-                                    <Link
+                                    <AppLink
                                         :href="`/payment/${booking.uuid}/checkout`"
                                         @click.stop
                                         class="ml-auto font-medium text-yellow-800 hover:underline"
                                     >
                                         Pay Now
-                                    </Link>
+                                    </AppLink>
                                 </div>
 
                                 <!-- Today Badge -->
@@ -191,7 +191,7 @@ const getInitials = (name: string) => {
                             </div>
                         </div>
                     </div>
-                </Link>
+                </AppLink>
 
                 <!-- Pagination -->
                 <div v-if="bookings.last_page > 1" class="flex justify-center gap-2 pt-4">

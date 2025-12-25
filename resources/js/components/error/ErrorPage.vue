@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { home } from '@/routes';
 
 interface Props {
@@ -31,7 +31,7 @@ const goBack = () => {
         <!-- Header -->
         <header v-if="showNavigation" class="error-header">
             <div class="header-container">
-                <Link :href="home.url()" class="logo">Zeen</Link>
+                <AppLink :href="home.url()" class="logo">Zeen</AppLink>
             </div>
         </header>
 
@@ -58,10 +58,10 @@ const goBack = () => {
                         <i class="pi pi-arrow-left"></i>
                         Go Back
                     </button>
-                    <Link v-if="showHomeButton" :href="home.url()" class="btn btn-primary">
+                    <AppLink v-if="showHomeButton" :href="home.url()" class="btn btn-primary">
                         <i class="pi pi-home"></i>
                         Return Home
-                    </Link>
+                    </AppLink>
                 </div>
 
                 <slot name="additional" />

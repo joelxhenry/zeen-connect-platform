@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import Provider from '@/actions/App/Domains/Provider';
 import SettingsController from '@/actions/App/Domains/Provider/Controllers/SettingsController';
+import InstallPrompt from '@/components/console/InstallPrompt.vue';
 
 defineProps<{
     title?: string;
 }>();
 
 const sidebarOpen = ref(false);
+
+// Register service worker for PWA
+onMounted(() => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/console-sw.js').catch((error) => {
+            console.log('SW registration failed:', error);
+        });
+    }
+});
 
 const navItems = [
     { label: 'Dashboard', icon: 'pi pi-home', route: Provider.Controllers.DashboardController.url() },
@@ -101,5 +111,8 @@ const closeSidebar = () => {
                 <slot />
             </main>
         </div>
+
+        <!-- PWA Install Prompt -->
+        <InstallPrompt />
     </div>
 </template>

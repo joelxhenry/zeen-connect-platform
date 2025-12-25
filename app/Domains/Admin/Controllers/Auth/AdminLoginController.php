@@ -8,7 +8,6 @@ use App\Domains\Auth\Requests\LoginRequest;
 use App\Domains\User\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,17 +33,9 @@ class AdminLoginController extends Controller
     {
         $user = $this->loginAction->execute(
             $request->only('email', 'password'),
-            $request->boolean('remember')
+            $request->boolean('remember'),
+            UserRole::Admin
         );
-
-        // Verify user is an admin
-        if ($user->role !== UserRole::Admin) {
-            $this->logoutAction->execute();
-
-            throw ValidationException::withMessages([
-                'email' => 'This account does not have administrator access.',
-            ]);
-        }
 
         return redirect()->intended(route('admin.dashboard'));
     }

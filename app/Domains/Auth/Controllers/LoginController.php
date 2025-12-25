@@ -8,6 +8,7 @@ use App\Domains\Auth\Requests\LoginRequest;
 use App\Domains\User\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,20 +45,112 @@ class LoginController extends Controller
     }
 
     /**
-     * Handle unified login request (auto-detects role).
+     * Handle unified login request.
+     * If multiple accounts exist for the email, redirect to role selector.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse|Response
     {
-        $user = $this->loginAction->execute(
-            $request->only('email', 'password'),
-            $request->boolean('remember')
-        );
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $remember = $request->boolean('remember');
 
-        return match ($user->role) {
-            UserRole::Admin => redirect()->intended(route('admin.dashboard')),
-            UserRole::Provider => redirect()->intended(route('provider.dashboard')),
-            default => redirect()->intended(route('client.dashboard')),
-        };
+        // Check how many accounts exist for this email
+        $accounts = $this->loginAction->getAccountsForEmail($email);
+
+        if ($accounts['count'] === 0) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        // Single account - proceed with normal login
+        if ($accounts['count'] === 1) {
+            $user = $this->loginAction->execute(
+                $request->only('email', 'password'),
+                $remember
+            );
+
+            return $this->redirectForRole($user->role);
+        }
+
+        // Multiple accounts - validate password first, then show role selector
+        if (! $this->loginAction->validatePasswordForEmail($email, $password)) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.failed'),
+            ]);
+        }
+
+        // Store credentials in session for role selection
+        session([
+            'pending_login' => [
+                'email' => $email,
+                'password' => encrypt($password),
+                'remember' => $remember,
+                'roles' => $accounts['roles'],
+            ],
+        ]);
+
+        return redirect()->route('login.select-role');
+    }
+
+    /**
+     * Show the role selector page.
+     */
+    public function showSelectRole(): Response|RedirectResponse
+    {
+        $pendingLogin = session('pending_login');
+
+        if (! $pendingLogin) {
+            return redirect()->route('login');
+        }
+
+        return Inertia::render('Auth/SelectRole', [
+            'roles' => $pendingLogin['roles'],
+        ]);
+    }
+
+    /**
+     * Complete login after role selection.
+     */
+    public function storeSelectRole(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'role' => ['required', 'string', 'in:client,provider,admin'],
+        ]);
+
+        $pendingLogin = session('pending_login');
+
+        if (! $pendingLogin) {
+            return redirect()->route('login');
+        }
+
+        $role = UserRole::from($request->input('role'));
+
+        // Verify the selected role is one of the available roles
+        if (! in_array($role->value, $pendingLogin['roles'])) {
+            return redirect()->route('login.select-role')
+                ->withErrors(['role' => 'Invalid role selected.']);
+        }
+
+        try {
+            $user = $this->loginAction->execute(
+                [
+                    'email' => $pendingLogin['email'],
+                    'password' => decrypt($pendingLogin['password']),
+                ],
+                $pendingLogin['remember'],
+                $role
+            );
+
+            // Clear pending login from session
+            session()->forget('pending_login');
+
+            return $this->redirectForRole($user->role);
+        } catch (ValidationException $e) {
+            session()->forget('pending_login');
+
+            return redirect()->route('login')->withErrors($e->errors());
+        }
     }
 
     /**
@@ -67,17 +160,9 @@ class LoginController extends Controller
     {
         $user = $this->loginAction->execute(
             $request->only('email', 'password'),
-            $request->boolean('remember')
+            $request->boolean('remember'),
+            UserRole::Client
         );
-
-        // Verify user is a client
-        if ($user->role !== UserRole::Client) {
-            $this->logoutAction->execute();
-
-            throw ValidationException::withMessages([
-                'email' => 'This account is not registered as a client. Please use provider login.',
-            ]);
-        }
 
         return redirect()->intended(route('client.dashboard'));
     }
@@ -89,17 +174,9 @@ class LoginController extends Controller
     {
         $user = $this->loginAction->execute(
             $request->only('email', 'password'),
-            $request->boolean('remember')
+            $request->boolean('remember'),
+            UserRole::Provider
         );
-
-        // Verify user is a provider
-        if ($user->role !== UserRole::Provider) {
-            $this->logoutAction->execute();
-
-            throw ValidationException::withMessages([
-                'email' => 'This account is not registered as a provider. Please use client login.',
-            ]);
-        }
 
         return redirect()->intended(route('provider.dashboard'));
     }
@@ -112,5 +189,17 @@ class LoginController extends Controller
         $this->logoutAction->execute();
 
         return redirect()->route('home');
+    }
+
+    /**
+     * Get the redirect response for the given role.
+     */
+    private function redirectForRole(UserRole $role): RedirectResponse
+    {
+        return match ($role) {
+            UserRole::Admin => redirect()->intended(route('admin.dashboard')),
+            UserRole::Provider => redirect()->intended(route('provider.dashboard')),
+            default => redirect()->intended(route('client.dashboard')),
+        };
     }
 }

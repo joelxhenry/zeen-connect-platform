@@ -2,13 +2,14 @@
 import { Head } from '@inertiajs/vue3';
 import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
-
+import { home } from '@/routes';
 defineProps<{
     title?: string;
 }>();
 </script>
 
 <template>
+
     <Head :title="title" />
     <FlashMessages />
 
@@ -16,7 +17,7 @@ defineProps<{
         <!-- Left Panel - Marketing -->
         <div class="auth-marketing">
             <div class="marketing-content">
-                <AppLink href="/" class="logo">Zeen</AppLink>
+                <AppLink :href="home.url()" class="logo">Zeen</AppLink>
 
                 <div class="marketing-text">
                     <h1>Book services<br />with ease</h1>
@@ -40,14 +41,14 @@ defineProps<{
         <!-- Right Panel - Form -->
         <div class="auth-form-panel">
             <div class="auth-form-container">
-                <AppLink href="/" class="mobile-logo">Zeen</AppLink>
+                <AppLink :href="home.url()" class="mobile-logo">Zeen</AppLink>
 
                 <div class="form-content">
                     <slot />
                 </div>
 
                 <p class="auth-footer">
-                    <AppLink href="/">
+                    <AppLink :href="home.url()">
                         <i class="pi pi-arrow-left"></i>
                         Back to Home
                     </AppLink>

@@ -4,6 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import provider from '@/routes/provider';
 import { logout } from '@/routes';
 import InstallPrompt from '@/components/console/InstallPrompt.vue';
+import FlashMessages from '@/components/error/FlashMessages.vue';
 
 defineProps<{
     title?: string;
@@ -41,8 +42,8 @@ const closeSidebar = () => {
 </script>
 
 <template>
-
     <Head :title="title" />
+    <FlashMessages />
 
     <div class="flex min-h-screen">
         <!-- Mobile Overlay -->

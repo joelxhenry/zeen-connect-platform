@@ -5,6 +5,7 @@ import type { User } from '@/types/models';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
+import FlashMessages from '@/components/error/FlashMessages.vue';
 import ProviderSiteController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteController';
 import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
 
@@ -44,8 +45,8 @@ const getInitials = (name: string) => {
 </script>
 
 <template>
-
     <Head :title="title ? `${title} | ${providerSiteProvider?.business_name}` : providerSiteProvider?.business_name" />
+    <FlashMessages />
 
     <div class="provider-site-layout">
         <!-- Header -->

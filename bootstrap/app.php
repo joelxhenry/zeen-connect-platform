@@ -9,7 +9,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -64,5 +67,50 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Render custom error pages via Inertia
+        $exceptions->render(function (Throwable $e, Request $request) {
+            // Handle HTTP exceptions (404, 403, 419, 500, 503)
+            if ($e instanceof HttpExceptionInterface) {
+                $statusCode = $e->getStatusCode();
+
+                // For Inertia/web requests, render Vue error pages
+                if ($request->header('X-Inertia') || ! $request->expectsJson()) {
+                    $page = match ($statusCode) {
+                        404 => 'Error/404',
+                        403 => 'Error/403',
+                        419 => 'Error/419',
+                        503 => 'Error/503',
+                        default => 'Error/500',
+                    };
+
+                    return Inertia::render($page, [
+                        'status' => $statusCode,
+                        'message' => $e->getMessage() ?: null,
+                    ])->toResponse($request)->setStatusCode($statusCode);
+                }
+            }
+
+            // For API requests, return consistent JSON error format
+            if ($request->expectsJson() || $request->is('api/*')) {
+                $statusCode = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
+
+                return response()->json([
+                    'success' => false,
+                    'error' => [
+                        'code' => $statusCode,
+                        'message' => $e->getMessage() ?: 'An unexpected error occurred',
+                        'type' => class_basename($e),
+                    ],
+                ], $statusCode);
+            }
+
+            return null;
+        });
+
+        // Report to Sentry if available
+        $exceptions->report(function (Throwable $e) {
+            if (app()->bound('sentry') && app()->environment('production')) {
+                app('sentry')->captureException($e);
+            }
+        });
     })->create();

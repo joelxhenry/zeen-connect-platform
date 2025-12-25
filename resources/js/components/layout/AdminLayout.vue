@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import FlashMessages from '@/components/error/FlashMessages.vue';
 
 defineProps<{
     title?: string;
@@ -21,6 +22,7 @@ const navItems = [
 
 <template>
     <Head :title="title ? `${title} - Admin` : 'Admin'" />
+    <FlashMessages />
 
     <div class="admin-layout">
         <!-- Sidebar -->

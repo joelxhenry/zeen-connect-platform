@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import MadeInJamaica from '@/components/common/MadeInJamaica.vue';
+import FlashMessages from '@/components/error/FlashMessages.vue';
 
 defineProps<{
     title?: string;
@@ -9,6 +10,7 @@ defineProps<{
 
 <template>
     <Head :title="title" />
+    <FlashMessages />
 
     <div class="auth-layout">
         <!-- Left Panel - Marketing -->

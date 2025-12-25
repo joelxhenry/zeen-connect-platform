@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { User } from '@/types/models';
 import SiteFooter from '@/components/common/SiteFooter.vue';
+import FlashMessages from '@/components/error/FlashMessages.vue';
 import { home, pricing, forYou, foundingMembers, login, logout } from '@/routes';
 import provider from '@/routes/provider';
 import client from '@/routes/client';
@@ -16,6 +17,7 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
 
 <template>
     <Head :title="title" />
+    <FlashMessages />
 
     <div class="public-layout">
         <!-- Header -->

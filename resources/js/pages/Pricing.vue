@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import PublicLayout from '@/components/layout/PublicLayout.vue';
+import register from '@/routes/register';
 
 const plans = [
     {
@@ -18,7 +19,7 @@ const plans = [
             '$500 JMD minimum deposit',
         ],
         cta: 'Get Started',
-        ctaLink: '/register/provider',
+        ctaLink: register.provider.url(),
         highlighted: false,
     },
     {
@@ -37,7 +38,7 @@ const plans = [
             'No-show protection',
         ],
         cta: 'Start Free Trial',
-        ctaLink: '/register/provider?plan=premium',
+        ctaLink: register.provider.url({ query: { plan: 'premium' } }),
         highlighted: true,
         badge: 'Most Popular',
     },
@@ -152,7 +153,7 @@ const faqs = [
             <section class="cta-section">
                 <h2>Ready to grow your business?</h2>
                 <p>Join thousands of service providers in Jamaica using Zeen.</p>
-                <Link href="/register/provider" class="cta-button">
+                <Link :href="register.provider.url()" class="cta-button">
                     Get Started for Free
                     <i class="pi pi-arrow-right"></i>
                 </Link>

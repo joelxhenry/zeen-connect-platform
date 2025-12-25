@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import Provider from '@/actions/App/Domains/Provider';
-import SettingsController from '@/actions/App/Domains/Provider/Controllers/SettingsController';
+import provider from '@/routes/provider';
+import { logout } from '@/routes';
 import InstallPrompt from '@/components/console/InstallPrompt.vue';
 
 defineProps<{
@@ -21,14 +21,14 @@ onMounted(() => {
 });
 
 const navItems = [
-    { label: 'Dashboard', icon: 'pi pi-home', route: Provider.Controllers.DashboardController.url() },
-    { label: 'Profile', icon: 'pi pi-user', route: '/console/profile' },
-    { label: 'Services', icon: 'pi pi-th-large', route: Provider.Controllers.ServiceController.index().url },
-    { label: 'Availability', icon: 'pi pi-clock', route: Provider.Controllers.AvailabilityController.edit().url },
-    { label: 'Bookings', icon: 'pi pi-calendar', route: '/console/bookings' },
-    { label: 'Payments', icon: 'pi pi-wallet', route: '/console/payments' },
-    { label: 'Reviews', icon: 'pi pi-star', route: '/console/reviews' },
-    { label: 'Settings', icon: 'pi pi-cog', route: SettingsController.edit().url },
+    { label: 'Dashboard', icon: 'pi pi-home', route: provider.dashboard.url() },
+    { label: 'Profile', icon: 'pi pi-user', route: provider.profile.edit.url() },
+    { label: 'Services', icon: 'pi pi-th-large', route: provider.services.index.url() },
+    { label: 'Availability', icon: 'pi pi-clock', route: provider.availability.edit.url() },
+    { label: 'Bookings', icon: 'pi pi-calendar', route: provider.bookings.index.url() },
+    { label: 'Payments', icon: 'pi pi-wallet', route: provider.payments.index.url() },
+    { label: 'Reviews', icon: 'pi pi-star', route: provider.reviews.index.url() },
+    { label: 'Settings', icon: 'pi pi-cog', route: provider.settings.edit.url() },
 ];
 
 const toggleSidebar = () => {
@@ -74,7 +74,7 @@ const closeSidebar = () => {
             </nav>
 
             <div class="p-4 border-t border-gray-200">
-                <Link href="/logout" method="post" as="button"
+                <Link :href="logout.url()" method="post" as="button"
                     class="flex items-center gap-3 w-full py-3 bg-transparent border-none text-gray-500 cursor-pointer text-left hover:text-[#0D1F1B] transition-colors">
                     <i class="pi pi-sign-out"></i>
                     <span>Logout</span>

@@ -5,6 +5,8 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
+import LoginController from '@/actions/App/Domains/Auth/Controllers/LoginController';
+import { register } from '@/routes';
 
 const form = useForm({
     email: '',
@@ -13,7 +15,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post('/login', {
+    form.post(LoginController.store.url(), {
         onFinish: () => {
             form.reset('password');
         },
@@ -105,7 +107,7 @@ const socialAuth = (provider: string) => {
             </form>
 
             <p class="register-link">
-                Don't have an account? <Link href="/register">Sign up</Link>
+                Don't have an account? <Link :href="register.url()">Sign up</Link>
             </p>
         </div>
     </AuthLayout>

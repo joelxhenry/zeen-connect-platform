@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { foundingMembers } from '@/routes';
 </script>
 
 <template>
@@ -14,7 +15,7 @@ import { Link } from '@inertiajs/vue3';
                     Manage bookings, reach new clients, and grow your business — all in one place.
                 </p>
                 <div class="hero-actions">
-                    <Link href="/founding-members" class="btn btn-primary">
+                    <Link :href="foundingMembers.url()" class="btn btn-primary">
                         Join Waitlist
                         <i class="pi pi-arrow-right"></i>
                     </Link>

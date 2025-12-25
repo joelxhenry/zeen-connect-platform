@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import provider from '@/routes/provider';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ConfirmDialog from 'primevue/confirmdialog';
@@ -44,7 +45,7 @@ const deleteService = (service: Service) => {
         icon: 'pi pi-exclamation-triangle',
         acceptClass: '!bg-red-500 !border-red-500',
         accept: () => {
-            router.delete(`/console/services/${service.uuid}`, {
+            router.delete(provider.services.destroy.url(service.uuid), {
                 preserveScroll: true,
                 onSuccess: () => {
                     toast.add({
@@ -60,7 +61,7 @@ const deleteService = (service: Service) => {
 };
 
 const toggleActive = (service: Service) => {
-    router.post(`/console/services/${service.uuid}/toggle-active`, {}, {
+    router.post(provider.services.toggleActive.url(service.uuid), {}, {
         preserveScroll: true,
     });
 };
@@ -79,7 +80,7 @@ const toggleActive = (service: Service) => {
                         Manage the services you offer to clients
                     </p>
                 </div>
-                <Link href="/console/services/create">
+                <Link :href="provider.services.create.url()">
                     <Button label="Add Service" icon="pi pi-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
                 </Link>
             </div>
@@ -91,7 +92,7 @@ const toggleActive = (service: Service) => {
                 <p class="text-gray-500 m-0 mb-6 max-w-md mx-auto">
                     Start by adding your first service. Services define what you offer and how much you charge.
                 </p>
-                <Link href="/console/services/create">
+                <Link :href="provider.services.create.url()">
                     <Button label="Add Your First Service" icon="pi pi-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
                 </Link>
             </div>
@@ -126,7 +127,7 @@ const toggleActive = (service: Service) => {
                         </div>
 
                         <div class="flex items-center gap-2 pt-3 border-t border-gray-100">
-                            <Link :href="`/console/services/${service.uuid}/edit`" class="flex-1">
+                            <Link :href="provider.services.edit.url(service.uuid)" class="flex-1">
                                 <Button label="Edit" icon="pi pi-pencil" size="small" severity="secondary" outlined
                                     class="w-full" />
                             </Link>

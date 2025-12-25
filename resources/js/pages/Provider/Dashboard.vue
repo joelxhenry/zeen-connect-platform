@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
+import provider from '@/routes/provider';
 
 interface Props {
     provider: {
@@ -97,7 +98,7 @@ const getStatusSeverity = (status: string) => {
             <div v-if="stats.pendingBookings > 0" class="flex flex-wrap items-center gap-3 px-4 py-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-6 text-yellow-800">
                 <i class="pi pi-info-circle text-lg"></i>
                 <span class="flex-1">You have <strong>{{ stats.pendingBookings }}</strong> pending booking{{ stats.pendingBookings > 1 ? 's' : '' }} awaiting confirmation</span>
-                <Link href="/console/bookings?status=pending" class="font-medium text-yellow-800 no-underline hover:underline">View All</Link>
+                <Link :href="provider.bookings.index.url({ query: { status: 'pending' }})" class="font-medium text-yellow-800 no-underline hover:underline">View All</Link>
             </div>
 
             <!-- Stats Grid -->
@@ -154,13 +155,13 @@ const getStatusSeverity = (status: string) => {
                 <div class="lg:col-span-2 bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="flex justify-between items-center px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
                         <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0">Upcoming Bookings</h2>
-                        <Link href="/console/bookings" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
+                        <Link :href="provider.bookings.index.url()" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
                     </div>
                     <div class="p-4 lg:p-5">
                         <div v-if="upcomingBookings.length === 0" class="text-center py-12 text-gray-400">
                             <i class="pi pi-calendar text-4xl mb-3 block"></i>
                             <p class="m-0 text-sm">No upcoming bookings</p>
-                            <Link href="/console/availability" class="text-sm text-[#106B4F] no-underline hover:underline mt-2 inline-block">Set your availability</Link>
+                            <Link :href="provider.availability.edit.url()" class="text-sm text-[#106B4F] no-underline hover:underline mt-2 inline-block">Set your availability</Link>
                         </div>
                         <div v-else class="grid gap-3">
                             <div v-for="booking in upcomingBookings" :key="booking.uuid" class="flex flex-wrap items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
@@ -199,7 +200,7 @@ const getStatusSeverity = (status: string) => {
                                 <i class="pi pi-wallet text-[#106B4F]"></i>
                                 Payments
                             </h2>
-                            <Link href="/console/payments" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
+                            <Link :href="provider.payments.index.url()" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
                         </div>
                         <div class="p-4 lg:p-5">
                             <div v-if="recentPayments.length === 0" class="text-center py-6 text-gray-400">
@@ -225,7 +226,7 @@ const getStatusSeverity = (status: string) => {
                                 Reviews
                                 <Tag v-if="unrespondedReviewsCount > 0" severity="danger" :value="`${unrespondedReviewsCount}`" rounded class="!text-[10px] !px-1.5 !py-0.5 !min-w-[20px]" />
                             </h2>
-                            <Link href="/console/reviews" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
+                            <Link :href="provider.reviews.index.url()" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">View All</Link>
                         </div>
                         <div class="p-4 lg:p-5">
                             <div v-if="recentReviews.length === 0" class="text-center py-6 text-gray-400">
@@ -252,21 +253,21 @@ const getStatusSeverity = (status: string) => {
             <div class="bg-white rounded-xl p-4 lg:p-5 shadow-sm">
                 <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 mb-4">Quick Actions</h2>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-                    <Link href="/console/services/create" class="flex items-center justify-center gap-2 py-3 px-4 bg-[#106B4F] text-white rounded-lg text-sm font-medium no-underline hover:bg-[#0D5A42] transition-colors">
+                    <Link :href="provider.services.create.url()" class="flex items-center justify-center gap-2 py-3 px-4 bg-[#106B4F] text-white rounded-lg text-sm font-medium no-underline hover:bg-[#0D5A42] transition-colors">
                         <i class="pi pi-plus"></i>
                         <span class="hidden sm:inline">Add Service</span>
                         <span class="sm:hidden">Service</span>
                     </Link>
-                    <Link href="/console/availability" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
+                    <Link :href="provider.availability.edit.url()" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
                         <i class="pi pi-clock"></i>
                         <span class="hidden sm:inline">Availability</span>
                         <span class="sm:hidden">Hours</span>
                     </Link>
-                    <Link href="/console/profile" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
+                    <Link :href="provider.profile.edit.url()" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
                         <i class="pi pi-user"></i>
                         Profile
                     </Link>
-                    <Link href="/console/bookings" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
+                    <Link :href="provider.bookings.index.url()" class="flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium no-underline hover:bg-gray-200 transition-colors">
                         <i class="pi pi-calendar"></i>
                         Bookings
                     </Link>

@@ -2,6 +2,9 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import type { User } from '@/types/models';
 import SiteFooter from '@/components/common/SiteFooter.vue';
+import { home, pricing, forYou, foundingMembers, login, logout } from '@/routes';
+import provider from '@/routes/provider';
+import client from '@/routes/client';
 
 defineProps<{
     title?: string;
@@ -18,23 +21,23 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
         <!-- Header -->
         <header class="site-header">
             <div class="header-container">
-                <Link href="/" class="logo">Zeen</Link>
+                <Link :href="home.url()" class="logo">Zeen</Link>
 
                 <nav class="main-nav">
-                    <Link href="/" class="nav-link">Home</Link>
-                    <Link href="/explore" class="nav-link">Explore</Link>
-                    <Link href="/pricing" class="nav-link">Pricing</Link>
+                    <Link :href="home.url()" class="nav-link">Home</Link>
+                    <Link :href="forYou.url()" class="nav-link">For You</Link>
+                    <Link :href="pricing.url()" class="nav-link">Pricing</Link>
                 </nav>
 
                 <div class="auth-nav">
                     <template v-if="user">
-                        <Link v-if="user.role === 'provider'" href="/console" class="nav-link">Dashboard</Link>
-                        <Link v-else href="/dashboard" class="nav-link">Dashboard</Link>
-                        <Link href="/logout" method="post" as="button" class="logout-btn">Logout</Link>
+                        <Link v-if="user.role === 'provider'" :href="provider.dashboard.url()" class="nav-link">Dashboard</Link>
+                        <Link v-else :href="client.dashboard.url()" class="nav-link">Dashboard</Link>
+                        <Link :href="logout.url()" method="post" as="button" class="logout-btn">Logout</Link>
                     </template>
                     <template v-else>
-                        <Link href="/founding-members" class="cta-btn outline">Join Waitlist</Link>
-                        <Link href="/login" class="cta-btn filled">Log In</Link>
+                        <Link :href="foundingMembers.url()" class="cta-btn outline">Join Waitlist</Link>
+                        <Link :href="login.url()" class="cta-btn filled">Log In</Link>
                     </template>
                 </div>
             </div>

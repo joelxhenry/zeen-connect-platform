@@ -6,6 +6,7 @@ import FoundingFeatures from '@/components/founding/FoundingFeatures.vue';
 import FoundingPerks from '@/components/founding/FoundingPerks.vue';
 import FoundingPioneers from '@/components/founding/FoundingPioneers.vue';
 import FoundingCta from '@/components/founding/FoundingCta.vue';
+import { home, pricing, forYou, login } from '@/routes';
 
 const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -19,17 +20,17 @@ const scrollToTop = () => {
         <!-- Header -->
         <header class="site-header">
             <div class="header-container">
-                <Link href="/" class="logo">Zeen</Link>
+                <Link :href="home.url()" class="logo">Zeen</Link>
 
                 <nav class="main-nav">
-                    <Link href="/" class="nav-link">Home</Link>
-                    <Link href="/explore" class="nav-link">Explore</Link>
-                    <Link href="/pricing" class="nav-link">Pricing</Link>
+                    <Link :href="home.url()" class="nav-link">Home</Link>
+                    <Link :href="forYou.url()" class="nav-link">For You</Link>
+                    <Link :href="pricing.url()" class="nav-link">Pricing</Link>
                 </nav>
 
                 <div class="auth-nav">
                     <span class="header-badge">Founding Members</span>
-                    <Link href="/login" class="cta-btn">Log In</Link>
+                    <Link :href="login.url()" class="cta-btn">Log In</Link>
                 </div>
             </div>
         </header>

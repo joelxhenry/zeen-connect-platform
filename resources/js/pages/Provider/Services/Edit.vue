@@ -11,7 +11,7 @@ import Button from 'primevue/button';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import ServiceController from '@/actions/App/Domains/Provider/Controllers/ServiceController';
+import provider from '@/routes/provider';
 import FeeCalculator from '@/components/service/FeeCalculator.vue';
 
 interface Category {
@@ -131,7 +131,7 @@ const getDepositDisplay = (settings: BookingSettings) => {
 };
 
 const submit = () => {
-    form.put(ServiceController.edit({ uuid: props.service.uuid }).url, {
+    form.put(provider.services.update.url(props.service.uuid), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -151,7 +151,7 @@ const deleteService = () => {
         icon: 'pi pi-exclamation-triangle',
         acceptClass: '!bg-red-500 !border-red-500',
         accept: () => {
-            router.delete(`/console/services/${props.service.uuid}`, {
+            router.delete(provider.services.destroy.url(props.service.uuid), {
                 onSuccess: () => {
                     toast.add({
                         severity: 'success',
@@ -174,7 +174,7 @@ const deleteService = () => {
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex items-center gap-2 mb-2">
-                    <Link href="/console/services" class="text-gray-500 hover:text-[#0D1F1B]">
+                    <Link :href="provider.services.index.url()" class="text-gray-500 hover:text-[#0D1F1B]">
                         <i class="pi pi-arrow-left"></i>
                     </Link>
                     <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0">Edit Service</h1>
@@ -372,7 +372,7 @@ const deleteService = () => {
 
                 <!-- Form Actions -->
                 <div class="flex justify-end gap-3">
-                    <Link href="/console/services">
+                    <Link :href="provider.services.index.url()">
                         <Button label="Cancel" severity="secondary" type="button" />
                     </Link>
                     <Button label="Save Changes" icon="pi pi-check" type="submit" :loading="form.processing"

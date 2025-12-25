@@ -4,6 +4,8 @@ import AuthLayout from '@/components/layout/AuthLayout.vue';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
+import RegisterController from '@/actions/App/Domains/Auth/Controllers/RegisterController';
+import { login, terms, privacy } from '@/routes';
 
 const form = useForm({
     name: '',
@@ -15,7 +17,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post('/register/provider', {
+    form.post(RegisterController.storeProvider.url(), {
         onFinish: () => {
             form.reset('password', 'password_confirmation');
         },
@@ -142,8 +144,8 @@ const socialAuth = (provider: string) => {
 
                 <p class="terms-text">
                     By creating an account, you agree to our
-                    <Link href="/terms">Terms of Service</Link> and
-                    <Link href="/privacy">Privacy Policy</Link>.
+                    <Link :href="terms.url()">Terms of Service</Link> and
+                    <Link :href="privacy.url()">Privacy Policy</Link>.
                 </p>
 
                 <Button
@@ -155,7 +157,7 @@ const socialAuth = (provider: string) => {
             </form>
 
             <p class="login-link">
-                Already have an account? <Link href="/login">Sign in</Link>
+                Already have an account? <Link :href="login.url()">Sign in</Link>
             </p>
         </div>
     </AuthLayout>

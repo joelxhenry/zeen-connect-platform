@@ -9,7 +9,7 @@ import InputNumber from 'primevue/inputnumber';
 import InputSwitch from 'primevue/inputswitch';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
-import ServiceController from '@/actions/App/Domains/Provider/Controllers/ServiceController';
+import provider from '@/routes/provider';
 import FeeCalculator from '@/components/service/FeeCalculator.vue';
 
 interface Category {
@@ -110,7 +110,7 @@ const getDepositDisplay = (settings: BookingSettings) => {
 };
 
 const submit = () => {
-    form.post(ServiceController.store().url, {
+    form.post(provider.services.store.url(), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -130,7 +130,7 @@ const submit = () => {
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex items-center gap-2 mb-2">
-                    <Link href="/console/services" class="text-gray-500 hover:text-[#0D1F1B]">
+                    <Link :href="provider.services.index.url()" class="text-gray-500 hover:text-[#0D1F1B]">
                         <i class="pi pi-arrow-left"></i>
                     </Link>
                     <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0">Add New Service</h1>
@@ -311,7 +311,7 @@ const submit = () => {
 
                 <!-- Form Actions -->
                 <div class="flex justify-end gap-3">
-                    <Link href="/console/services">
+                    <Link :href="provider.services.index.url()">
                         <Button label="Cancel" severity="secondary" type="button" />
                     </Link>
                     <Button label="Create Service" icon="pi pi-check" type="submit" :loading="form.processing"

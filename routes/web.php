@@ -34,6 +34,10 @@ Route::domain(config('app.domain'))->group(function () {
         return Inertia::render('Pricing');
     })->name('pricing');
 
+    Route::get('/for-you', function () {
+        return Inertia::render('ForYou');
+    })->name('for-you');
+
     Route::get('/privacy', function () {
         return Inertia::render('Privacy');
     })->name('privacy');

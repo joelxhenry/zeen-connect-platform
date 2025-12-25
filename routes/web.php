@@ -5,6 +5,7 @@ use App\Domains\Client\Controllers\DashboardController as ClientDashboardControl
 use App\Domains\Client\Controllers\FavoriteController;
 use App\Domains\Client\Controllers\ProfileController as ClientProfileController;
 use App\Domains\Review\Controllers\ClientReviewController;
+use App\Http\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,8 +30,21 @@ Route::domain(config('app.domain'))->group(function () {
         return Inertia::render('Home');
     })->name('home');
 
+    Route::get('/pricing', function () {
+        return Inertia::render('Pricing');
+    })->name('pricing');
 
+    Route::get('/privacy', function () {
+        return Inertia::render('Privacy');
+    })->name('privacy');
 
+    Route::get('/terms', function () {
+        return Inertia::render('Terms');
+    })->name('terms');
+
+    // Waitlist / Founding Members
+    Route::get('/founding-members', [WaitlistController::class, 'show'])->name('founding-members');
+    Route::post('/founding-members', [WaitlistController::class, 'store'])->name('founding-members.store');
 
 
 

@@ -19,9 +19,9 @@ const features = [
         accent: false,
     },
     {
-        icon: 'pi-chart-line',
-        title: 'Business Analytics',
-        description: 'Get insights into your business performance and growth.',
+        icon: 'pi-palette',
+        title: 'Your Own Brand',
+        description: 'Customize your site with your logo, colors, and unique style.',
         accent: true,
     },
     {

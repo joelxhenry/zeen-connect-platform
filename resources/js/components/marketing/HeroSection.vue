@@ -14,8 +14,8 @@ import { Link } from '@inertiajs/vue3';
                     Manage bookings, reach new clients, and grow your business — all in one place.
                 </p>
                 <div class="hero-actions">
-                    <Link href="/register/provider" class="btn btn-primary">
-                        Join as Provider
+                    <Link href="/founding-members" class="btn btn-primary">
+                        Join Waitlist
                         <i class="pi pi-arrow-right"></i>
                     </Link>
                     <a href="#how-it-works" class="btn btn-secondary">
@@ -52,7 +52,7 @@ import { Link } from '@inertiajs/vue3';
 
 <style scoped>
 .hero-section {
-    padding: 5rem 2rem;
+    padding: 4rem 2rem 5rem;
     background: linear-gradient(165deg, #f8faf9 0%, #e8f5f0 50%, #f0f4f8 100%);
     overflow: hidden;
 }
@@ -229,6 +229,7 @@ import { Link } from '@inertiajs/vue3';
     .hero-visual {
         order: -1;
         height: 420px;
+        width: 100%;
         max-width: 400px;
         margin: 0 auto;
     }
@@ -236,21 +237,23 @@ import { Link } from '@inertiajs/vue3';
     .image-wrapper {
         width: 280px;
         height: 360px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
     }
 
     .card-1 {
         width: 110px;
         height: 110px;
         bottom: 60px;
-        left: 0;
+        left: 10%;
     }
 
     .card-2 {
         width: 90px;
         height: 90px;
         top: 40px;
-        left: 40px;
+        left: 5%;
     }
 
     .hero-text {
@@ -269,7 +272,7 @@ import { Link } from '@inertiajs/vue3';
 
 @media (max-width: 768px) {
     .hero-section {
-        padding: 3rem 1rem;
+        padding: 2rem 1rem 3rem;
     }
 
     .hero-text h1 {
@@ -281,26 +284,27 @@ import { Link } from '@inertiajs/vue3';
     }
 
     .hero-visual {
-        height: 350px;
+        height: 320px;
+        max-width: 320px;
     }
 
     .image-wrapper {
-        width: 220px;
-        height: 280px;
-        right: 30px;
+        width: 200px;
+        height: 260px;
     }
 
     .card-1 {
-        width: 90px;
-        height: 90px;
-        bottom: 50px;
+        width: 80px;
+        height: 80px;
+        bottom: 40px;
+        left: 0;
     }
 
     .card-2 {
-        width: 70px;
-        height: 70px;
-        top: 30px;
-        left: 20px;
+        width: 65px;
+        height: 65px;
+        top: 20px;
+        left: 0;
     }
 
     .shape-1, .shape-2 {

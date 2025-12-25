@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import type { User } from '@/types/models';
-import SiteFooter from '@/components/common/SiteFooter.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import FoundingHero from '@/components/founding/FoundingHero.vue';
+import FoundingVision from '@/components/founding/FoundingVision.vue';
+import FoundingFeatures from '@/components/founding/FoundingFeatures.vue';
+import FoundingPerks from '@/components/founding/FoundingPerks.vue';
+import FoundingPioneers from '@/components/founding/FoundingPioneers.vue';
+import FoundingCta from '@/components/founding/FoundingCta.vue';
 
-defineProps<{
-    title?: string;
-}>();
-
-const page = usePage();
-const user = (page.props.auth as { user?: User } | undefined)?.user;
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 </script>
 
 <template>
-    <Head :title="title" />
+    <Head title="Founding Members - Join the Waitlist" />
 
-    <div class="public-layout">
+    <div class="page">
         <!-- Header -->
         <header class="site-header">
             <div class="header-container">
@@ -27,34 +28,27 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
                 </nav>
 
                 <div class="auth-nav">
-                    <template v-if="user">
-                        <Link v-if="user.role === 'provider'" href="/console" class="nav-link">Dashboard</Link>
-                        <Link v-else href="/dashboard" class="nav-link">Dashboard</Link>
-                        <Link href="/logout" method="post" as="button" class="logout-btn">Logout</Link>
-                    </template>
-                    <template v-else>
-                        <Link href="/founding-members" class="cta-btn outline">Join Waitlist</Link>
-                        <Link href="/login" class="cta-btn filled">Log In</Link>
-                    </template>
+                    <span class="header-badge">Founding Members</span>
+                    <Link href="/login" class="cta-btn">Log In</Link>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <slot />
+            <FoundingHero />
+            <FoundingVision />
+            <FoundingFeatures />
+            <FoundingPerks />
+            <FoundingPioneers @join="scrollToTop" />
+            <FoundingCta />
         </main>
-
-        <!-- Footer -->
-        <SiteFooter />
     </div>
 </template>
 
 <style scoped>
-.public-layout {
+.page {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background: #fafbfc;
 }
 
 /* Header */
@@ -107,22 +101,18 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
 .auth-nav {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
-.logout-btn {
-    padding: 0.5rem 1rem;
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.logout-btn:hover {
-    color: white;
+.header-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #1ABC9C;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid rgba(26, 188, 156, 0.3);
+    border-radius: 4px;
 }
 
 .cta-btn {
@@ -131,33 +121,18 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
     font-weight: 500;
     text-decoration: none;
     border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.cta-btn.outline {
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background: transparent;
-}
-
-.cta-btn.outline:hover {
-    border-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.cta-btn.filled {
     background: #106B4F;
     color: white;
     border: 1px solid #106B4F;
+    transition: all 0.2s;
 }
 
-.cta-btn.filled:hover {
+.cta-btn:hover {
     background: #0D5A42;
     border-color: #0D5A42;
 }
 
 .main-content {
-    flex: 1;
     padding-top: 64px;
 }
 
@@ -172,9 +147,8 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
         display: none;
     }
 
-    .cta-btn {
-        padding: 0.375rem 1rem;
-        font-size: 0.8125rem;
+    .header-badge {
+        display: none;
     }
 
     .main-content {

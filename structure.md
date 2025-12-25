@@ -3,7 +3,7 @@ Zeen Revised Business Structure & Loophole Fixes
 1. Tiered Pricing Model 
 
 - Free Tier: $0 JMD/mo, 8% platform fee + trans fees, Compulsory Deposit. 
-- Premium Tier: $3,500 JMD/mo, 4% platform fee + trans fees, Up to 3 providers, Branding colors. 
+- Premium Tier: $3,500 JMD/mo, 4% platform fee + trans fees, Up to 3  additinal providers at $800 per user per month, Branding colors and theming. 
 - Enterprise Tier: $20,000 JMD/mo, 0% platform fee (trans fees only), Unlimited providers, Custom templates, APIs, Widgets. 
 
 

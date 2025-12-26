@@ -21,13 +21,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('guest')->group(function () {
+
+    Route::get('/', fn () => redirect()->route('login'));
+    
     // Unified login
     Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
-
-    // Role selector (for accounts with multiple roles)
-    Route::get('/login/select-role', [LoginController::class, 'showSelectRole'])->name('login.select-role');
-    Route::post('/login/select-role', [LoginController::class, 'storeSelectRole']);
 
     // Client login
     Route::get('/login/client', [LoginController::class, 'showClient'])->name('login.client');

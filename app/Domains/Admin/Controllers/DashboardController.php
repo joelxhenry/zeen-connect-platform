@@ -5,11 +5,14 @@ namespace App\Domains\Admin\Controllers;
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Enums\PaymentStatus;
+use App\Domains\Payment\Enums\PayoutStatus;
 use App\Domains\Payment\Models\Payment;
+use App\Domains\Payment\Models\Payout;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Review\Models\Review;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\WaitlistSubscriber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -30,13 +33,17 @@ class DashboardController extends Controller
             'pending_bookings' => Booking::whereIn('status', [BookingStatus::PENDING, BookingStatus::CONFIRMED])->count(),
             'total_revenue' => Payment::where('status', PaymentStatus::COMPLETED)->sum('amount'),
             'total_reviews' => Review::count(),
+            // New metrics for dashboard redesign
+            'mrr' => 0, // Placeholder until subscriptions are implemented
+            'pending_payouts_amount' => Payout::where('status', PayoutStatus::PENDING)->sum('amount'),
+            'waitlist_count' => WaitlistSubscriber::count(),
         ];
 
         // Revenue over last 30 days
         $revenueByDay = Payment::where('status', PaymentStatus::COMPLETED)
-            ->where('completed_at', '>=', now()->subDays(30))
+            ->where('paid_at', '>=', now()->subDays(30))
             ->select(
-                DB::raw('DATE(completed_at) as date'),
+                DB::raw('DATE(paid_at) as date'),
                 DB::raw('SUM(amount) as total'),
                 DB::raw('COUNT(*) as count')
             )
@@ -63,7 +70,7 @@ class DashboardController extends Controller
             ->map(fn ($booking) => [
                 'id' => $booking->id,
                 'uuid' => $booking->uuid,
-                'client_name' => $booking->client->name,
+                'client_name' =>  $booking->getClientName(),
                 'provider_name' => $booking->provider->business_name,
                 'service_name' => $booking->service->name,
                 'booking_date' => $booking->booking_date->format('M d, Y'),
@@ -77,16 +84,16 @@ class DashboardController extends Controller
         // Recent payments
         $recentPayments = Payment::with(['client:id,name', 'booking:id,uuid'])
             ->where('status', PaymentStatus::COMPLETED)
-            ->latest('completed_at')
+            ->latest('paid_at')
             ->take(10)
             ->get()
             ->map(fn ($payment) => [
                 'id' => $payment->id,
                 'uuid' => $payment->uuid,
-                'client_name' => $payment->client->name,
+                'client_name' => $payment->getClientName(),
                 'amount' => $payment->formatted_amount,
                 'booking_uuid' => $payment->booking->uuid,
-                'completed_at' => $payment->completed_at?->diffForHumans(),
+                'paid_at' => $payment->paid_at?->diffForHumans(),
             ]);
 
         // Pending provider verifications
@@ -119,6 +126,50 @@ class DashboardController extends Controller
                 'rating_count' => $provider->rating_count,
             ]);
 
+        // Financial data for chart (revenue vs payouts over last 30 days)
+        $financialData = collect();
+        for ($i = 29; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $dayRevenue = $revenueByDay->firstWhere('date', $date);
+            $dayPayouts = Payout::where('status', PayoutStatus::COMPLETED)
+                ->whereDate('processed_at', $date)
+                ->sum('amount');
+
+            $financialData->push([
+                'date' => $date,
+                'revenue' => $dayRevenue ? (float) $dayRevenue['total'] : 0,
+                'payouts' => (float) $dayPayouts,
+            ]);
+        }
+
+        // Critical alerts for notification bell
+        $criticalAlerts = collect();
+        $failedPayouts = Payout::where('status', PayoutStatus::FAILED)->count();
+        if ($failedPayouts > 0) {
+            $criticalAlerts->push([
+                'id' => 'failed-payouts',
+                'type' => 'payout_failed',
+                'title' => 'Failed Payouts',
+                'message' => "{$failedPayouts} payout(s) failed and need attention",
+                'timestamp' => now()->diffForHumans(),
+                'read' => false,
+                'link' => '/admin/payouts?status=failed',
+            ]);
+        }
+
+        $pendingProviderCount = $stats['pending_providers'];
+        if ($pendingProviderCount > 0) {
+            $criticalAlerts->push([
+                'id' => 'pending-providers',
+                'type' => 'provider_pending',
+                'title' => 'Pending Providers',
+                'message' => "{$pendingProviderCount} provider(s) awaiting approval",
+                'timestamp' => now()->diffForHumans(),
+                'read' => false,
+                'link' => '/admin/providers?status=pending',
+            ]);
+        }
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => $stats,
             'revenueByDay' => $revenueByDay,
@@ -127,6 +178,8 @@ class DashboardController extends Controller
             'recentPayments' => $recentPayments,
             'pendingProviders' => $pendingProviders,
             'topProviders' => $topProviders,
+            'financialData' => $financialData,
+            'criticalAlerts' => $criticalAlerts,
         ]);
     }
 }

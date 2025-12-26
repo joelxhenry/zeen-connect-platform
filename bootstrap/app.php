@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddXsrfTokenCookie;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsClient;
 use App\Http\Middleware\EnsureUserIsProvider;
@@ -52,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(prepend: [
             HandleCors::class,
         ], append: [
+            AddXsrfTokenCookie::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
@@ -66,6 +68,33 @@ return Application::configure(basePath: dirname(__DIR__))
             'client' => EnsureUserIsClient::class,
             'providersite' => ResolveProviderFromSubdomain::class,
         ]);
+
+        // Redirect authenticated users away from guest routes based on role
+        $middleware->redirectUsersTo(function (Request $request) {
+            $user = $request->user();
+            if (!$user) {
+                return route('home');
+            }
+
+            $scheme = $request->secure() ? 'https' : 'http';
+            $port = $request->getPort();
+            $portSuffix = ($port && $port !== 80 && $port !== 443) ? ':' . $port : '';
+
+            return match ($user->role->value) {
+                'admin' => $scheme . '://' . config('app.admin_domain') . $portSuffix . '/',
+                'provider' => $scheme . '://' . config('app.console_domain') . $portSuffix . '/',
+                default => route('client.dashboard'),
+            };
+        });
+
+        // Redirect guests to login (preserving port for local development)
+        $middleware->redirectGuestsTo(function (Request $request) {
+            $scheme = $request->secure() ? 'https' : 'http';
+            $port = $request->getPort();
+            $portSuffix = ($port && $port !== 80 && $port !== 443) ? ':' . $port : '';
+
+            return $scheme . '://' . config('app.auth_domain') . $portSuffix . '/login';
+        });
 
         $middleware->throttleApi();
     })

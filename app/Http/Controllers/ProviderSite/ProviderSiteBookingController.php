@@ -297,7 +297,7 @@ class ProviderSiteBookingController extends Controller
             'created_at' => $booking->created_at->format('M j, Y g:i A'),
             // Payment/deposit info
             'is_guest_booking' => $booking->isGuestBooking(),
-            'client_name' => $booking->client_name,
+            'client_name' => $booking->getClientName(),
             'client_email' => $booking->client_email,
             'requires_deposit' => $booking->requiresDeposit(),
             'deposit_amount' => (float) $booking->deposit_amount,

@@ -247,6 +247,18 @@ class Booking extends Model
         return '$'.number_format($this->total_amount, 2);
     }
 
+
+    public function getClientName()
+    {
+        return $this->isGuestBooking() ? $this->guest_name : $this->client?->name;
+    }
+
+
+    public function getClientEmail()
+    {
+        return $this->isGuestBooking() ? $this->guest_email : $this->client?->email;
+    }
+
     /**
      * Check if booking is in the past.
      */

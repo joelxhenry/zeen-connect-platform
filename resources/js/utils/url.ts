@@ -10,6 +10,13 @@
 
 // Known domains from the app configuration
 const KNOWN_DOMAINS = [
+    'zeenconnect.test',
+    'auth.zeenconnect.test',
+    'admin.zeenconnect.test',
+    'console.zeenconnect.test',
+    'payments.zeenconnect.test',
+
+    // Localhost variants
     'localhost',
     'auth.localhost',
     'admin.localhost',

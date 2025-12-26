@@ -59,12 +59,12 @@ class BookingController extends Controller
 
         $bookings = $query->paginate(20)->withQueryString();
 
-        $bookings->getCollection()->transform(fn ($booking) => [
+        $bookings->getCollection()->transform(fn($booking) => [
             'id' => $booking->id,
             'uuid' => $booking->uuid,
             'client' => [
-                'name' => $booking->client->name,
-                'email' => $booking->client->email,
+                'name' => $booking->getClientName(),
+                'email' => $booking->getClientEmail(),
             ],
             'provider' => [
                 'business_name' => $booking->provider->business_name,
@@ -116,10 +116,10 @@ class BookingController extends Controller
                 'uuid' => $booking->uuid,
                 'client' => [
                     'id' => $booking->client->id,
-                    'name' => $booking->client->name,
-                    'email' => $booking->client->email,
-                    'phone' => $booking->client->phone,
-                    'avatar' => $booking->client->avatar,
+                    'name' => $booking->getClientName(),
+                    'email' => $booking->getClientEmail(),
+                    'phone' => $booking->client?->phone,
+                    'avatar' => $booking->client?->avatar,
                 ],
                 'provider' => [
                     'id' => $booking->provider->id,

@@ -35,7 +35,7 @@ class PaymentRequired extends Mailable implements ShouldQueue
             view: 'emails.bookings.payment-required',
             with: [
                 'booking' => $this->booking,
-                'clientName' => $this->booking->client_name,
+                'clientName' => $this->booking->getClientName(),
                 'provider' => $this->booking->provider,
                 'service' => $this->booking->service,
                 'depositAmount' => $this->booking->deposit_amount,

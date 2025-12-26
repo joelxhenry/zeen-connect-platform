@@ -11,6 +11,7 @@ use App\Domains\Admin\Controllers\ProviderController;
 use App\Domains\Admin\Controllers\ReviewController;
 use App\Domains\Admin\Controllers\SettingsController;
 use App\Domains\Admin\Controllers\UserController;
+use App\Domains\Admin\Controllers\WaitlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -105,5 +106,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::prefix('settings')->name('admin.settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::put('/', [SettingsController::class, 'update'])->name('update');
+    });
+
+    // Waitlist management
+    Route::prefix('waitlist')->name('admin.waitlist.')->group(function () {
+        Route::get('/', [WaitlistController::class, 'index'])->name('index');
+        Route::post('/{id}/invite', [WaitlistController::class, 'invite'])->name('invite');
+        Route::delete('/{id}', [WaitlistController::class, 'destroy'])->name('destroy');
+        Route::get('/export', [WaitlistController::class, 'export'])->name('export');
     });
 });

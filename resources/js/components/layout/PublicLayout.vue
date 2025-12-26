@@ -13,11 +13,16 @@ defineProps<{
 
 const page = usePage();
 const user = (page.props.auth as { user?: User } | undefined)?.user;
+
+
+console.log('PublicLayout user:', user);
 </script>
 
 <template>
     <Head :title="title" />
     <FlashMessages />
+
+
 
     <div class="public-layout">
         <!-- Header -->
@@ -33,7 +38,7 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
 
                 <div class="auth-nav">
                     <template v-if="user">
-                        <AppLink v-if="user.role === 'provider'" :href="provider.dashboard.url()" class="nav-link">Dashboard</AppLink>
+                        <AppLink v-if="user.role === 'provider'" :href="provider.dashboard.url()" class="nav-link">Console</AppLink>
                         <AppLink v-else :href="client.dashboard.url()" class="nav-link">Dashboard</AppLink>
                         <AppLink :href="logout.url()" method="post" as="button" class="logout-btn">Logout</AppLink>
                     </template>

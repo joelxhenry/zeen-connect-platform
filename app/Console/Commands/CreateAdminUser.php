@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class CreateAdminUser extends Command
 {
@@ -33,15 +32,11 @@ class CreateAdminUser extends Command
         // Get email
         $email = $this->askWithValidation(
             'Email',
-            [
-                'required',
-                'email',
-                Rule::unique('users')->where('role', UserRole::Admin->value),
-            ],
+            ['required', 'email', 'unique:users'],
             [
                 'required' => 'Email is required.',
                 'email' => 'Please enter a valid email address.',
-                'unique' => 'An admin account with this email already exists.',
+                'unique' => 'An account with this email already exists.',
             ]
         );
 

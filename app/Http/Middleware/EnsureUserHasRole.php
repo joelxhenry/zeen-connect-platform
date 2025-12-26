@@ -17,7 +17,7 @@ class EnsureUserHasRole
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
 
-            return redirect()->to($this->getLoginRoute($roles));
+            return redirect()->to($this->getLoginRoute($request, $roles));
         }
 
         $userRole = $request->user()->role;
@@ -40,14 +40,18 @@ class EnsureUserHasRole
     /**
      * Get the appropriate login route based on the required roles.
      */
-    private function getLoginRoute(array $roles): string
+    private function getLoginRoute(Request $request, array $roles): string
     {
+        $scheme = $request->secure() ? 'https' : 'http';
+        $port = $request->getPort();
+        $portSuffix = ($port && $port !== 80 && $port !== 443) ? ':' . $port : '';
+
         // If admin role is required, redirect to admin login
-        if (in_array('admin', $roles) && Route::has('admin.login')) {
-            return route('admin.login');
+        if (in_array('admin', $roles)) {
+            return $scheme . '://' . config('app.admin_domain') . $portSuffix . '/login';
         }
 
-        // Default to the standard login route
-        return route('login');
+        // Default to the auth domain login route
+        return $scheme . '://' . config('app.auth_domain') . $portSuffix . '/login';
     }
 }

@@ -71,7 +71,7 @@ class PaymentController extends Controller
                 'total_amount' => (float) $booking->total_amount,
                 'total_display' => $booking->total_display,
                 'is_guest' => $booking->isGuestBooking(),
-                'client_name' => $booking->client_name,
+                'client_name' => $booking->getClientName(),
                 'client_email' => $booking->client_email,
             ],
             'payment' => [

@@ -29,6 +29,7 @@ const navItems = [
     { label: 'Bookings', icon: 'pi pi-calendar', route: provider.bookings.index.url() },
     { label: 'Payments', icon: 'pi pi-wallet', route: provider.payments.index.url() },
     { label: 'Reviews', icon: 'pi pi-star', route: provider.reviews.index.url() },
+    { label: 'Team', icon: 'pi pi-users', route: provider.team.index.url() },
     { label: 'Settings', icon: 'pi pi-cog', route: provider.settings.edit.url() },
 ];
 

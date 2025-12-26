@@ -297,4 +297,163 @@ class Provider extends Model
     {
         return $this->favoritedBy()->count();
     }
+
+    // =========================================================================
+    // Team Member Methods
+    // =========================================================================
+
+    /**
+     * Get all team members for this provider.
+     */
+    public function teamMembers(): HasMany
+    {
+        return $this->hasMany(TeamMember::class);
+    }
+
+    /**
+     * Get only active team members.
+     */
+    public function activeTeamMembers(): HasMany
+    {
+        return $this->teamMembers()->active();
+    }
+
+    /**
+     * Get the count of active team members.
+     */
+    public function getTeamMemberCount(): int
+    {
+        return $this->activeTeamMembers()->count();
+    }
+
+    /**
+     * Get the team member limit based on subscription tier.
+     * Returns null for unlimited.
+     */
+    public function getTeamMemberLimit(): ?int
+    {
+        return $this->getTier()->teamMemberLimit();
+    }
+
+    /**
+     * Get the number of free team member slots for this tier.
+     */
+    public function getFreeTeamMemberSlots(): int
+    {
+        return $this->getTier()->freeTeamMemberSlots();
+    }
+
+    /**
+     * Check if provider's tier supports team members.
+     */
+    public function supportsTeam(): bool
+    {
+        return $this->getTier()->supportsTeam();
+    }
+
+    /**
+     * Check if the provider can add another team member.
+     */
+    public function canAddTeamMember(): bool
+    {
+        if (! $this->supportsTeam()) {
+            return false;
+        }
+
+        $limit = $this->getTeamMemberLimit();
+
+        // null means unlimited
+        if ($limit === null) {
+            return true;
+        }
+
+        // For premium tier, soft limit with warning (always allow)
+        // The controller/frontend should show a warning about extra charges
+        return true;
+    }
+
+    /**
+     * Get the count of team members exceeding the free slots.
+     * This is used for billing extra member fees.
+     */
+    public function getExtraTeamMemberCount(): int
+    {
+        $freeSlots = $this->getFreeTeamMemberSlots();
+        $activeCount = $this->getTeamMemberCount();
+
+        return max(0, $activeCount - $freeSlots);
+    }
+
+    /**
+     * Check if adding a member would exceed free slots.
+     */
+    public function wouldExceedFreeSlots(): bool
+    {
+        $freeSlots = $this->getFreeTeamMemberSlots();
+        $activeCount = $this->getTeamMemberCount();
+
+        return $activeCount >= $freeSlots;
+    }
+
+    /**
+     * Check if a user is the owner of this provider.
+     */
+    public function isOwner(User $user): bool
+    {
+        return $this->user_id === $user->id;
+    }
+
+    /**
+     * Get the team member record for a given user.
+     * Returns null if the user is not a team member.
+     */
+    public function getTeamMemberFor(User $user): ?TeamMember
+    {
+        return $this->teamMembers()
+            ->where('user_id', $user->id)
+            ->first();
+    }
+
+    /**
+     * Check if a user has access to this provider (owner or team member).
+     */
+    public function hasAccess(User $user): bool
+    {
+        if ($this->isOwner($user)) {
+            return true;
+        }
+
+        $teamMember = $this->getTeamMemberFor($user);
+
+        return $teamMember && $teamMember->isActive();
+    }
+
+    /**
+     * Get permissions for a user accessing this provider.
+     * Returns all permissions for owner, or the team member's permissions.
+     *
+     * @return array<string>
+     */
+    public function getPermissionsFor(User $user): array
+    {
+        if ($this->isOwner($user)) {
+            return \App\Domains\Provider\Enums\TeamPermission::keys();
+        }
+
+        $teamMember = $this->getTeamMemberFor($user);
+
+        if (! $teamMember || ! $teamMember->isActive()) {
+            return [];
+        }
+
+        return $teamMember->permissions ?? [];
+    }
+
+    /**
+     * Check if a user has a specific permission for this provider.
+     */
+    public function userHasPermission(User $user, string $permission): bool
+    {
+        return in_array($permission, $this->getPermissionsFor($user), true);
+    }
 }

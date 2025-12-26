@@ -95,6 +95,53 @@ export interface BlockedDate {
     updated_at?: string;
 }
 
+export type TeamMemberStatus = 'pending' | 'active' | 'suspended';
+
+export interface TeamMember {
+    id: number;
+    uuid: string;
+    provider_id: number;
+    user_id: number | null;
+    email: string;
+    name: string | null;
+    avatar?: string | null;
+    permissions: string[];
+    permissions_summary?: string;
+    status: TeamMemberStatus;
+    status_label?: string;
+    status_color?: string;
+    invited_at: string | null;
+    accepted_at: string | null;
+    is_expired?: boolean;
+    is_pending?: boolean;
+    user?: User;
+}
+
+export interface TeamPermission {
+    key: string;
+    label: string;
+    description: string;
+    group: string;
+}
+
+export interface TeamPreset {
+    label: string;
+    description: string;
+    permissions: string[];
+}
+
+export interface TeamInfo {
+    tier: string;
+    tier_label: string;
+    supports_team: boolean;
+    free_slots: number;
+    active_count: number;
+    extra_count: number;
+    fee_per_extra: number;
+    total_extra_fee: number;
+    would_exceed_free_slots: boolean;
+}
+
 export interface PageProps {
     auth: {
         user: User | null;

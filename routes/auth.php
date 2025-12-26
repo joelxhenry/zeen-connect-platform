@@ -2,6 +2,7 @@
 
 use App\Domains\Auth\Controllers\LoginController;
 use App\Domains\Auth\Controllers\RegisterController;
+use App\Domains\Auth\Controllers\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,15 @@ Route::middleware('guest')->group(function () {
         Route::post('/register/provider', [RegisterController::class, 'storeProvider']);
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Team Invitation Routes (accessible by anyone)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/team/invite/{token}', [TeamInvitationController::class, 'show'])->name('team.invite.show');
+Route::post('/team/invite/{token}', [TeamInvitationController::class, 'accept'])->name('team.invite.accept');
 
 /*
 |--------------------------------------------------------------------------

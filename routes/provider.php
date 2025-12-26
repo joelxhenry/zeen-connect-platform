@@ -7,6 +7,7 @@ use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Provider\Controllers\SettingsController;
+use App\Domains\Provider\Controllers\TeamMemberController;
 use App\Domains\Review\Controllers\ProviderReviewController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,4 +76,17 @@ Route::prefix('payments')->name('provider.payments.')->group(function () {
 Route::prefix('reviews')->name('provider.reviews.')->group(function () {
     Route::get('/', [ProviderReviewController::class, 'index'])->name('index');
     Route::post('/{uuid}/respond', [ProviderReviewController::class, 'respond'])->name('respond');
+});
+
+// Team member management
+Route::prefix('team')->name('provider.team.')->group(function () {
+    Route::get('/', [TeamMemberController::class, 'index'])->name('index');
+    Route::get('/invite', [TeamMemberController::class, 'create'])->name('create');
+    Route::post('/', [TeamMemberController::class, 'store'])->name('store');
+    Route::get('/{member}/edit', [TeamMemberController::class, 'edit'])->name('edit');
+    Route::put('/{member}', [TeamMemberController::class, 'update'])->name('update');
+    Route::delete('/{member}', [TeamMemberController::class, 'destroy'])->name('destroy');
+    Route::post('/{member}/resend', [TeamMemberController::class, 'resendInvite'])->name('resend');
+    Route::post('/{member}/suspend', [TeamMemberController::class, 'suspend'])->name('suspend');
+    Route::post('/{member}/reactivate', [TeamMemberController::class, 'reactivate'])->name('reactivate');
 });

@@ -144,4 +144,74 @@ class User extends Authenticatable
         $this->favoriteProviders()->attach($provider->id);
         return true;
     }
+
+    // =========================================================================
+    // Team Membership Methods
+    // =========================================================================
+
+    /**
+     * Get all team memberships for this user.
+     */
+    public function teamMemberships(): HasMany
+    {
+        return $this->hasMany(\App\Domains\Provider\Models\TeamMember::class);
+    }
+
+    /**
+     * Get only active team memberships.
+     */
+    public function activeTeamMemberships(): HasMany
+    {
+        return $this->teamMemberships()->active();
+    }
+
+    /**
+     * Get all providers this user can access (owned or team member).
+     *
+     * @return \Illuminate\Support\Collection<\App\Domains\Provider\Models\Provider>
+     */
+    public function getAccessibleProviders(): \Illuminate\Support\Collection
+    {
+        $providers = collect();
+
+        // Add owned provider
+        if ($this->provider) {
+            $providers->push($this->provider);
+        }
+
+        // Add providers from active team memberships
+        $teamProviders = $this->activeTeamMemberships()
+            ->with('provider')
+            ->get()
+            ->pluck('provider')
+            ->filter();
+
+        return $providers->merge($teamProviders)->unique('id');
+    }
+
+    /**
+     * Check if this user can access a specific provider.
+     */
+    public function canAccessProvider(\App\Domains\Provider\Models\Provider $provider): bool
+    {
+        return $provider->hasAccess($this);
+    }
+
+    /**
+     * Get this user's permissions for a specific provider.
+     *
+     * @return array<string>
+     */
+    public function getPermissionsForProvider(\App\Domains\Provider\Models\Provider $provider): array
+    {
+        return $provider->getPermissionsFor($this);
+    }
+
+    /**
+     * Check if user has a specific permission for a provider.
+     */
+    public function hasProviderPermission(\App\Domains\Provider\Models\Provider $provider, string $permission): bool
+    {
+        return $provider->userHasPermission($this, $permission);
+    }
 }

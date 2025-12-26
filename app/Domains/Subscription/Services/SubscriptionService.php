@@ -188,4 +188,81 @@ class SubscriptionService
             SubscriptionTier::ENTERPRISE => (float) SystemSetting::get('enterprise_tier_monthly_price', 20000),
         };
     }
+
+    // =========================================================================
+    // Team Member Fee Methods
+    // =========================================================================
+
+    /**
+     * Get the monthly fee for each additional team member beyond free slots.
+     */
+    public function getExtraTeamMemberMonthlyFee(): float
+    {
+        return (float) SystemSetting::get('extra_team_member_monthly_fee', 1000);
+    }
+
+    /**
+     * Get the number of free team member slots for premium tier (from settings).
+     */
+    public function getPremiumFreeTeamMemberSlots(): int
+    {
+        return (int) SystemSetting::get('premium_tier_free_team_members', 3);
+    }
+
+    /**
+     * Calculate team member charges for a provider.
+     *
+     * @return array{
+     *     tier: string,
+     *     supports_team: bool,
+     *     free_slots: int,
+     *     active_count: int,
+     *     extra_count: int,
+     *     fee_per_extra: float,
+     *     total_extra_fee: float,
+     *     would_exceed_free_slots: bool
+     * }
+     */
+    public function calculateTeamMemberCharges(Provider $provider): array
+    {
+        $tier = $provider->getTier();
+        $supportsTeam = $tier->supportsTeam();
+        $freeSlots = $supportsTeam ? $provider->getFreeTeamMemberSlots() : 0;
+        $activeCount = $provider->getTeamMemberCount();
+        $extraCount = $provider->getExtraTeamMemberCount();
+        $feePerExtra = $this->getExtraTeamMemberMonthlyFee();
+
+        // Enterprise tier has no extra fees
+        $totalExtraFee = $tier === SubscriptionTier::ENTERPRISE
+            ? 0.0
+            : $extraCount * $feePerExtra;
+
+        return [
+            'tier' => $tier->value,
+            'tier_label' => $tier->label(),
+            'supports_team' => $supportsTeam,
+            'free_slots' => $freeSlots === PHP_INT_MAX ? -1 : $freeSlots, // -1 indicates unlimited
+            'active_count' => $activeCount,
+            'extra_count' => $extraCount,
+            'fee_per_extra' => $feePerExtra,
+            'total_extra_fee' => $totalExtraFee,
+            'would_exceed_free_slots' => $provider->wouldExceedFreeSlots(),
+        ];
+    }
+
+    /**
+     * Get a formatted description of team member limits for a tier.
+     */
+    public function getTeamMemberLimitDescription(SubscriptionTier $tier): string
+    {
+        return match ($tier) {
+            SubscriptionTier::FREE => 'Team members not available on Free tier',
+            SubscriptionTier::PREMIUM => sprintf(
+                '%d free members, then ₦%s/month each',
+                $this->getPremiumFreeTeamMemberSlots(),
+                number_format($this->getExtraTeamMemberMonthlyFee())
+            ),
+            SubscriptionTier::ENTERPRISE => 'Unlimited team members',
+        };
+    }
 }

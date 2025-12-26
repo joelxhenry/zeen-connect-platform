@@ -53,4 +53,38 @@ enum SubscriptionTier: string
     {
         return $this !== self::ENTERPRISE;
     }
+
+    /**
+     * Check if this tier supports team members.
+     */
+    public function supportsTeam(): bool
+    {
+        return $this !== self::FREE;
+    }
+
+    /**
+     * Get the team member limit for this tier.
+     * Returns null for unlimited, 0 for no team support.
+     */
+    public function teamMemberLimit(): ?int
+    {
+        return match ($this) {
+            self::FREE => 0,
+            self::PREMIUM => 3,       // Soft limit with extra charges
+            self::ENTERPRISE => null, // Unlimited
+        };
+    }
+
+    /**
+     * Get the number of free team member slots.
+     * For unlimited tiers, returns PHP_INT_MAX for comparison purposes.
+     */
+    public function freeTeamMemberSlots(): int
+    {
+        return match ($this) {
+            self::FREE => 0,
+            self::PREMIUM => 3,
+            self::ENTERPRISE => PHP_INT_MAX,
+        };
+    }
 }

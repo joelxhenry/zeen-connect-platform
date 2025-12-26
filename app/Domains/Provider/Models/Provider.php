@@ -2,7 +2,6 @@
 
 namespace App\Domains\Provider\Models;
 
-use App\Domains\Location\Models\Location;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
@@ -24,7 +23,6 @@ class Provider extends Model
 
     protected $fillable = [
         'user_id',
-        'primary_location_id',
         'business_name',
         'slug',
         'bio',
@@ -99,24 +97,6 @@ class Provider extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * Get the primary location for this provider.
-     */
-    public function primaryLocation(): BelongsTo
-    {
-        return $this->belongsTo(Location::class, 'primary_location_id');
-    }
-
-    /**
-     * Get all locations this provider serves.
-     */
-    public function locations(): BelongsToMany
-    {
-        return $this->belongsToMany(Location::class, 'location_provider')
-            ->withPivot('is_primary')
-            ->withTimestamps();
     }
 
     /**
@@ -249,79 +229,11 @@ class Provider extends Model
     }
 
     /**
-     * Scope a query to filter by location (providers serving this location).
-     */
-    public function scopeServesLocation($query, int $locationId)
-    {
-        return $query->whereHas('locations', fn ($q) => $q->where('locations.id', $locationId));
-    }
-
-    /**
-     * Scope a query to filter by region (providers serving any location in this region).
-     */
-    public function scopeServesRegion($query, int $regionId)
-    {
-        return $query->whereHas('locations', fn ($q) => $q->where('region_id', $regionId));
-    }
-
-    /**
-     * Scope a query to filter by country (providers serving any location in this country).
-     */
-    public function scopeServesCountry($query, int $countryId)
-    {
-        return $query->whereHas('locations.region', fn ($q) => $q->where('country_id', $countryId));
-    }
-
-    /**
      * Get the public URL for this provider's profile.
      */
     public function getPublicUrlAttribute(): string
     {
         return route('provider.public', $this->slug);
-    }
-
-    /**
-     * Get the primary location display string.
-     */
-    public function getLocationDisplayAttribute(): ?string
-    {
-        if (! $this->primaryLocation) {
-            return null;
-        }
-
-        return $this->primaryLocation->display_name;
-    }
-
-    /**
-     * Get all locations as a comma-separated string.
-     */
-    public function getLocationsDisplayAttribute(): string
-    {
-        return $this->locations->pluck('name')->implode(', ');
-    }
-
-    /**
-     * Sync locations and set primary.
-     */
-    public function syncLocations(array $locationIds, ?int $primaryLocationId = null): void
-    {
-        // Prepare pivot data with is_primary flag
-        $syncData = [];
-        foreach ($locationIds as $locationId) {
-            $syncData[$locationId] = [
-                'is_primary' => $locationId === $primaryLocationId,
-            ];
-        }
-
-        $this->locations()->sync($syncData);
-
-        // Update primary_location_id on provider
-        if ($primaryLocationId && in_array($primaryLocationId, $locationIds)) {
-            $this->update(['primary_location_id' => $primaryLocationId]);
-        } elseif (! empty($locationIds)) {
-            // Default to first location if no primary specified
-            $this->update(['primary_location_id' => $locationIds[0]]);
-        }
     }
 
     /**

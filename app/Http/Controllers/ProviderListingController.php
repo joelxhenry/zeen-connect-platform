@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Domains\Location\Models\Location;
-use App\Domains\Location\Models\Region;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Category;
 use Illuminate\Http\Request;
@@ -21,21 +19,10 @@ class ProviderListingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar',
-                'primaryLocation.region',
                 'services' => fn ($q) => $q->where('is_active', true)->limit(3),
                 'services.category:id,name,icon',
             ])
             ->withCount(['services' => fn ($q) => $q->where('is_active', true)]);
-
-        // Filter by location
-        if ($request->filled('location')) {
-            $query->servesLocation((int) $request->location);
-        }
-
-        // Filter by region
-        if ($request->filled('region')) {
-            $query->servesRegion((int) $request->region);
-        }
 
         // Filter by category (providers who have services in this category)
         if ($request->filled('category')) {
@@ -87,7 +74,6 @@ class ProviderListingController extends Controller
                 'business_name' => $provider->business_name,
                 'tagline' => $provider->tagline,
                 'avatar' => $provider->user?->avatar,
-                'location' => $provider->primaryLocation?->display_name,
                 'rating_avg' => $provider->rating_avg,
                 'rating_count' => $provider->rating_count,
                 'services_count' => $provider->services_count,
@@ -113,19 +99,13 @@ class ProviderListingController extends Controller
 
         // Get filter options
         $categories = Category::active()->ordered()->get(['id', 'uuid', 'name', 'slug', 'icon']);
-        $regions = Region::with('locations:id,region_id,name,slug')
-            ->whereHas('locations.providers')
-            ->get(['id', 'uuid', 'name', 'slug']);
 
         return Inertia::render('Explore/Index', [
             'providers' => $providers,
             'categories' => $categories,
-            'regions' => $regions,
             'filters' => [
                 'search' => $request->search,
                 'category' => $request->category,
-                'region' => $request->region,
-                'location' => $request->location,
                 'sort' => $sortBy,
             ],
         ]);
@@ -141,8 +121,6 @@ class ProviderListingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar,email',
-                'primaryLocation.region',
-                'locations.region',
                 'services' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
                 'services.category:id,name,icon,slug',
                 'availability' => fn ($q) => $q->where('is_available', true)->orderBy('day_of_week'),
@@ -232,12 +210,6 @@ class ProviderListingController extends Controller
                 'avatar' => $provider->user?->avatar,
                 'website' => $provider->website,
                 'social_links' => $provider->social_links,
-                'location' => $provider->primaryLocation?->display_name,
-                'locations' => $provider->locations->map(fn ($loc) => [
-                    'id' => $loc->id,
-                    'name' => $loc->name,
-                    'display_name' => $loc->display_name,
-                ]),
                 'rating_avg' => $provider->rating_avg,
                 'rating_count' => $provider->rating_count,
                 'total_bookings' => $provider->total_bookings,

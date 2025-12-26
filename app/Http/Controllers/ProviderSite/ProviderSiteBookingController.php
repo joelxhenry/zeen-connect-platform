@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +30,7 @@ class ProviderSiteBookingController extends Controller
      */
     protected function getProvider(): Provider
     {
-        return app('providersite.provider');
+        return app('site.provider');
     }
 
     /**
@@ -42,7 +43,6 @@ class ProviderSiteBookingController extends Controller
         // Load additional data needed for booking
         $provider->load([
             'user:id,name,avatar',
-            'primaryLocation.region',
             'subscription',
         ]);
 
@@ -63,11 +63,10 @@ class ProviderSiteBookingController extends Controller
                 'business_name' => $provider->business_name,
                 'slug' => $provider->slug,
                 'avatar' => $provider->user?->avatar,
-                'location' => $provider->primaryLocation?->display_name,
-                'tier' => $tierInfo['tier'] ?? 'free',
-                'tier_label' => $tierInfo['tier_label'] ?? 'Free',
+                'tier' => Arr::get($tierInfo, 'tier', 'free'),
+                'tier_label' => Arr::get($tierInfo, 'tier_label', 'Free')
             ],
-            'services' => $provider->services->map(fn ($service) => [
+            'services' => $provider->services->map(fn($service) => [
                 'id' => $service->id,
                 'name' => $service->name,
                 'description' => $service->description,
@@ -193,7 +192,6 @@ class ProviderSiteBookingController extends Controller
             ->with([
                 'provider:id,business_name,slug,address',
                 'provider.user:id,name,avatar,email',
-                'provider.primaryLocation.region',
                 'service:id,name,description,duration_minutes',
                 'payment',
             ])
@@ -272,7 +270,6 @@ class ProviderSiteBookingController extends Controller
                 'business_name' => $booking->provider->business_name,
                 'slug' => $booking->provider->slug,
                 'avatar' => $booking->provider->user?->avatar,
-                'location' => $booking->provider->primaryLocation?->display_name,
                 'address' => $booking->provider->address,
             ],
             'service' => [

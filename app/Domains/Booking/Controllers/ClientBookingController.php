@@ -93,7 +93,6 @@ class ClientBookingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar',
-                'primaryLocation.region',
                 'services' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
                 'services.category:id,name,icon',
                 'subscription',
@@ -117,7 +116,6 @@ class ClientBookingController extends Controller
                 'business_name' => $provider->business_name,
                 'slug' => $provider->slug,
                 'avatar' => $provider->user?->avatar,
-                'location' => $provider->primaryLocation?->display_name,
                 'tier' => $tierInfo['tier'] ?? 'free',
                 'tier_label' => $tierInfo['tier_label'] ?? 'Free',
             ],
@@ -238,7 +236,6 @@ class ClientBookingController extends Controller
             ->with([
                 'provider:id,business_name,slug,address',
                 'provider.user:id,name,avatar,email',
-                'provider.primaryLocation.region',
                 'service:id,name,description,duration_minutes',
                 'payment',
             ])
@@ -258,7 +255,6 @@ class ClientBookingController extends Controller
             ->with([
                 'provider:id,business_name,slug,address',
                 'provider.user:id,name,avatar,email',
-                'provider.primaryLocation.region',
                 'service:id,name,description,duration_minutes',
                 'payment',
             ])
@@ -281,7 +277,6 @@ class ClientBookingController extends Controller
                 'business_name' => $booking->provider->business_name,
                 'slug' => $booking->provider->slug,
                 'avatar' => $booking->provider->user?->avatar,
-                'location' => $booking->provider->primaryLocation?->display_name,
                 'address' => $booking->provider->address,
             ],
             'service' => [

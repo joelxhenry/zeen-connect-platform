@@ -19,8 +19,6 @@ class ProviderController extends Controller
         $query = Provider::query()
             ->with([
                 'user:id,name,email,avatar',
-                'primaryLocation:id,name,region_id',
-                'primaryLocation.region:id,name',
             ])
             ->withCount(['services', 'reviews']);
 
@@ -70,7 +68,6 @@ class ProviderController extends Controller
                 'email' => $provider->user->email,
                 'avatar' => $provider->user->avatar,
             ],
-            'location' => $provider->primaryLocation?->display_name,
             'status' => $provider->status,
             'is_featured' => $provider->is_featured,
             'rating_avg' => $provider->rating_avg,
@@ -108,8 +105,6 @@ class ProviderController extends Controller
         $provider = Provider::where('uuid', $uuid)
             ->with([
                 'user:id,name,email,phone,avatar,created_at',
-                'primaryLocation.region',
-                'locations',
                 'services.category',
                 'availability',
             ])
@@ -144,14 +139,6 @@ class ProviderController extends Controller
                     'avatar' => $provider->user->avatar,
                     'joined' => $provider->user->created_at->format('M d, Y'),
                 ],
-                'location' => $provider->primaryLocation ? [
-                    'name' => $provider->primaryLocation->name,
-                    'region' => $provider->primaryLocation->region->name,
-                ] : null,
-                'locations' => $provider->locations->map(fn ($loc) => [
-                    'id' => $loc->id,
-                    'name' => $loc->name,
-                ]),
                 'services' => $provider->services->map(fn ($service) => [
                     'id' => $service->id,
                     'name' => $service->name,

@@ -18,7 +18,7 @@ class FavoriteController extends Controller
     {
         $favorites = $request->user()
             ->favoriteProviders()
-            ->with(['user', 'primaryLocation', 'services' => fn ($q) => $q->where('is_active', true)])
+            ->with(['user', 'services' => fn ($q) => $q->where('is_active', true)])
             ->get()
             ->map(fn ($provider) => [
                 'id' => $provider->id,
@@ -27,7 +27,6 @@ class FavoriteController extends Controller
                 'business_name' => $provider->business_name,
                 'tagline' => $provider->tagline,
                 'avatar' => $provider->user->avatar,
-                'location' => $provider->primaryLocation?->display_name,
                 'rating_avg' => $provider->rating_avg,
                 'rating_count' => $provider->rating_count,
                 'services_count' => $provider->services->count(),

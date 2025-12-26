@@ -32,16 +32,7 @@ class UpdateProviderProfileAction
             // Update provider
             $provider->update($providerData);
 
-            // Sync locations if provided
-            if (isset($data['location_ids']) && ! empty($data['location_ids'])) {
-                $primaryLocationId = $data['primary_location_id'] ?? $data['location_ids'][0];
-                $provider->syncLocations($data['location_ids'], $primaryLocationId);
-            } elseif (isset($data['primary_location_id'])) {
-                // Just primary location, no multiple locations
-                $provider->syncLocations([$data['primary_location_id']], $data['primary_location_id']);
-            }
-
-            return $provider->fresh(['primaryLocation.region.country', 'locations']);
+            return $provider->fresh();
         });
     }
 

@@ -40,11 +40,6 @@ class UpdateProviderProfileRequest extends FormRequest
             'social_links.twitter' => ['nullable', 'string', 'max:255'],
             'social_links.tiktok' => ['nullable', 'string', 'max:255'],
             'social_links.youtube' => ['nullable', 'string', 'max:255'],
-
-            // Location
-            'primary_location_id' => ['nullable', 'exists:locations,id'],
-            'location_ids' => ['nullable', 'array'],
-            'location_ids.*' => ['exists:locations,id'],
         ];
     }
 
@@ -59,7 +54,6 @@ class UpdateProviderProfileRequest extends FormRequest
             'business_name.max' => 'Business name cannot exceed 100 characters.',
             'bio.max' => 'Bio cannot exceed 1000 characters.',
             'website.url' => 'Please enter a valid website URL.',
-            'primary_location_id.exists' => 'Please select a valid location.',
         ];
     }
 }

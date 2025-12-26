@@ -88,7 +88,7 @@ class UserController extends Controller
     public function show(string $uuid): Response
     {
         $user = User::where('uuid', $uuid)
-            ->with(['provider.primaryLocation', 'provider.services'])
+            ->with(['provider.services'])
             ->firstOrFail();
 
         return Inertia::render('Admin/Users/Show', [
@@ -109,7 +109,6 @@ class UserController extends Controller
                     'business_name' => $user->provider->business_name,
                     'slug' => $user->provider->slug,
                     'status' => $user->provider->status,
-                    'location' => $user->provider->primaryLocation?->display_name,
                     'services_count' => $user->provider->services->count(),
                     'rating_avg' => $user->provider->rating_avg,
                     'total_bookings' => $user->provider->total_bookings,

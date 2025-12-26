@@ -4,7 +4,6 @@ use App\Domains\Admin\Controllers\Auth\AdminLoginController;
 use App\Domains\Admin\Controllers\BookingController;
 use App\Domains\Admin\Controllers\CategoryController;
 use App\Domains\Admin\Controllers\DashboardController;
-use App\Domains\Admin\Controllers\LocationController;
 use App\Domains\Admin\Controllers\PaymentController;
 use App\Domains\Admin\Controllers\PayoutController;
 use App\Domains\Admin\Controllers\ProviderController;
@@ -91,15 +90,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::put('/{uuid}', [CategoryController::class, 'update'])->name('update');
         Route::post('/{uuid}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/{uuid}', [CategoryController::class, 'destroy'])->name('destroy');
-    });
-
-    // Location management
-    Route::prefix('locations')->name('admin.locations.')->group(function () {
-        Route::get('/', [LocationController::class, 'index'])->name('index');
-        Route::post('/', [LocationController::class, 'store'])->name('store');
-        Route::put('/{uuid}', [LocationController::class, 'update'])->name('update');
-        Route::post('/{uuid}/toggle-status', [LocationController::class, 'toggleStatus'])->name('toggle-status');
-        Route::delete('/{uuid}', [LocationController::class, 'destroy'])->name('destroy');
     });
 
     // System Settings management

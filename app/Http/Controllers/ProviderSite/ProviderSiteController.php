@@ -28,7 +28,6 @@ class ProviderSiteController extends Controller
         // Load additional relationships needed for homepage
         $provider->load([
             'user:id,name,avatar,email',
-            'primaryLocation.region',
             'availability' => fn ($q) => $q->where('is_available', true)->orderBy('day_of_week'),
         ]);
 
@@ -192,7 +191,6 @@ class ProviderSiteController extends Controller
             'cover_image' => $provider->cover_image,
             'website' => $provider->website,
             'social_links' => $provider->social_links,
-            'location' => $provider->primaryLocation?->display_name,
             'address' => $provider->address,
             'rating_avg' => $provider->rating_avg,
             'rating_count' => $provider->rating_count,

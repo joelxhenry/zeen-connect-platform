@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Route;
 | Each provider gets their own mini-site with profile, services, reviews,
 | and booking functionality.
 |
-| The {provider} parameter comes from the subdomain, resolved by
-| the providersite middleware in bootstrap/app.php.
-|
 */
 
 // Provider site pages

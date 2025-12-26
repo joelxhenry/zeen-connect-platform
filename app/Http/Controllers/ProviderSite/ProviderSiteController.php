@@ -15,7 +15,7 @@ class ProviderSiteController extends Controller
      */
     protected function getProvider(): Provider
     {
-        return app('providersite.provider');
+        return app('site.provider');
     }
 
     /**

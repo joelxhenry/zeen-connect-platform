@@ -6,8 +6,10 @@ import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
-import ProviderSiteController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteController';
-import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
+import site from '@/routes/providersite';
+import client from '@/routes/client';
+import { login } from '@/routes';
+import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
 
 defineProps<{
     title?: string;
@@ -18,14 +20,14 @@ const slots = useSlots();
 
 const page = usePage();
 const user = (page.props.auth as { user?: User } | undefined)?.user;
-const providerSiteProvider = page.props.providerSiteProvider as {
+const __provider = page.props.__provider as {
     id: number;
     business_name: string;
     slug: string;
     avatar?: string;
     cover_image?: string;
 } | null;
-const mainPlatformUrl = page.props.mainPlatformUrl as string;
+
 
 const currentPath = computed(() => {
     const url = new URL(window.location.href);
@@ -42,10 +44,36 @@ const isActive = (path: string) => {
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
+
+
+
+const homeUrl = computed(() => {
+    return site.home({ provider: __provider?.slug ?? '' }).url;
+});
+
+
+const servicesUrl = computed(() => {
+    return site.services({ provider: __provider?.slug ?? '' }).url;
+});
+
+
+const reviewsUrl = computed(() => {
+    return site.reviews({ provider: __provider?.slug ?? '' }).url;
+});
+
+
+const getBookingUrl = (service?: number) => {
+    
+   return '#';
+};
+
+
+
 </script>
 
 <template>
-    <Head :title="title ? `${title} | ${providerSiteProvider?.business_name}` : providerSiteProvider?.business_name" />
+
+    <Head :title="title ? `${title} | ${__provider?.business_name}` : __provider?.business_name" />
     <FlashMessages />
 
     <div class="provider-site-layout">
@@ -53,47 +81,41 @@ const getInitials = (name: string) => {
         <header class="header">
             <div class="header-content">
                 <!-- Provider Logo/Name -->
-                <AppLink :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
-                    class="provider-brand">
-                    <Avatar v-if="providerSiteProvider?.avatar" :image="providerSiteProvider.avatar" shape="circle"
-                        class="!w-10 !h-10" />
-                    <Avatar v-else :label="getInitials(providerSiteProvider?.business_name || '')" shape="circle"
+                <AppLink :href="homeUrl" class="provider-brand">
+                    <Avatar v-if="__provider?.avatar" :image="__provider.avatar" shape="circle" class="!w-10 !h-10" />
+                    <Avatar v-else :label="getInitials(__provider?.business_name || '')" shape="circle"
                         class="!w-10 !h-10 !bg-[#106B4F]" />
-                    <span class="provider-name">{{ providerSiteProvider?.business_name }}</span>
+                    <span class="provider-name">{{ __provider?.business_name }}</span>
                 </AppLink>
 
                 <!-- Main Navigation -->
                 <nav class="main-nav">
-                    <AppLink :href="ProviderSiteController.home({ provider: providerSiteProvider?.slug ?? '' }).url"
-                        class="nav-link"
+                    <AppLink :href="homeUrl" class="nav-link"
                         :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
                         Home
                     </AppLink>
-                    <AppLink :href="ProviderSiteController.services({ provider: providerSiteProvider?.slug ?? '' }).url"
-                        class="nav-link" :class="{ active: isActive('/services') }">
+                    <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
                         Services
                     </AppLink>
-                    <AppLink :href="ProviderSiteController.reviews({ provider: providerSiteProvider?.slug ?? '' }).url"
-                        class="nav-link" :class="{ active: isActive('/reviews') }">
+                    <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
                         Reviews
                     </AppLink>
                 </nav>
 
                 <!-- Right Side -->
                 <div class="header-right">
-                    <AppLink
-                        :href="ProviderSiteBookingController.create({ provider: providerSiteProvider?.slug ?? '' }).url">
+                    <AppLink :href="getBookingUrl()">
                         <Button label="Book Now" class="!bg-[#106B4F] !border-[#106B4F]" />
                     </AppLink>
 
                     <div class="auth-nav">
                         <template v-if="user">
-                            <AppLink :href="`${mainPlatformUrl}/dashboard`" class="nav-link text-sm">
+                            <AppLink :href="client.bookings.index().url" class="nav-link text-sm">
                                 My Bookings
                             </AppLink>
                         </template>
                         <template v-else>
-                            <AppLink :href="`${mainPlatformUrl}/login`" class="nav-link text-sm">
+                            <AppLink :href="login().url" class="nav-link text-sm">
                                 Login
                             </AppLink>
                         </template>
@@ -104,10 +126,9 @@ const getInitials = (name: string) => {
 
         <!-- Banner (cover image) -->
         <div v-if="showBanner !== false && !slots.hero" class="layout-banner">
-            <div class="layout-banner__cover"
-                :style="providerSiteProvider?.cover_image
-                    ? { backgroundImage: `url(${providerSiteProvider.cover_image})` }
-                    : { backgroundImage: `url('https://images.unsplash.com/photo-1600051831735-9e0b949949b6?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')` }">
+            <div class="layout-banner__cover" :style="__provider?.cover_image
+                ? { backgroundImage: `url(${__provider.cover_image})` }
+                : null">
                 <div class="layout-banner__overlay"></div>
             </div>
         </div>
@@ -121,7 +142,7 @@ const getInitials = (name: string) => {
         </main>
 
         <!-- Footer -->
-        <SiteFooter :copyrightName="providerSiteProvider?.business_name" :showPoweredBy="true" />
+        <SiteFooter :copyrightName="__provider?.business_name" :showPoweredBy="true" />
     </div>
 </template>
 

@@ -29,7 +29,7 @@ class ResolveProviderFromSubdomain
         }
 
         // Share provider globally via service container
-        app()->instance('providersite.provider', $provider);
+        app()->instance('site.provider', $provider);
 
         return $next($request);
     }

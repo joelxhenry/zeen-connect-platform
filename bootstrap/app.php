@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AddXsrfTokenCookie;
+use App\Http\Middleware\CheckLaunchMode;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsClient;
 use App\Http\Middleware\EnsureUserIsProvider;
@@ -67,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'provider' => EnsureUserIsProvider::class,
             'client' => EnsureUserIsClient::class,
             'providersite' => ResolveProviderFromSubdomain::class,
+            'launch.mode' => CheckLaunchMode::class,
         ]);
 
         // Redirect authenticated users away from guest routes based on role

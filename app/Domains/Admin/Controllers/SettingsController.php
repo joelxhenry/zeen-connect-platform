@@ -15,6 +15,19 @@ class SettingsController extends Controller
      * Settings categories with their keys and metadata.
      */
     private const SETTINGS_SCHEMA = [
+        'launch_mode' => [
+            'label' => 'Launch Mode',
+            'description' => 'Control platform availability during pre-launch',
+            'icon' => 'pi pi-rocket',
+            'settings' => [
+                'launch_mode_enabled' => [
+                    'label' => 'Enable Launch Mode',
+                    'type' => 'toggle',
+                    'description' => 'When enabled, registration is disabled and users are directed to the waitlist',
+                    'default' => false,
+                ],
+            ],
+        ],
         'tier_pricing' => [
             'label' => 'Tier Pricing',
             'description' => 'Platform fee rates and subscription prices for each tier',
@@ -147,9 +160,17 @@ class SettingsController extends Controller
 
             foreach ($categoryData['settings'] as $key => $metadata) {
                 $value = SystemSetting::get($key, $metadata['default']);
+
+                // Handle different types
+                if ($metadata['type'] === 'toggle') {
+                    $value = (bool) $value;
+                } elseif (is_numeric($value)) {
+                    $value = (float) $value;
+                }
+
                 $settings[$category]['settings'][$key] = [
                     ...$metadata,
-                    'value' => is_numeric($value) ? (float) $value : $value,
+                    'value' => $value,
                     'key' => $key,
                 ];
             }

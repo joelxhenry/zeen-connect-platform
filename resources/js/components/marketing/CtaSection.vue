@@ -1,5 +1,11 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import register from '@/routes/register';
+import { foundingMembers } from '@/routes';
+
+const page = usePage();
+const launchModeEnabled = computed(() => page.props.launchModeEnabled as boolean);
 </script>
 
 <template>
@@ -8,11 +14,24 @@ import register from '@/routes/register';
         <div class="cta-content">
             <h2>Ready to Grow Your Business?</h2>
             <p>Join thousands of service providers already thriving on Zeen Connect.</p>
-            <AppLink :href="register.provider.url()" class="btn btn-cta">
-                Start Your Free Account
-                <i class="pi pi-arrow-right"></i>
-            </AppLink>
-            <span class="cta-note">No credit card required &bull; Free to get started</span>
+
+            <!-- Show waitlist CTA during launch mode -->
+            <template v-if="launchModeEnabled">
+                <AppLink :href="foundingMembers.url()" class="btn btn-cta">
+                    Join the Waitlist
+                    <i class="pi pi-arrow-right"></i>
+                </AppLink>
+                <span class="cta-note">Be the first to know when we launch</span>
+            </template>
+
+            <!-- Show registration CTA when not in launch mode -->
+            <template v-else>
+                <AppLink :href="register.provider.url()" class="btn btn-cta">
+                    Start Your Free Account
+                    <i class="pi pi-arrow-right"></i>
+                </AppLink>
+                <span class="cta-note">No credit card required &bull; Free to get started</span>
+            </template>
         </div>
     </section>
 </template>

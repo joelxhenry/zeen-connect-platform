@@ -36,13 +36,17 @@ Route::middleware('guest')->group(function () {
     Route::get('/login/provider', [LoginController::class, 'showProvider'])->name('login.provider');
     Route::post('/login/provider', [LoginController::class, 'storeProvider']);
 
-    // Client registration
-    Route::get('/register', [RegisterController::class, 'show'])->name('register');
-    Route::post('/register', [RegisterController::class, 'store']);
+    // Client registration (blocked during launch mode)
+    Route::middleware('launch.mode')->group(function () {
+        Route::get('/register', [RegisterController::class, 'show'])->name('register');
+        Route::post('/register', [RegisterController::class, 'store']);
+    });
 
-    // Provider registration
-    Route::get('/register/provider', [RegisterController::class, 'showProvider'])->name('register.provider');
-    Route::post('/register/provider', [RegisterController::class, 'storeProvider']);
+    // Provider registration (blocked during launch mode)
+    Route::middleware('launch.mode')->group(function () {
+        Route::get('/register/provider', [RegisterController::class, 'showProvider'])->name('register.provider');
+        Route::post('/register/provider', [RegisterController::class, 'storeProvider']);
+    });
 });
 
 /*

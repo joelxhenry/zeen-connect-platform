@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import InputNumber from 'primevue/inputnumber';
+import ToggleSwitch from 'primevue/toggleswitch';
 import Button from 'primevue/button';
 import Panel from 'primevue/panel';
 import Message from 'primevue/message';
@@ -10,14 +11,14 @@ import SettingsController from '@/actions/App/Domains/Admin/Controllers/Settings
 
 interface SettingMeta {
     label: string;
-    type: 'percentage' | 'currency';
-    min: number;
+    type: 'percentage' | 'currency' | 'toggle';
+    min?: number;
     max?: number;
     step?: number;
     description: string;
-    value: number;
+    value: number | boolean;
     key: string;
-    default: number;
+    default: number | boolean;
 }
 
 interface CategoryData {
@@ -35,8 +36,8 @@ const props = defineProps<Props>();
 const toast = useToast();
 
 // Build initial form data from all settings
-const buildFormData = (): Record<string, number> => {
-    const data: Record<string, number> = {};
+const buildFormData = (): Record<string, number | boolean> => {
+    const data: Record<string, number | boolean> = {};
     for (const category of Object.values(props.settings)) {
         for (const [key, setting] of Object.entries(category.settings)) {
             data[key] = setting.value;
@@ -104,11 +105,25 @@ const submit = () => {
                             :key="key"
                             class="space-y-1"
                         >
-                            <label :for="key" class="block text-sm font-medium text-gray-700">
+                            <label :for="String(key)" class="block text-sm font-medium text-gray-700">
                                 {{ setting.label }}
                             </label>
+
+                            <!-- Toggle Switch for boolean settings -->
+                            <div v-if="setting.type === 'toggle'" class="flex items-center gap-3 py-2">
+                                <ToggleSwitch
+                                    :id="String(key)"
+                                    v-model="form[key]"
+                                />
+                                <span class="text-sm" :class="form[key] ? 'text-[#106B4F] font-medium' : 'text-gray-500'">
+                                    {{ form[key] ? 'Enabled' : 'Disabled' }}
+                                </span>
+                            </div>
+
+                            <!-- Number Input for percentage/currency settings -->
                             <InputNumber
-                                :id="key"
+                                v-else
+                                :id="String(key)"
                                 v-model="form[key]"
                                 :mode="setting.type === 'currency' ? 'currency' : 'decimal'"
                                 :currency="setting.type === 'currency' ? 'JMD' : undefined"
@@ -121,6 +136,7 @@ const submit = () => {
                                 class="w-full"
                                 :class="{ 'p-invalid': form.errors[key] }"
                             />
+
                             <small class="text-xs text-gray-500 block">
                                 {{ setting.description }}
                             </small>

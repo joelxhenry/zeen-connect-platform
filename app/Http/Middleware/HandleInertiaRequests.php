@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Domains\Admin\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -35,8 +36,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $isProviderSite = app()->bound('providersite.provider');
-        $providerSiteProvider = $isProviderSite ? app('providersite.provider') : null;
+        // Helper to get provider - evaluated lazily after providersite middleware runs
+        $getProvider = fn () => app()->bound('site.provider') ? app('site.provider') : null;
 
         return [
             ...parent::share($request),
@@ -49,15 +50,19 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
-            // Provider site context
-            'isProviderSite' => $isProviderSite,
-            'providerSiteProvider' => $providerSiteProvider ? [
-                'id' => $providerSiteProvider->id,
-                'business_name' => $providerSiteProvider->business_name,
-                'slug' => $providerSiteProvider->slug,
-                'avatar' => $providerSiteProvider->user?->avatar,
-                'cover_image' => $providerSiteProvider->cover_image,
-            ] : null,
+            // Provider site context (lazy evaluated after route middleware runs)
+            'isProviderSite' => fn () => (bool) $getProvider(),
+            '__provider' => function () use ($getProvider) {
+                $provider = $getProvider();
+
+                return $provider ? [
+                    'id' => $provider->id,
+                    'business_name' => $provider->business_name,
+                    'slug' => $provider->slug,
+                    'avatar' => $provider->user?->avatar,
+                    'cover_image' => $provider->cover_image,
+                ] : null;
+            },
             // Domain URLs
             'domains' => [
                 'main' => config('app.url'),
@@ -68,6 +73,8 @@ class HandleInertiaRequests extends Middleware
             ],
             'mainPlatformUrl' => config('app.url'),
             'appDomain' => config('app.domain'),
+            // Launch mode status for conditional UI rendering
+            'launchModeEnabled' => (bool) SystemSetting::get('launch_mode_enabled', false),
         ];
     }
 

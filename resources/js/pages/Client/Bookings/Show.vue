@@ -1,66 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import ClientLayout from '@/components/layout/ClientLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
+import type { Booking } from '@/types/models/booking';
 
 interface Props {
-    booking: {
-        id: number;
-        uuid: string;
-        provider: {
-            business_name: string;
-            slug: string;
-            avatar?: string;
-            location?: string;
-            address?: string;
-        };
-        service: {
-            name: string;
-            description?: string;
-            duration_minutes: number;
-        };
-        booking_date: string;
-        formatted_date: string;
-        formatted_time: string;
-        status: string;
-        status_label: string;
-        status_color: string;
-        service_price: number;
-        total_amount: number;
-        total_display: string;
-        client_notes?: string;
-        provider_notes?: string;
-        cancellation_reason?: string;
-        is_past: boolean;
-        is_today: boolean;
-        can_cancel: boolean;
-        confirmed_at?: string;
-        completed_at?: string;
-        cancelled_at?: string;
-        created_at: string;
-        is_guest_booking: boolean;
-        client_name: string;
-        client_email: string;
-        requires_deposit: boolean;
-        deposit_amount: number;
-        deposit_paid: boolean;
-        balance_amount: number;
-        platform_fee_amount: number;
-        processing_fee_amount: number;
-        can_pay: boolean;
-        payment?: {
-            status: string;
-            amount: number;
-            payment_type: string;
-            paid_at?: string;
-        };
-    };
+    booking: Booking;
 }
 
 const props = defineProps<Props>();
@@ -85,6 +36,21 @@ const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
 
+const getRelativeDate = (dateStr: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays < 7 && diffDays > 0) return `In ${diffDays} days`;
+    return null;
+};
+
+const relativeDate = computed(() => getRelativeDate(props.booking.booking_date));
+
 const submitCancel = () => {
     cancelForm.post(`/dashboard/bookings/${props.booking.uuid}/cancel`, {
         preserveScroll: true,
@@ -107,217 +73,305 @@ const submitCancel = () => {
         },
     });
 };
+
+const timelineEvents = computed(() => {
+    const events = [
+        {
+            icon: 'pi pi-plus',
+            iconBg: 'bg-gray-100',
+            iconColor: 'text-gray-500',
+            title: 'Booking Created',
+            date: props.booking.created_at,
+            show: true,
+        },
+        {
+            icon: 'pi pi-check',
+            iconBg: 'bg-[#106B4F]/10',
+            iconColor: 'text-[#106B4F]',
+            title: 'Confirmed',
+            date: props.booking.confirmed_at,
+            show: !!props.booking.confirmed_at,
+        },
+        {
+            icon: 'pi pi-check-circle',
+            iconBg: 'bg-blue-50',
+            iconColor: 'text-blue-500',
+            title: 'Completed',
+            date: props.booking.completed_at,
+            show: !!props.booking.completed_at,
+        },
+        {
+            icon: 'pi pi-times',
+            iconBg: 'bg-red-50',
+            iconColor: 'text-red-500',
+            title: 'Cancelled',
+            date: props.booking.cancelled_at,
+            show: !!props.booking.cancelled_at,
+        },
+    ];
+    return events.filter(e => e.show);
+});
 </script>
 
 <template>
-    <DashboardLayout :title="`Booking - ${booking.service.name}`">
-        <div class="max-w-3xl mx-auto px-4 py-8">
-            <!-- Back Link -->
-            <AppLink href="/dashboard/bookings" class="inline-flex items-center gap-2 text-gray-500 hover:text-[#0D1F1B] mb-6 no-underline">
-                <i class="pi pi-arrow-left"></i>
-                <span>Back to Bookings</span>
-            </AppLink>
-
-            <!-- Status Banner -->
-            <div
-                v-if="booking.can_pay"
-                class="flex flex-wrap items-center justify-between gap-4 px-5 py-4 bg-yellow-50 border border-yellow-200 rounded-xl mb-6"
-            >
-                <div class="flex items-center gap-3">
-                    <i class="pi pi-exclamation-circle text-yellow-600 text-xl"></i>
-                    <div>
-                        <p class="font-medium text-yellow-800 m-0">Deposit Payment Required</p>
-                        <p class="text-sm text-yellow-700 m-0">Pay ${{ booking.deposit_amount.toFixed(2) }} to secure your booking</p>
-                    </div>
-                </div>
-                <AppLink :href="`/payment/${booking.uuid}/checkout`">
-                    <Button label="Pay Now" icon="pi pi-credit-card" class="!bg-yellow-600 !border-yellow-600" />
+    <ClientLayout :title="`Booking - ${booking.service?.name}`">
+        <div class="min-h-screen bg-gray-50/50">
+            <div class="max-w-2xl mx-auto px-4 py-8">
+                <!-- Back Navigation -->
+                <AppLink
+                    href="/dashboard/bookings"
+                    class="inline-flex items-center gap-2 text-gray-500 hover:text-[#106B4F] mb-6 no-underline transition-colors"
+                >
+                    <i class="pi pi-arrow-left text-sm"></i>
+                    <span class="text-sm font-medium">Back to Bookings</span>
                 </AppLink>
-            </div>
 
-            <div
-                v-if="booking.is_today && !booking.is_past && booking.status === 'confirmed'"
-                class="flex items-center gap-3 px-5 py-4 bg-[#106B4F]/10 border border-[#106B4F]/20 rounded-xl mb-6"
-            >
-                <i class="pi pi-star-fill text-[#106B4F] text-xl"></i>
-                <div>
-                    <p class="font-medium text-[#106B4F] m-0">Your appointment is today!</p>
-                    <p class="text-sm text-[#106B4F]/80 m-0">{{ booking.formatted_time }} at {{ booking.provider.location || booking.provider.address }}</p>
-                </div>
-            </div>
+                <!-- Hero Card -->
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+                    <!-- Status Banner -->
+                    <div
+                        v-if="relativeDate && !booking.is_past && booking.status !== 'cancelled'"
+                        class="px-5 py-3 bg-gradient-to-r from-[#106B4F] to-[#0D5A42] text-white"
+                    >
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">
+                                <i class="pi pi-star-fill mr-2 text-sm"></i>
+                                {{ relativeDate }}
+                            </span>
+                            <span class="text-white/80 text-sm">{{ booking.formatted_time }}</span>
+                        </div>
+                    </div>
 
-            <!-- Main Content -->
-            <div class="space-y-6">
-                <!-- Provider & Status Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-5">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="flex items-center gap-4">
-                                <Avatar
-                                    v-if="booking.provider.avatar"
-                                    :image="booking.provider.avatar"
-                                    shape="circle"
-                                    class="!w-14 !h-14"
-                                />
-                                <Avatar
-                                    v-else
-                                    :label="getInitials(booking.provider.business_name)"
-                                    shape="circle"
-                                    class="!w-14 !h-14 !bg-[#106B4F] !text-lg"
-                                />
-                                <div>
-                                    <h1 class="text-xl font-semibold text-[#0D1F1B] m-0">{{ booking.service.name }}</h1>
-                                    <AppLink :href="`/providers/${booking.provider.slug}`" class="text-[#106B4F] hover:underline no-underline">
-                                        {{ booking.provider.business_name }}
-                                    </AppLink>
+                    <!-- Provider Info -->
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                            <Avatar
+                                v-if="booking.provider?.avatar"
+                                :image="booking.provider.avatar"
+                                shape="circle"
+                                class="!w-16 !h-16"
+                            />
+                            <Avatar
+                                v-else
+                                :label="getInitials(booking.provider?.business_name || '')"
+                                shape="circle"
+                                class="!w-16 !h-16 !bg-[#106B4F] !text-white !text-xl"
+                            />
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div>
+                                        <h1 class="text-xl font-semibold text-[#0D1F1B] m-0">{{ booking.service?.name }}</h1>
+                                        <AppLink
+                                            :href="`/providers/${booking.provider?.slug}`"
+                                            class="text-[#106B4F] hover:underline no-underline text-sm font-medium"
+                                        >
+                                            {{ booking.provider?.business_name }}
+                                        </AppLink>
+                                    </div>
+                                    <Tag
+                                        :value="booking.status_label"
+                                        :severity="getStatusSeverity(booking.status)"
+                                        class="!rounded-full !px-3"
+                                    />
                                 </div>
                             </div>
-                            <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" class="!text-sm !px-3 !py-1.5" />
                         </div>
-                    </div>
-                </div>
 
-                <!-- Booking Details Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-200">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">Appointment Details</h2>
-                    </div>
-                    <div class="p-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Date</label>
-                                <p class="font-medium text-[#0D1F1B] m-0 flex items-center gap-2">
+                        <!-- Quick Info -->
+                        <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-[#106B4F]/10 flex items-center justify-center shrink-0">
                                     <i class="pi pi-calendar text-[#106B4F]"></i>
-                                    {{ booking.formatted_date }}
-                                </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 m-0">Date</p>
+                                    <p class="font-medium text-[#0D1F1B] m-0 text-sm">{{ booking.formatted_date }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Time</label>
-                                <p class="font-medium text-[#0D1F1B] m-0 flex items-center gap-2">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-[#106B4F]/10 flex items-center justify-center shrink-0">
                                     <i class="pi pi-clock text-[#106B4F]"></i>
-                                    {{ booking.formatted_time }}
-                                </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 m-0">Time</p>
+                                    <p class="font-medium text-[#0D1F1B] m-0 text-sm">{{ booking.formatted_time }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Duration</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.service.duration_minutes }} minutes</p>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                                    <i class="pi pi-stopwatch text-blue-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 m-0">Duration</p>
+                                    <p class="font-medium text-[#0D1F1B] m-0 text-sm">{{ booking.service?.duration_minutes }} min</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Location</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.provider.address || booking.provider.location || 'Contact provider' }}</p>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                                    <i class="pi pi-wallet text-amber-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 m-0">Total</p>
+                                    <p class="font-semibold text-[#0D1F1B] m-0 text-sm">{{ booking.total_display }}</p>
+                                </div>
                             </div>
-                        </div>
-
-                        <div v-if="booking.service.description" class="mt-6 pt-6 border-t border-gray-100">
-                            <label class="text-sm text-gray-500 block mb-2">Service Description</label>
-                            <p class="text-gray-700 m-0">{{ booking.service.description }}</p>
-                        </div>
-
-                        <div v-if="booking.client_notes" class="mt-6 pt-6 border-t border-gray-100">
-                            <label class="text-sm text-gray-500 block mb-2">Your Notes</label>
-                            <p class="text-gray-700 m-0">{{ booking.client_notes }}</p>
-                        </div>
-
-                        <div v-if="booking.provider_notes" class="mt-6 pt-6 border-t border-gray-100">
-                            <label class="text-sm text-gray-500 block mb-2">Provider Notes</label>
-                            <p class="text-gray-700 m-0">{{ booking.provider_notes }}</p>
-                        </div>
-
-                        <div v-if="booking.cancellation_reason" class="mt-6 pt-6 border-t border-gray-100">
-                            <label class="text-sm text-gray-500 block mb-2">Cancellation Reason</label>
-                            <p class="text-red-600 m-0">{{ booking.cancellation_reason }}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Payment Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-200">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">Payment</h2>
+                <!-- Payment Alert -->
+                <div
+                    v-if="booking.can_pay"
+                    class="flex items-center gap-4 p-5 bg-amber-50 rounded-2xl border border-amber-100 mb-6"
+                >
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                        <i class="pi pi-credit-card text-amber-600 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold text-amber-800 m-0">Complete Your Payment</p>
+                        <p class="text-amber-600 m-0 text-sm">Pay ${{ booking.deposit_amount.toFixed(2) }} deposit to confirm your booking</p>
+                    </div>
+                    <AppLink :href="`/payment/${booking.uuid}/checkout`">
+                        <Button
+                            label="Pay Now"
+                            icon="pi pi-arrow-right"
+                            iconPos="right"
+                            class="!bg-amber-500 !border-amber-500 !rounded-full"
+                        />
+                    </AppLink>
+                </div>
+
+                <!-- Location Card -->
+                <div v-if="booking.provider?.address" class="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-[#106B4F]/10 flex items-center justify-center shrink-0">
+                            <i class="pi pi-map-marker text-[#106B4F] text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-[#0D1F1B] m-0">Location</p>
+                            <p class="text-gray-600 m-0 text-sm mt-1">{{ booking.provider.address }}</p>
+                        </div>
+                        <AppLink
+                            :href="`https://maps.google.com/?q=${encodeURIComponent(booking.provider.address)}`"
+                            target="_blank"
+                            class="shrink-0"
+                        >
+                            <Button
+                                label="Directions"
+                                icon="pi pi-external-link"
+                                text
+                                class="!text-[#106B4F]"
+                            />
+                        </AppLink>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div v-if="booking.service?.description || booking.client_notes || booking.provider_notes" class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+                    <div class="px-5 py-4 border-b border-gray-100">
+                        <h2 class="font-semibold text-[#0D1F1B] m-0">Details</h2>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div v-if="booking.service?.description">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide m-0 mb-1">Service Description</p>
+                            <p class="text-gray-700 m-0 text-sm">{{ booking.service.description }}</p>
+                        </div>
+                        <div v-if="booking.client_notes" class="pt-4 border-t border-gray-50">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide m-0 mb-1">Your Notes</p>
+                            <p class="text-gray-700 m-0 text-sm">{{ booking.client_notes }}</p>
+                        </div>
+                        <div v-if="booking.provider_notes" class="pt-4 border-t border-gray-50">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide m-0 mb-1">Provider Notes</p>
+                            <p class="text-gray-700 m-0 text-sm">{{ booking.provider_notes }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cancellation Reason -->
+                <div v-if="booking.cancellation_reason" class="bg-red-50 rounded-2xl border border-red-100 p-5 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+                            <i class="pi pi-times text-red-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-red-800 m-0">Cancellation Reason</p>
+                            <p class="text-red-600 m-0 text-sm mt-1">{{ booking.cancellation_reason }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Breakdown -->
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="font-semibold text-[#0D1F1B] m-0">Payment Summary</h2>
+                        <div v-if="booking.payment" class="flex items-center gap-1.5 text-[#106B4F] text-sm">
+                            <i class="pi pi-check-circle text-xs"></i>
+                            <span>Paid</span>
+                        </div>
                     </div>
                     <div class="p-5">
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Service Price</span>
-                                <span class="font-medium">${{ booking.service_price.toFixed(2) }}</span>
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Service</span>
+                                <span class="font-medium text-[#0D1F1B]">${{ booking.service_price.toFixed(2) }}</span>
+                            </div>
+
+                            <div v-if="booking.fee_payer === 'client' && booking.convenience_fee > 0" class="flex justify-between text-sm">
+                                <span class="text-gray-600">Service Fee</span>
+                                <span class="font-medium text-[#0D1F1B]">${{ booking.convenience_fee.toFixed(2) }}</span>
                             </div>
 
                             <template v-if="booking.requires_deposit">
-                                <div class="flex justify-between">
+                                <div class="h-px bg-gray-100 my-2"></div>
+                                <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Deposit</span>
-                                    <span :class="booking.deposit_paid ? 'text-[#106B4F]' : 'text-yellow-600'" class="font-medium">
+                                    <span class="font-medium" :class="booking.deposit_paid ? 'text-[#106B4F]' : 'text-amber-600'">
                                         ${{ booking.deposit_amount.toFixed(2) }}
-                                        <span v-if="booking.deposit_paid" class="text-xs ml-1">(Paid)</span>
-                                        <span v-else class="text-xs ml-1">(Pending)</span>
+                                        <span class="text-xs ml-1">({{ booking.deposit_paid ? 'Paid' : 'Due' }})</span>
                                     </span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Balance Due at Appointment</span>
-                                    <span class="font-medium">${{ booking.balance_amount.toFixed(2) }}</span>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Balance at appointment</span>
+                                    <span class="font-medium text-[#0D1F1B]">${{ booking.balance_amount.toFixed(2) }}</span>
                                 </div>
                             </template>
 
-                            <hr class="border-gray-200 my-2" />
+                            <div class="h-px bg-gray-200 my-3"></div>
 
-                            <div class="flex justify-between text-base">
+                            <div class="flex justify-between">
                                 <span class="font-semibold text-[#0D1F1B]">Total</span>
-                                <span class="font-bold text-[#0D1F1B]">{{ booking.total_display }}</span>
+                                <span class="font-bold text-lg text-[#0D1F1B]">{{ booking.total_display }}</span>
                             </div>
                         </div>
 
                         <div v-if="booking.payment" class="mt-4 pt-4 border-t border-gray-100">
-                            <div class="flex items-center gap-2 text-sm text-[#106B4F]">
-                                <i class="pi pi-check-circle"></i>
+                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                                <i class="pi pi-check-circle text-[#106B4F]"></i>
                                 <span>{{ booking.payment.payment_type === 'deposit' ? 'Deposit' : 'Payment' }} received on {{ booking.payment.paid_at }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Timeline Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-200">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">Timeline</h2>
+                <!-- Timeline -->
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+                    <div class="px-5 py-4 border-b border-gray-100">
+                        <h2 class="font-semibold text-[#0D1F1B] m-0">Timeline</h2>
                     </div>
                     <div class="p-5">
-                        <div class="space-y-4">
-                            <div class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                                    <i class="pi pi-plus text-gray-500 text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Booking Created</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.created_at }}</p>
-                                </div>
-                            </div>
+                        <div class="relative">
+                            <!-- Timeline line -->
+                            <div class="absolute left-4 top-4 bottom-4 w-px bg-gray-200"></div>
 
-                            <div v-if="booking.confirmed_at" class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-[#106B4F]/10 flex items-center justify-center shrink-0">
-                                    <i class="pi pi-check text-[#106B4F] text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Confirmed</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.confirmed_at }}</p>
-                                </div>
-                            </div>
-
-                            <div v-if="booking.completed_at" class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                                    <i class="pi pi-check-circle text-blue-500 text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Completed</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.completed_at }}</p>
-                                </div>
-                            </div>
-
-                            <div v-if="booking.cancelled_at" class="flex items-start gap-3">
-                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                                    <i class="pi pi-times text-red-500 text-sm"></i>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Cancelled</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.cancelled_at }}</p>
+                            <div class="space-y-6">
+                                <div v-for="(event, index) in timelineEvents" :key="index" class="flex items-start gap-4 relative">
+                                    <div :class="[event.iconBg, 'w-8 h-8 rounded-full flex items-center justify-center shrink-0 relative z-10']">
+                                        <i :class="[event.icon, event.iconColor, 'text-sm']"></i>
+                                    </div>
+                                    <div class="pt-1">
+                                        <p class="font-medium text-[#0D1F1B] m-0 text-sm">{{ event.title }}</p>
+                                        <p class="text-gray-500 m-0 text-xs">{{ event.date }}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -325,9 +379,14 @@ const submitCancel = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex flex-wrap gap-3">
-                    <AppLink :href="`/providers/${booking.provider.slug}`">
-                        <Button label="View Provider" icon="pi pi-user" outlined class="!border-[#106B4F] !text-[#106B4F]" />
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <AppLink :href="`/providers/${booking.provider?.slug}`" class="flex-1">
+                        <Button
+                            label="View Provider"
+                            icon="pi pi-user"
+                            outlined
+                            class="!border-[#106B4F] !text-[#106B4F] !rounded-full w-full"
+                        />
                     </AppLink>
                     <Button
                         v-if="booking.can_cancel"
@@ -335,48 +394,75 @@ const submitCancel = () => {
                         icon="pi pi-times"
                         severity="danger"
                         outlined
+                        class="!rounded-full flex-1"
                         @click="showCancelDialog = true"
                     />
                 </div>
             </div>
+        </div>
 
-            <!-- Cancel Dialog -->
-            <Dialog
-                v-model:visible="showCancelDialog"
-                header="Cancel Booking"
-                modal
-                :style="{ width: '400px' }"
-            >
-                <div class="space-y-4">
-                    <p class="text-gray-600 m-0">
-                        Are you sure you want to cancel this booking? This action cannot be undone.
-                    </p>
+        <!-- Cancel Dialog -->
+        <Dialog
+            v-model:visible="showCancelDialog"
+            modal
+            :style="{ width: '420px' }"
+            :pt="{
+                root: { class: '!rounded-2xl overflow-hidden' },
+                header: { class: '!p-5 !border-b !border-gray-100' },
+                content: { class: '!p-5' },
+                footer: { class: '!p-5 !pt-0' }
+            }"
+        >
+            <template #header>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                        <i class="pi pi-exclamation-triangle text-red-500"></i>
+                    </div>
                     <div>
-                        <label for="cancel_reason" class="block text-sm font-medium text-gray-700 mb-1">
-                            Reason for cancellation *
-                        </label>
-                        <Textarea
-                            id="cancel_reason"
-                            v-model="cancelForm.reason"
-                            rows="3"
-                            class="w-full"
-                            :class="{ 'p-invalid': cancelForm.errors.reason }"
-                            placeholder="Please provide a reason for cancelling..."
-                        />
-                        <small v-if="cancelForm.errors.reason" class="text-red-500">{{ cancelForm.errors.reason }}</small>
+                        <h3 class="font-semibold text-[#0D1F1B] m-0">Cancel Booking</h3>
+                        <p class="text-gray-500 text-sm m-0">This action cannot be undone</p>
                     </div>
                 </div>
-                <template #footer>
-                    <Button label="Keep Booking" severity="secondary" @click="showCancelDialog = false" />
+            </template>
+
+            <div class="space-y-4">
+                <p class="text-gray-600 m-0 text-sm">
+                    Please let us know why you're cancelling. This helps the provider improve their service.
+                </p>
+                <div>
+                    <label for="cancel_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for cancellation
+                    </label>
+                    <Textarea
+                        id="cancel_reason"
+                        v-model="cancelForm.reason"
+                        rows="3"
+                        class="w-full !rounded-xl"
+                        :class="{ 'p-invalid': cancelForm.errors.reason }"
+                        placeholder="e.g., Schedule conflict, changed plans..."
+                    />
+                    <small v-if="cancelForm.errors.reason" class="text-red-500">{{ cancelForm.errors.reason }}</small>
+                </div>
+            </div>
+
+            <template #footer>
+                <div class="flex gap-3 w-full">
+                    <Button
+                        label="Keep Booking"
+                        outlined
+                        class="!rounded-full flex-1"
+                        @click="showCancelDialog = false"
+                    />
                     <Button
                         label="Cancel Booking"
                         severity="danger"
+                        class="!rounded-full flex-1"
                         :loading="cancelForm.processing"
                         :disabled="!cancelForm.reason"
                         @click="submitCancel"
                     />
-                </template>
-            </Dialog>
-        </div>
-    </DashboardLayout>
+                </div>
+            </template>
+        </Dialog>
+    </ClientLayout>
 </template>

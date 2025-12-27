@@ -5,6 +5,7 @@ namespace App\Http\Controllers\ProviderSite;
 use App\Domains\Booking\Actions\CreateBookingAction;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Requests\StoreBookingRequest;
+use App\Domains\Booking\Resources\BookingResource;
 use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Provider\Models\Provider;
@@ -182,15 +183,19 @@ class ProviderSiteBookingController extends Controller
         $booking = Booking::where('uuid', $uuid)
             ->where('provider_id', $providerModel->id)
             ->with([
+                'client',
                 'provider:id,business_name,slug,address',
                 'provider.user:id,name,avatar,email',
-                'service:id,name,description,duration_minutes',
+                'service:id,uuid,name,description,duration_minutes,price',
                 'payment',
             ])
             ->firstOrFail();
 
         return Inertia::render('ProviderSite/Confirmation', [
-            'booking' => $this->formatBookingForShow($booking),
+            'booking' => (new BookingResource($booking))
+                ->withProvider()
+                ->withPayment()
+                ->resolve(),
         ]);
     }
 
@@ -250,55 +255,4 @@ class ProviderSiteBookingController extends Controller
         return 'Booking created successfully! Awaiting provider confirmation.';
     }
 
-    /**
-     * Format booking data for show/confirmation views.
-     */
-    protected function formatBookingForShow(Booking $booking): array
-    {
-        return [
-            'id' => $booking->id,
-            'uuid' => $booking->uuid,
-            'provider' => [
-                'business_name' => $booking->provider->business_name,
-                'slug' => $booking->provider->slug,
-                'avatar' => $booking->provider->user?->avatar,
-                'address' => $booking->provider->address,
-            ],
-            'service' => [
-                'name' => $booking->service->name,
-                'description' => $booking->service->description,
-                'duration_minutes' => $booking->service->duration_minutes,
-            ],
-            'booking_date' => $booking->booking_date->format('Y-m-d'),
-            'formatted_date' => $booking->formatted_date,
-            'formatted_time' => $booking->formatted_time,
-            'status' => $booking->status->value,
-            'status_label' => $booking->status->label(),
-            'status_color' => $booking->status->color(),
-            'service_price' => (float) $booking->service_price,
-            'total_amount' => (float) $booking->total_amount,
-            'total_display' => $booking->total_display,
-            'client_notes' => $booking->client_notes,
-            'is_past' => $booking->isPast(),
-            'is_today' => $booking->isToday(),
-            'can_cancel' => $booking->canBeCancelled(),
-            'confirmed_at' => $booking->confirmed_at?->format('M j, Y g:i A'),
-            'created_at' => $booking->created_at->format('M j, Y g:i A'),
-            // Payment/deposit info
-            'is_guest_booking' => $booking->isGuestBooking(),
-            'client_name' => $booking->getClientName(),
-            'client_email' => $booking->client_email,
-            'requires_deposit' => $booking->requiresDeposit(),
-            'deposit_amount' => (float) $booking->deposit_amount,
-            'deposit_paid' => $booking->isDepositPaid(),
-            'balance_amount' => $booking->balance_amount,
-            'can_pay' => $booking->canProceedToPayment(),
-            'payment' => $booking->payment ? [
-                'status' => $booking->payment->status,
-                'amount' => (float) $booking->payment->amount,
-                'payment_type' => $booking->payment->payment_type ?? 'full',
-                'paid_at' => $booking->payment->paid_at?->format('M j, Y g:i A'),
-            ] : null,
-        ];
-    }
 }

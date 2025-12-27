@@ -1,47 +1,15 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import type { Booking } from '@/types/models/booking';
 
 interface Props {
-    booking: {
-        uuid: string;
-        provider: {
-            business_name: string;
-            slug: string;
-            avatar?: string;
-            location?: string;
-            address?: string;
-        };
-        service: {
-            name: string;
-            description?: string;
-            duration_minutes: number;
-        };
-        booking_date: string;
-        formatted_date: string;
-        formatted_time: string;
-        status: string;
-        status_label: string;
-        status_color: string;
-        service_price: number;
-        total_amount: number;
-        total_display: string;
-        is_guest_booking: boolean;
-        client_name: string;
-        client_email: string;
-        requires_deposit: boolean;
-        deposit_amount: number;
-        deposit_paid: boolean;
-        balance_amount: number;
-        can_pay: boolean;
-    };
+    booking: Booking;
 }
 
 const props = defineProps<Props>();
-const page = usePage();
 
 const getStatusSeverity = (status: string) => {
     switch (status) {
@@ -71,7 +39,7 @@ const getInitials = (name: string) => {
                     <p class="text-gray-500 mt-2">
                         {{ booking.requires_deposit && !booking.deposit_paid
                             ? 'Complete your deposit payment to secure your booking.'
-                            : 'We\'ve sent a confirmation email to ' + booking.client_email
+                            : 'We\'ve sent a confirmation email to ' + booking.client?.email
                         }}
                     </p>
                 </div>
@@ -86,22 +54,22 @@ const getInitials = (name: string) => {
                         <!-- Provider Info -->
                         <div class="flex items-center gap-4 pb-4 border-b border-gray-100">
                             <Avatar
-                                v-if="booking.provider.avatar"
+                                v-if="booking.provider?.avatar"
                                 :image="booking.provider.avatar"
                                 shape="circle"
                                 class="!w-12 !h-12"
                             />
                             <Avatar
                                 v-else
-                                :label="getInitials(booking.provider.business_name)"
+                                :label="getInitials(booking.provider?.business_name || '')"
                                 shape="circle"
                                 class="!w-12 !h-12 !bg-[#106B4F]"
                             />
                             <div>
-                                <h3 class="font-medium text-[#0D1F1B] m-0">{{ booking.provider.business_name }}</h3>
-                                <p v-if="booking.provider.location" class="text-sm text-gray-500 m-0">
+                                <h3 class="font-medium text-[#0D1F1B] m-0">{{ booking.provider?.business_name }}</h3>
+                                <p v-if="booking.provider?.address" class="text-sm text-gray-500 m-0">
                                     <i class="pi pi-map-marker mr-1"></i>
-                                    {{ booking.provider.location }}
+                                    {{ booking.provider.address }}
                                 </p>
                             </div>
                         </div>
@@ -129,8 +97,8 @@ const getInitials = (name: string) => {
                         <!-- Your Info -->
                         <div class="pt-4 border-t border-gray-100">
                             <label class="text-sm text-gray-500 block mb-1">Booked by</label>
-                            <p class="font-medium text-[#0D1F1B] m-0">{{ booking.client_name }}</p>
-                            <p class="text-sm text-gray-500 m-0">{{ booking.client_email }}</p>
+                            <p class="font-medium text-[#0D1F1B] m-0">{{ booking.client?.name }}</p>
+                            <p class="text-sm text-gray-500 m-0">{{ booking.client?.email }}</p>
                         </div>
                     </div>
                 </div>
@@ -145,6 +113,10 @@ const getInitials = (name: string) => {
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Service Total</span>
                                 <span class="font-medium">${{ booking.service_price.toFixed(2) }}</span>
+                            </div>
+                            <div v-if="booking.fee_payer === 'client' && booking.convenience_fee > 0" class="flex justify-between">
+                                <span class="text-gray-600">Service Fee</span>
+                                <span class="font-medium">${{ booking.convenience_fee.toFixed(2) }}</span>
                             </div>
                             <div class="flex justify-between text-[#106B4F]">
                                 <span>Deposit Required</span>
@@ -197,7 +169,7 @@ const getInitials = (name: string) => {
                                 </span>
                                 <div>
                                     <p class="font-medium text-[#0D1F1B] m-0">Check your email</p>
-                                    <p class="text-sm text-gray-500 m-0">We've sent booking details to {{ booking.client_email }}</p>
+                                    <p class="text-sm text-gray-500 m-0">We've sent booking details to {{ booking.client?.email }}</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
@@ -215,7 +187,7 @@ const getInitials = (name: string) => {
                                 </span>
                                 <div>
                                     <p class="font-medium text-[#0D1F1B] m-0">Arrive on time</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.provider.address || booking.provider.location }}</p>
+                                    <p class="text-sm text-gray-500 m-0">{{ booking.provider?.address }}</p>
                                 </div>
                             </li>
                         </ul>

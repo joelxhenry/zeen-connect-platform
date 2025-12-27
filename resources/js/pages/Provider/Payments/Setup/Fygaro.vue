@@ -45,11 +45,9 @@ const submit = () => {
     <ConsoleLayout :title="isEdit ? 'Edit Fygaro' : 'Set Up Fygaro'">
         <div class="w-full max-w-2xl mx-auto">
             <!-- Page Header -->
-            <ConsolePageHeader
-                :title="isEdit ? 'Edit Fygaro Configuration' : 'Set Up Fygaro'"
+            <ConsolePageHeader :title="isEdit ? 'Edit Fygaro Configuration' : 'Set Up Fygaro'"
                 :subtitle="isEdit ? 'Update your Fygaro account credentials' : 'Connect your Fygaro account to receive payments'"
-                back-href="/payments/setup"
-            />
+                back-href="/payments/setup" />
 
             <!-- Gateway Info -->
             <ConsoleFormCard class="mb-6">
@@ -60,7 +58,8 @@ const submit = () => {
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
                             <h3 class="font-semibold text-[#0D1F1B] m-0">{{ gateway.name }}</h3>
-                            <Tag v-if="gateway.supports_split" value="Split Payments" severity="success" class="!text-xs" />
+                            <Tag v-if="gateway.supports_split" value="Split Payments" severity="success"
+                                class="!text-xs" />
                             <Tag v-if="gateway.supports_escrow" value="Escrow" severity="info" class="!text-xs" />
                         </div>
                         <p class="text-sm text-gray-500 m-0">{{ gateway.description }}</p>
@@ -69,19 +68,11 @@ const submit = () => {
             </ConsoleFormCard>
 
             <!-- Status Alert (for edit mode) -->
-            <ConsoleAlertBanner
-                v-if="isEdit && config?.is_pending"
-                variant="warning"
-                class="mb-6"
-            >
+            <ConsoleAlertBanner v-if="isEdit && config?.is_pending" variant="warning" class="mb-6">
                 Your credentials are pending verification. Click "Verify" after saving to confirm your account.
             </ConsoleAlertBanner>
 
-            <ConsoleAlertBanner
-                v-if="isEdit && config?.is_failed"
-                variant="danger"
-                class="mb-6"
-            >
+            <ConsoleAlertBanner v-if="isEdit && config?.is_failed" variant="danger" class="mb-6">
                 Verification failed. Please check your credentials and try again.
             </ConsoleAlertBanner>
 
@@ -93,13 +84,9 @@ const submit = () => {
                             <label for="merchant_id" class="block text-sm font-medium text-gray-700 mb-1">
                                 Merchant ID *
                             </label>
-                            <InputText
-                                id="merchant_id"
-                                v-model="form.merchant_id"
-                                class="w-full"
+                            <InputText id="merchant_id" v-model="form.merchant_id" class="w-full"
                                 :class="{ 'p-invalid': form.errors.merchant_id }"
-                                placeholder="Your Fygaro merchant ID"
-                            />
+                                placeholder="Your Fygaro merchant ID" />
                             <small v-if="form.errors.merchant_id" class="text-red-500">
                                 {{ form.errors.merchant_id }}
                             </small>
@@ -114,16 +101,9 @@ const submit = () => {
                             <label for="api_key" class="block text-sm font-medium text-gray-700 mb-1">
                                 API Key *
                             </label>
-                            <Password
-                                id="api_key"
-                                v-model="form.api_key"
-                                class="w-full"
-                                :class="{ 'p-invalid': form.errors.api_key }"
-                                :feedback="false"
-                                toggleMask
-                                placeholder="Enter your API key"
-                                inputClass="w-full"
-                            />
+                            <Password id="api_key" v-model="form.api_key" class="w-full"
+                                :class="{ 'p-invalid': form.errors.api_key }" :feedback="false" toggleMask
+                                placeholder="Enter your API key" inputClass="w-full" />
                             <small v-if="form.errors.api_key" class="text-red-500">
                                 {{ form.errors.api_key }}
                             </small>
@@ -132,16 +112,9 @@ const submit = () => {
                             <label for="secret_key" class="block text-sm font-medium text-gray-700 mb-1">
                                 Secret Key *
                             </label>
-                            <Password
-                                id="secret_key"
-                                v-model="form.secret_key"
-                                class="w-full"
-                                :class="{ 'p-invalid': form.errors.secret_key }"
-                                :feedback="false"
-                                toggleMask
-                                placeholder="Enter your secret key"
-                                inputClass="w-full"
-                            />
+                            <Password id="secret_key" v-model="form.secret_key" class="w-full"
+                                :class="{ 'p-invalid': form.errors.secret_key }" :feedback="false" toggleMask
+                                placeholder="Enter your secret key" inputClass="w-full" />
                             <small v-if="form.errors.secret_key" class="text-red-500">
                                 {{ form.errors.secret_key }}
                             </small>
@@ -157,15 +130,9 @@ const submit = () => {
                             <label for="environment" class="block text-sm font-medium text-gray-700 mb-1">
                                 Environment *
                             </label>
-                            <Select
-                                id="environment"
-                                v-model="form.environment"
-                                :options="environmentOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                                :class="{ 'p-invalid': form.errors.environment }"
-                            />
+                            <Select id="environment" v-model="form.environment" :options="environmentOptions"
+                                optionLabel="label" optionValue="value" class="w-full"
+                                :class="{ 'p-invalid': form.errors.environment }" />
                             <small v-if="form.errors.environment" class="text-red-500">
                                 {{ form.errors.environment }}
                             </small>
@@ -177,17 +144,9 @@ const submit = () => {
 
                     <!-- Actions -->
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-                        <ConsoleButton
-                            label="Cancel"
-                            variant="secondary"
-                            href="/payments/setup"
-                        />
-                        <ConsoleButton
-                            :label="isEdit ? 'Save Changes' : 'Save & Continue'"
-                            icon="pi pi-check"
-                            type="submit"
-                            :loading="form.processing"
-                        />
+                        <ConsoleButton label="Cancel" variant="secondary" href="/payments/setup" />
+                        <ConsoleButton :label="isEdit ? 'Save Changes' : 'Save & Continue'" icon="pi pi-check"
+                            type="submit" :loading="form.processing" />
                     </div>
                 </form>
             </ConsoleFormCard>

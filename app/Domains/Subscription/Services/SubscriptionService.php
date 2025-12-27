@@ -16,7 +16,7 @@ class SubscriptionService
         $tier = $provider->getTier();
 
         return match ($tier) {
-            SubscriptionTier::FREE => (float) SystemSetting::get('free_tier_deposit_percentage', 20),
+            SubscriptionTier::STARTER => (float) SystemSetting::get('free_tier_deposit_percentage', 20),
             SubscriptionTier::PREMIUM => $this->getPremiumDepositPercentage($provider),
             SubscriptionTier::ENTERPRISE => 0.0,
         };
@@ -45,7 +45,7 @@ class SubscriptionService
         $tier = $provider->getTier();
 
         return match ($tier) {
-            SubscriptionTier::FREE => (float) SystemSetting::get('free_tier_platform_fee_rate', 10) / 100,
+            SubscriptionTier::STARTER => (float) SystemSetting::get('free_tier_platform_fee_rate', 10) / 100,
             SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_platform_fee_rate', 2) / 100,
             SubscriptionTier::ENTERPRISE => 0.0,
         };
@@ -148,7 +148,7 @@ class SubscriptionService
     public function createFreeSubscription(Provider $provider): void
     {
         $provider->subscription()->create([
-            'tier' => SubscriptionTier::FREE,
+            'tier' => SubscriptionTier::STARTER,
             'started_at' => now(),
         ]);
     }
@@ -183,7 +183,7 @@ class SubscriptionService
     public function getTierMonthlyPrice(SubscriptionTier $tier): float
     {
         return match ($tier) {
-            SubscriptionTier::FREE => 0.0,
+            SubscriptionTier::STARTER => 0.0,
             SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_monthly_price', 3500),
             SubscriptionTier::ENTERPRISE => (float) SystemSetting::get('enterprise_tier_monthly_price', 20000),
         };
@@ -256,7 +256,7 @@ class SubscriptionService
     public function getTeamMemberLimitDescription(SubscriptionTier $tier): string
     {
         return match ($tier) {
-            SubscriptionTier::FREE => 'Team members not available on Free tier',
+            SubscriptionTier::STARTER => 'Team members not available on Free tier',
             SubscriptionTier::PREMIUM => sprintf(
                 '%d free members, then ₦%s/month each',
                 $this->getPremiumFreeTeamMemberSlots(),

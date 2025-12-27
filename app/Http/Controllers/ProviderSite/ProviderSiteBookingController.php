@@ -121,7 +121,7 @@ class ProviderSiteBookingController extends Controller
     /**
      * Store a new booking.
      */
-    public function store(StoreBookingRequest $request, CreateBookingAction $action): RedirectResponse
+    public function store(StoreBookingRequest $request, CreateBookingAction $action)
     {
         $provider = $this->getProvider();
         $service = Service::findOrFail($request->service_id);
@@ -165,9 +165,10 @@ class ProviderSiteBookingController extends Controller
 
             // Redirect to provider site confirmation or main platform dashboard
             if ($request->user()) {
-                return redirect()
-                    ->route('client.bookings.show', $booking->uuid)
-                    ->with('success', $this->getSuccessMessage($booking));
+                session()->put('booking_success_message', $this->getSuccessMessage($booking));
+                return inertia()->location(
+                    route('client.bookings.show', $booking->uuid)
+                );
             }
 
             return redirect()

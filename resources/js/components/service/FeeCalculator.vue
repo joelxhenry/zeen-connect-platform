@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Tag from 'primevue/tag';
+import type { TierRestrictions } from '@/types/service';
 
 interface FeeRates {
     tier: string;
@@ -15,7 +16,67 @@ interface FeeRates {
 const props = defineProps<{
     price: number;
     feeRates: FeeRates;
+    tierRestrictions?: TierRestrictions;
+    depositType?: 'none' | 'fixed' | 'percentage';
+    depositAmount?: number | null;
 }>();
+
+const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-JM', {
+        style: 'currency',
+        currency: 'JMD',
+        minimumFractionDigits: 2,
+    }).format(amount);
+};
+
+/**
+ * Deposit validation based on tier restrictions.
+ */
+const depositValidation = computed(() => {
+    if (!props.tierRestrictions) {
+        return { valid: true, message: null, coversCommission: true };
+    }
+
+    const restrictions = props.tierRestrictions;
+    const depositType = props.depositType || 'percentage';
+    const depositAmount = props.depositAmount ?? props.feeRates.deposit_percentage;
+
+    // Check if deposit is disabled when not allowed
+    if (depositType === 'none' && !restrictions.can_disable_deposit) {
+        return {
+            valid: false,
+            message: `Your ${restrictions.tier_label} tier requires a deposit to cover the ${restrictions.platform_fee_rate}% platform fee.`,
+            coversCommission: false,
+        };
+    }
+
+    // For percentage deposits, check minimum
+    if (depositType === 'percentage') {
+        const percentage = depositAmount || 0;
+        if (percentage < restrictions.minimum_deposit_percentage) {
+            return {
+                valid: false,
+                message: `Deposit must be at least ${restrictions.minimum_deposit_percentage}% to cover the ${restrictions.platform_fee_rate}% platform fee.`,
+                coversCommission: false,
+            };
+        }
+    }
+
+    // For fixed deposits, check if it covers the platform fee
+    if (depositType === 'fixed' && props.price > 0) {
+        const fixedAmount = depositAmount || 0;
+        const platformFee = props.price * (restrictions.platform_fee_rate / 100);
+        if (fixedAmount < platformFee) {
+            return {
+                valid: false,
+                message: `Deposit of ${formatCurrency(fixedAmount)} does not cover the ${formatCurrency(platformFee)} platform fee.`,
+                coversCommission: false,
+            };
+        }
+    }
+
+    return { valid: true, message: null, coversCommission: true };
+});
 
 const calculations = computed(() => {
     const price = props.price || 0;
@@ -49,14 +110,6 @@ const calculations = computed(() => {
         providerPaysProcessingFee,
     };
 });
-
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-JM', {
-        style: 'currency',
-        currency: 'JMD',
-        minimumFractionDigits: 2,
-    }).format(amount);
-};
 
 const tierSeverity = computed(() => {
     switch (props.feeRates.tier) {
@@ -156,6 +209,12 @@ const tierDescription = computed(() => {
             <i class="pi pi-info-circle"></i>
             <span>{{ tierDescription }}</span>
         </div>
+
+        <!-- Deposit Validation Warning -->
+        <div v-if="!depositValidation.valid" class="fee-calculator__warning">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ depositValidation.message }}</span>
+        </div>
     </div>
 </template>
 
@@ -240,5 +299,21 @@ const tierDescription = computed(() => {
     border-top: 1px solid #bbf7d0;
     font-size: 0.875rem;
     color: #166534;
+}
+
+.fee-calculator__warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: #fef3c7;
+    border-top: 1px solid #fcd34d;
+    font-size: 0.875rem;
+    color: #92400e;
+}
+
+.fee-calculator__warning i {
+    margin-top: 0.125rem;
+    flex-shrink: 0;
 }
 </style>

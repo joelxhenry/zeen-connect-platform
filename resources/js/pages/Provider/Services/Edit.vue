@@ -8,81 +8,44 @@ import {
     ConsoleFormSection,
     ConsoleButton,
 } from '@/components/console';
-import AppLink from '@/components/common/AppLink.vue';
+import TierRestrictionBanner from '@/components/service/TierRestrictionBanner.vue';
+import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import InputSwitch from 'primevue/inputswitch';
+import Tag from 'primevue/tag';
+import Message from 'primevue/message';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import provider from '@/routes/provider';
-import FeeCalculator from '@/components/service/FeeCalculator.vue';
-import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
+import { useServiceForm } from '@/composables/useServiceForm';
+import type { ServicesEditProps } from '@/types/service';
+import type { MediaItem } from '@/types/models';
 
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface MediaItem {
-    id: number;
-    uuid: string;
-    url: string;
-    thumbnail: string;
-    medium: string;
-    filename: string;
-}
-
-interface Service {
-    id: number;
-    uuid: string;
-    name: string;
-    category_id: number;
-    description?: string;
-    duration_minutes: number;
-    price: number;
-    is_active: boolean;
-    use_provider_defaults: boolean;
-    requires_approval?: boolean;
-    deposit_type?: 'none' | 'fixed' | 'percentage';
-    deposit_amount?: number | null;
-    cancellation_policy?: 'flexible' | 'moderate' | 'strict';
-    advance_booking_days?: number;
-    min_booking_notice_hours?: number;
-    cover?: MediaItem | null;
-}
-
-interface BookingSettings {
-    requires_approval: boolean;
-    deposit_type: 'none' | 'fixed' | 'percentage';
-    deposit_amount: number | null;
-    cancellation_policy: 'flexible' | 'moderate' | 'strict';
-    advance_booking_days: number;
-    min_booking_notice_hours: number;
-}
-
-interface FeeInfo {
-    tier: string;
-    tier_label: string;
-    deposit_percentage: number;
-    platform_fee_rate: number;
-    processing_fee_rate?: number;
-    processing_fee_flat?: number;
-    processing_fee_payer?: 'client' | 'provider';
-}
-
-interface Props {
-    service: Service;
-    categories: Category[];
-    providerDefaults: BookingSettings;
-    feeInfo: FeeInfo;
-}
-
-const props = defineProps<Props>();
+const props = defineProps<ServicesEditProps>();
 const confirm = useConfirm();
 const toast = useToast();
+
+// Use the service form composable for tier-based options and validation
+const {
+    depositTypeOptions,
+    durationOptions,
+    cancellationPolicyOptions,
+    minDepositPercentage,
+    minServicePrice,
+    canCustomizeDeposit,
+    canDisableDeposit,
+    validatePrice,
+    validateDepositType,
+    validateDepositAmount,
+    getDefaultDepositType,
+    getDefaultDepositAmount,
+    depositHelpText,
+    priceHelpText,
+} = useServiceForm(props.tierRestrictions);
 
 // Cover image state (managed separately from form)
 const cover = ref<MediaItem | null>(props.service.cover || null);
@@ -124,37 +87,36 @@ const form = useForm({
     min_booking_notice_hours: props.service.min_booking_notice_hours ?? props.providerDefaults.min_booking_notice_hours,
 });
 
-const durationOptions = [
-    { label: '15 minutes', value: 15 },
-    { label: '30 minutes', value: 30 },
-    { label: '45 minutes', value: 45 },
-    { label: '1 hour', value: 60 },
-    { label: '1 hour 30 minutes', value: 90 },
-    { label: '2 hours', value: 120 },
-    { label: '2 hours 30 minutes', value: 150 },
-    { label: '3 hours', value: 180 },
-    { label: '4 hours', value: 240 },
-    { label: '5 hours', value: 300 },
-    { label: '6 hours', value: 360 },
-    { label: '8 hours', value: 480 },
-];
+// Real-time validation for price
+const priceValidation = computed(() => {
+    if (form.price === null || form.price === 0) {
+        return { valid: true, message: null };
+    }
+    return validatePrice(form.price);
+});
 
-const depositTypeOptions = [
-    { label: 'No deposit required', value: 'none' },
-    { label: 'Fixed amount', value: 'fixed' },
-    { label: 'Percentage of total', value: 'percentage' },
-];
+// Real-time validation for deposit type
+const depositTypeValidation = computed(() => {
+    if (form.use_provider_defaults) {
+        return { valid: true, message: null };
+    }
+    return validateDepositType(form.deposit_type);
+});
 
-const cancellationPolicyOptions = [
-    { label: 'Flexible - Full refund 24h before', value: 'flexible' },
-    { label: 'Moderate - Full refund 48h before', value: 'moderate' },
-    { label: 'Strict - 50% refund up to 1 week before', value: 'strict' },
-];
+// Real-time validation for deposit amount
+const depositAmountValidation = computed(() => {
+    if (form.use_provider_defaults || form.deposit_type === 'none') {
+        return { valid: true, message: null };
+    }
+    return validateDepositAmount(form.deposit_type, form.deposit_amount);
+});
 
+// Show deposit amount input
 const showDepositAmount = computed(() =>
     form.deposit_type === 'fixed' || form.deposit_type === 'percentage'
 );
 
+// Watch for use_provider_defaults toggle
 watch(() => form.use_provider_defaults, (useDefaults) => {
     if (useDefaults) {
         form.requires_approval = props.providerDefaults.requires_approval;
@@ -166,10 +128,24 @@ watch(() => form.use_provider_defaults, (useDefaults) => {
     }
 });
 
-const getDepositDisplay = (settings: BookingSettings) => {
-    if (settings.deposit_type === 'none') return 'None';
-    if (settings.deposit_type === 'fixed') return `$${settings.deposit_amount?.toFixed(2)}`;
-    return `${settings.deposit_amount}%`;
+// Watch deposit type changes to reset amount when needed
+watch(() => form.deposit_type, (newType) => {
+    if (newType === 'percentage') {
+        // Ensure deposit amount meets minimum
+        if (form.deposit_amount === null || form.deposit_amount < minDepositPercentage.value) {
+            form.deposit_amount = minDepositPercentage.value;
+        }
+    } else if (newType === 'none') {
+        form.deposit_amount = null;
+    }
+});
+
+const getDepositDisplay = () => {
+    if (props.providerDefaults.deposit_type === 'none') return 'None';
+    if (props.providerDefaults.deposit_type === 'fixed') {
+        return `$${props.providerDefaults.deposit_amount?.toFixed(2)}`;
+    }
+    return `${props.providerDefaults.deposit_amount}%`;
 };
 
 const submit = () => {
@@ -218,6 +194,20 @@ const deleteService = () => {
                 title="Edit Service"
                 subtitle="Update your service details and booking settings"
                 :back-href="provider.services.index.url()"
+            >
+                <template #title-badge>
+                    <Tag
+                        :value="tierRestrictions.tier_label"
+                        :severity="tierRestrictions.tier === 'enterprise' ? 'success' : tierRestrictions.tier === 'premium' ? 'info' : 'secondary'"
+                        class="ml-2"
+                    />
+                </template>
+            </ConsolePageHeader>
+
+            <!-- Tier Restriction Banner -->
+            <TierRestrictionBanner
+                :restrictions="tierRestrictions"
+                class="mb-6"
             />
 
             <form @submit.prevent="submit" class="space-y-6">
@@ -271,9 +261,30 @@ const deleteService = () => {
                             />
                             <small v-if="form.errors.description" class="text-red-500">{{ form.errors.description }}</small>
                         </div>
+                    </div>
+                </ConsoleFormCard>
 
-                        <!-- Duration & Price Row -->
+                <!-- Cover Image Card -->
+                <ConsoleFormCard title="Cover Image" icon="pi pi-image">
+                    <SingleImageUpload
+                        v-model="cover"
+                        :upload-url="uploadUrl"
+                        collection="cover"
+                        shape="cover"
+                        placeholder="Upload Cover Image"
+                        @uploaded="handleCoverUploaded"
+                        @error="handleCoverError"
+                    />
+                    <small class="text-gray-500 mt-2 block">
+                        This image will be displayed in service listings and your booking page.
+                    </small>
+                </ConsoleFormCard>
+
+                <!-- Pricing & Duration Card -->
+                <ConsoleFormCard title="Pricing & Duration" icon="pi pi-dollar">
+                    <div class="space-y-4">
                         <ConsoleFormSection :columns="2">
+                            <!-- Duration -->
                             <div>
                                 <label for="duration" class="block text-sm font-medium text-gray-700 mb-1">
                                     Duration *
@@ -290,6 +301,8 @@ const deleteService = () => {
                                 />
                                 <small v-if="form.errors.duration_minutes" class="text-red-500">{{ form.errors.duration_minutes }}</small>
                             </div>
+
+                            <!-- Price -->
                             <div>
                                 <label for="price" class="block text-sm font-medium text-gray-700 mb-1">
                                     Price (JMD) *
@@ -301,42 +314,26 @@ const deleteService = () => {
                                     currency="JMD"
                                     locale="en-JM"
                                     class="w-full"
-                                    :class="{ 'p-invalid': form.errors.price }"
+                                    :class="{ 'p-invalid': form.errors.price || !priceValidation.valid }"
                                     placeholder="0.00"
                                 />
                                 <small v-if="form.errors.price" class="text-red-500">{{ form.errors.price }}</small>
+                                <small v-else-if="!priceValidation.valid" class="text-red-500">{{ priceValidation.message }}</small>
+                                <small v-else-if="priceHelpText" class="text-gray-500">{{ priceHelpText }}</small>
                             </div>
                         </ConsoleFormSection>
-
-                        <!-- Fee Calculator -->
-                        <FeeCalculator
-                            v-if="form.price && form.price > 0"
-                            :price="form.price"
-                            :fee-rates="feeInfo"
-                        />
-
-                        <!-- Active Toggle -->
-                        <div class="flex items-center gap-3">
-                            <InputSwitch v-model="form.is_active" />
-                            <label class="text-sm font-medium text-gray-700">Active (visible to clients)</label>
-                        </div>
                     </div>
                 </ConsoleFormCard>
 
-                <!-- Cover Image Card -->
-                <ConsoleFormCard title="Cover Image" icon="pi pi-image">
-                    <SingleImageUpload
-                        v-model="cover"
-                        :upload-url="uploadUrl"
-                        collection="cover"
-                        shape="cover"
-                        placeholder="Upload Cover Image"
-                        @uploaded="handleCoverUploaded"
-                        @error="handleCoverError"
-                    />
-                    <small class="text-gray-500 mt-2 block">
-                        This image will be displayed in service listings.
-                    </small>
+                <!-- Visibility Card -->
+                <ConsoleFormCard title="Visibility" icon="pi pi-eye">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Active</label>
+                            <p class="text-xs text-gray-500 m-0">Make this service visible to clients</p>
+                        </div>
+                        <InputSwitch v-model="form.is_active" />
+                    </div>
                 </ConsoleFormCard>
 
                 <!-- Booking Settings Card -->
@@ -353,53 +350,106 @@ const deleteService = () => {
                             </div>
                         </ConsoleFormSection>
 
+                        <!-- Provider Defaults Summary (shown when using defaults) -->
+                        <div v-if="form.use_provider_defaults" class="bg-gray-50 rounded-lg p-4">
+                            <p class="m-0 font-medium text-gray-700 mb-2">Current defaults:</p>
+                            <div class="text-sm text-gray-500 space-y-1">
+                                <p class="m-0">
+                                    <i class="pi pi-check-circle text-xs mr-2" />
+                                    Approval: {{ providerDefaults.requires_approval ? 'Required' : 'Not required' }}
+                                </p>
+                                <p class="m-0">
+                                    <i class="pi pi-wallet text-xs mr-2" />
+                                    Deposit: {{ getDepositDisplay() }}
+                                </p>
+                                <p class="m-0">
+                                    <i class="pi pi-ban text-xs mr-2" />
+                                    Cancellation: <span class="capitalize">{{ providerDefaults.cancellation_policy }}</span>
+                                </p>
+                                <p class="m-0">
+                                    <i class="pi pi-calendar-plus text-xs mr-2" />
+                                    Advance booking: {{ providerDefaults.advance_booking_days }} days
+                                </p>
+                                <p class="m-0">
+                                    <i class="pi pi-clock text-xs mr-2" />
+                                    Min notice: {{ providerDefaults.min_booking_notice_hours }} hours
+                                </p>
+                            </div>
+                        </div>
+
                         <!-- Custom Settings (shown when not using defaults) -->
-                        <div v-if="!form.use_provider_defaults" class="space-y-4 pt-2">
+                        <div v-else class="space-y-4 pt-2">
                             <!-- Requires Approval -->
-                            <div class="flex items-center gap-3">
-                                <InputSwitch v-model="form.requires_approval" />
+                            <div class="flex items-center justify-between">
                                 <div>
                                     <label class="text-sm font-medium text-gray-700">Require approval for bookings</label>
                                     <p class="text-xs text-gray-500 m-0">You'll need to manually confirm each booking</p>
                                 </div>
+                                <InputSwitch v-model="form.requires_approval" />
                             </div>
 
-                            <!-- Deposit Type -->
-                            <div>
-                                <label for="deposit_type" class="block text-sm font-medium text-gray-700 mb-1">
-                                    Deposit Requirement
-                                </label>
-                                <Select
-                                    id="deposit_type"
-                                    v-model="form.deposit_type"
-                                    :options="depositTypeOptions"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    class="w-full"
-                                />
-                            </div>
+                            <!-- Deposit Section -->
+                            <div class="border-t border-gray-100 pt-4">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="pi pi-wallet text-gray-400" />
+                                    <span class="font-medium text-gray-700">Deposit Settings</span>
+                                </div>
 
-                            <!-- Deposit Amount (conditional) -->
-                            <div v-if="showDepositAmount">
-                                <label for="deposit_amount" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ form.deposit_type === 'percentage' ? 'Deposit Percentage' : 'Deposit Amount (JMD)' }}
-                                </label>
-                                <InputNumber
-                                    id="deposit_amount"
-                                    v-model="form.deposit_amount"
-                                    :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
-                                    :currency="form.deposit_type === 'fixed' ? 'JMD' : undefined"
-                                    :suffix="form.deposit_type === 'percentage' ? '%' : undefined"
-                                    :min="0"
-                                    :max="form.deposit_type === 'percentage' ? 100 : undefined"
-                                    class="w-full"
-                                    :class="{ 'p-invalid': form.errors.deposit_amount }"
-                                />
-                                <small v-if="form.errors.deposit_amount" class="text-red-500">{{ form.errors.deposit_amount }}</small>
+                                <!-- Tier restriction notice for deposit -->
+                                <Message
+                                    v-if="!canDisableDeposit && tierRestrictions.tier !== 'enterprise'"
+                                    severity="info"
+                                    :closable="false"
+                                    class="mb-4"
+                                >
+                                    <span class="text-sm">{{ depositHelpText }}</span>
+                                </Message>
+
+                                <!-- Deposit Type -->
+                                <div class="mb-4">
+                                    <label for="deposit_type" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Deposit Type
+                                    </label>
+                                    <Select
+                                        id="deposit_type"
+                                        v-model="form.deposit_type"
+                                        :options="depositTypeOptions"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        :optionDisabled="(opt) => opt.disabled"
+                                        class="w-full"
+                                        :class="{ 'p-invalid': form.errors.deposit_type || !depositTypeValidation.valid }"
+                                    />
+                                    <small v-if="form.errors.deposit_type" class="text-red-500">{{ form.errors.deposit_type }}</small>
+                                    <small v-else-if="!depositTypeValidation.valid" class="text-red-500">{{ depositTypeValidation.message }}</small>
+                                </div>
+
+                                <!-- Deposit Amount (conditional) -->
+                                <div v-if="showDepositAmount">
+                                    <label for="deposit_amount" class="block text-sm font-medium text-gray-700 mb-1">
+                                        {{ form.deposit_type === 'percentage' ? 'Deposit Percentage' : 'Deposit Amount (JMD)' }}
+                                    </label>
+                                    <InputNumber
+                                        id="deposit_amount"
+                                        v-model="form.deposit_amount"
+                                        :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
+                                        :currency="form.deposit_type === 'fixed' ? 'JMD' : undefined"
+                                        :suffix="form.deposit_type === 'percentage' ? '%' : undefined"
+                                        :min="form.deposit_type === 'percentage' ? minDepositPercentage : 0"
+                                        :max="form.deposit_type === 'percentage' ? 100 : undefined"
+                                        class="w-full"
+                                        :class="{ 'p-invalid': form.errors.deposit_amount || !depositAmountValidation.valid }"
+                                    />
+                                    <small v-if="form.errors.deposit_amount" class="text-red-500">{{ form.errors.deposit_amount }}</small>
+                                    <small v-else-if="!depositAmountValidation.valid" class="text-red-500">{{ depositAmountValidation.message }}</small>
+                                    <small v-else-if="form.deposit_type === 'percentage'" class="text-gray-500">
+                                        Minimum {{ minDepositPercentage }}% required to cover platform fees
+                                    </small>
+                                </div>
                             </div>
 
                             <!-- Cancellation Policy -->
-                            <div>
+                            <div class="border-t border-gray-100 pt-4">
                                 <label for="cancellation_policy" class="block text-sm font-medium text-gray-700 mb-1">
                                     Cancellation Policy
                                 </label>
@@ -410,11 +460,18 @@ const deleteService = () => {
                                     optionLabel="label"
                                     optionValue="value"
                                     class="w-full"
-                                />
+                                >
+                                    <template #option="{ option }">
+                                        <div>
+                                            <p class="font-medium m-0">{{ option.label }}</p>
+                                            <p class="text-xs text-gray-500 m-0">{{ option.description }}</p>
+                                        </div>
+                                    </template>
+                                </Select>
                             </div>
 
                             <!-- Advance Booking & Notice Row -->
-                            <ConsoleFormSection :columns="2">
+                            <ConsoleFormSection :columns="2" class="border-t border-gray-100 pt-4">
                                 <div>
                                     <label for="advance_booking_days" class="block text-sm font-medium text-gray-700 mb-1">
                                         Advance Booking (days)
@@ -443,18 +500,6 @@ const deleteService = () => {
                                 </div>
                             </ConsoleFormSection>
                         </div>
-
-                        <!-- Provider Defaults Summary (shown when using defaults) -->
-                        <ConsoleFormSection v-else highlighted>
-                            <p class="m-0 font-medium text-gray-700 mb-2">Current defaults:</p>
-                            <div class="text-sm text-gray-500 space-y-1">
-                                <p class="m-0">Approval: {{ providerDefaults.requires_approval ? 'Required' : 'Not required' }}</p>
-                                <p class="m-0">Deposit: {{ getDepositDisplay(providerDefaults) }}</p>
-                                <p class="m-0 capitalize">Cancellation: {{ providerDefaults.cancellation_policy }}</p>
-                                <p class="m-0">Advance booking: {{ providerDefaults.advance_booking_days }} days</p>
-                                <p class="m-0">Min notice: {{ providerDefaults.min_booking_notice_hours }} hours</p>
-                            </div>
-                        </ConsoleFormSection>
                     </div>
                 </ConsoleFormCard>
 
@@ -487,6 +532,7 @@ const deleteService = () => {
                         icon="pi pi-check"
                         type="submit"
                         :loading="form.processing"
+                        :disabled="!priceValidation.valid || !depositTypeValidation.valid || !depositAmountValidation.valid"
                     />
                 </div>
             </form>

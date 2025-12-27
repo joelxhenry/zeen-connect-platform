@@ -5,11 +5,13 @@ namespace App\Domains\Service\Models;
 use App\Domains\Media\Models\Media;
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
+use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Models\Provider;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
@@ -76,6 +78,11 @@ class Service extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
     }
 
     public function scopeActive($query)

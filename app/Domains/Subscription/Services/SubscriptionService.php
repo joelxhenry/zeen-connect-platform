@@ -265,4 +265,107 @@ class SubscriptionService
             SubscriptionTier::ENTERPRISE => 'Unlimited team members',
         };
     }
+
+    // =========================================================================
+    // Service Restriction Methods
+    // =========================================================================
+
+    /**
+     * Get the minimum service price for a provider based on their tier.
+     */
+    public function getMinimumServicePrice(Provider $provider): float
+    {
+        $tier = $provider->getTier();
+
+        return match ($tier) {
+            SubscriptionTier::STARTER => (float) SystemSetting::get('starter_tier_minimum_service_price', 1000),
+            SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_minimum_service_price', 500),
+            SubscriptionTier::ENTERPRISE => (float) SystemSetting::get('enterprise_tier_minimum_service_price', 0),
+        };
+    }
+
+    /**
+     * Get the minimum deposit percentage for a provider based on their tier.
+     * This should be at least enough to cover the platform fee.
+     */
+    public function getMinimumDepositPercentage(Provider $provider): float
+    {
+        $tier = $provider->getTier();
+
+        return match ($tier) {
+            // Starter tier: deposit must cover the platform fee
+            SubscriptionTier::STARTER => (float) SystemSetting::get('free_tier_deposit_percentage', 20),
+            // Premium tier: minimum deposit percentage from settings
+            SubscriptionTier::PREMIUM => (float) SystemSetting::get('minimum_deposit_percentage', 15),
+            // Enterprise tier: no minimum required
+            SubscriptionTier::ENTERPRISE => 0.0,
+        };
+    }
+
+    /**
+     * Get all tier restrictions for frontend display.
+     */
+    public function getTierRestrictions(Provider $provider): array
+    {
+        $tier = $provider->getTier();
+        $platformFeeRate = $this->getPlatformFeeRate($provider) * 100;
+        $minDepositPercentage = $this->getMinimumDepositPercentage($provider);
+        $minServicePrice = $this->getMinimumServicePrice($provider);
+
+        return [
+            'tier' => $tier->value,
+            'tier_label' => $tier->label(),
+            'platform_fee_rate' => $platformFeeRate,
+            'minimum_service_price' => $minServicePrice,
+            'minimum_service_price_display' => $this->formatCurrency($minServicePrice),
+            'minimum_deposit_percentage' => $minDepositPercentage,
+            'can_disable_deposit' => $tier === SubscriptionTier::ENTERPRISE,
+            'can_customize_deposit' => $tier !== SubscriptionTier::STARTER,
+            'deposit_help_text' => $this->getDepositHelpText($tier, $minDepositPercentage, $platformFeeRate),
+            'price_help_text' => $this->getPriceHelpText($tier, $minServicePrice),
+        ];
+    }
+
+    /**
+     * Get help text explaining deposit restrictions for a tier.
+     */
+    private function getDepositHelpText(SubscriptionTier $tier, float $minDeposit, float $platformFee): string
+    {
+        return match ($tier) {
+            SubscriptionTier::STARTER => sprintf(
+                'Starter tier requires a %d%% deposit to cover the %d%% platform fee.',
+                (int) $minDeposit,
+                (int) $platformFee
+            ),
+            SubscriptionTier::PREMIUM => sprintf(
+                'Premium tier requires a minimum %d%% deposit. You can set a higher percentage.',
+                (int) $minDeposit
+            ),
+            SubscriptionTier::ENTERPRISE => 'Enterprise tier has no deposit restrictions. You can set any deposit amount or none at all.',
+        };
+    }
+
+    /**
+     * Get help text explaining price restrictions for a tier.
+     */
+    private function getPriceHelpText(SubscriptionTier $tier, float $minPrice): string
+    {
+        if ($minPrice <= 0) {
+            return 'No minimum service price for your tier.';
+        }
+
+        return sprintf(
+            'Your %s tier requires a minimum service price of %s.',
+            $tier->label(),
+            $this->formatCurrency($minPrice)
+        );
+    }
+
+    /**
+     * Format a currency amount for display.
+     */
+    private function formatCurrency(float $amount): string
+    {
+        return '$' . number_format($amount, 2);
+    }
 }

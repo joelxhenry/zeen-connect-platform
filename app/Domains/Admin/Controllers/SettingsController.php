@@ -141,6 +141,34 @@ class SettingsController extends Controller
                 ],
             ],
         ],
+        'service_restrictions' => [
+            'label' => 'Service Restrictions',
+            'description' => 'Minimum service prices per subscription tier',
+            'icon' => 'pi pi-shield',
+            'settings' => [
+                'starter_tier_minimum_service_price' => [
+                    'label' => 'Starter Tier Minimum Service Price',
+                    'type' => 'currency',
+                    'min' => 0,
+                    'description' => 'Minimum service price for Starter tier providers (JMD)',
+                    'default' => 1000,
+                ],
+                'premium_tier_minimum_service_price' => [
+                    'label' => 'Premium Tier Minimum Service Price',
+                    'type' => 'currency',
+                    'min' => 0,
+                    'description' => 'Minimum service price for Premium tier providers (JMD)',
+                    'default' => 500,
+                ],
+                'enterprise_tier_minimum_service_price' => [
+                    'label' => 'Enterprise Tier Minimum Service Price',
+                    'type' => 'currency',
+                    'min' => 0,
+                    'description' => 'Minimum service price for Enterprise tier (JMD). Set to 0 for no minimum.',
+                    'default' => 0,
+                ],
+            ],
+        ],
     ];
 
     /**

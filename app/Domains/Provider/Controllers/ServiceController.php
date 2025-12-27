@@ -2,10 +2,8 @@
 
 namespace App\Domains\Provider\Controllers;
 
-use App\Domains\Admin\Models\SystemSetting;
 use App\Domains\Provider\Actions\CreateServiceAction;
 use App\Domains\Provider\Actions\UpdateServiceAction;
-use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Requests\StoreServiceRequest;
 use App\Domains\Provider\Requests\UpdateServiceRequest;
 use App\Domains\Service\Models\Category;
@@ -30,12 +28,26 @@ class ServiceController extends Controller
         $provider = Auth::user()->provider;
         $services = $provider->services()
             ->with('category')
+            ->withCount(['bookings as total_bookings'])
             ->ordered()
             ->get();
 
+        // Get service statistics
+        $stats = [
+            'total' => $services->count(),
+            'active' => $services->where('is_active', true)->count(),
+            'inactive' => $services->where('is_active', false)->count(),
+        ];
+
+        // Get categories for filtering
+        $categories = Category::active()->ordered()->get(['id', 'name']);
+
         return Inertia::render('Provider/Services/Index', [
             'services' => $services,
+            'stats' => $stats,
+            'categories' => $categories,
             'providerDefaults' => $provider->getBookingSettings(),
+            'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }
 
@@ -47,21 +59,8 @@ class ServiceController extends Controller
         return Inertia::render('Provider/Services/Create', [
             'categories' => $categories,
             'providerDefaults' => $provider->getBookingSettings(),
-            'feeInfo' => $this->getFeeInfo($provider),
+            'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
-    }
-
-    private function getFeeInfo(Provider $provider): array
-    {
-        return [
-            'tier' => $provider->getTier()->value,
-            'tier_label' => $provider->getTier()->label(),
-            'deposit_percentage' => $this->subscriptionService->getEffectiveDepositPercentage($provider),
-            'platform_fee_rate' => $this->subscriptionService->getPlatformFeeRate($provider) * 100,
-            'processing_fee_rate' => (float) SystemSetting::get('enterprise_processing_fee_rate', 2.9),
-            'processing_fee_flat' => (float) SystemSetting::get('enterprise_processing_fee_flat', 50),
-            'processing_fee_payer' => $provider->processing_fee_payer,
-        ];
     }
 
     public function store(StoreServiceRequest $request): RedirectResponse
@@ -97,7 +96,7 @@ class ServiceController extends Controller
             'service' => $serviceData,
             'categories' => $categories,
             'providerDefaults' => $provider->getBookingSettings(),
-            'feeInfo' => $this->getFeeInfo($provider),
+            'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }
 

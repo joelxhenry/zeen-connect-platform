@@ -2,9 +2,14 @@
 import { ref, computed } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import {
+    ConsolePageHeader,
+    ConsoleFormCard,
+    ConsoleFormSection,
+    ConsoleButton,
+} from '@/components/console';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
-import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 import GalleryUpload from '@/components/media/GalleryUpload.vue';
@@ -98,24 +103,14 @@ const handleMediaError = (error: string) => {
     <ConsoleLayout title="Edit Profile">
         <div class="w-full max-w-3xl mx-auto">
             <!-- Page Header -->
-            <div class="mb-6">
-                <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0 mb-1">
-                    Edit Profile
-                </h1>
-                <p class="text-gray-500 m-0 text-sm lg:text-base">
-                    Update your business profile and media.
-                </p>
-            </div>
+            <ConsolePageHeader
+                title="Edit Profile"
+                subtitle="Update your business profile and media"
+            />
 
-            <!-- Cover Photo Section -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                    <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                        <i class="pi pi-image text-[#106B4F]"></i>
-                        Cover Photo
-                    </h2>
-                </div>
-                <div class="p-4 lg:p-5">
+            <div class="space-y-6">
+                <!-- Cover Photo Section -->
+                <ConsoleFormCard title="Cover Photo" icon="pi pi-image">
                     <SingleImageUpload
                         v-model="coverPhoto"
                         :upload-url="uploadUrl"
@@ -128,18 +123,10 @@ const handleMediaError = (error: string) => {
                     <small class="text-gray-500 mt-2 block">
                         Recommended size: 1200 x 300 pixels. Max 10MB.
                     </small>
-                </div>
-            </div>
+                </ConsoleFormCard>
 
-            <!-- Avatar & Basic Info Section -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                    <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                        <i class="pi pi-user text-[#106B4F]"></i>
-                        Profile Information
-                    </h2>
-                </div>
-                <div class="p-4 lg:p-5">
+                <!-- Avatar & Basic Info Section -->
+                <ConsoleFormCard title="Profile Information" icon="pi pi-user">
                     <div class="flex flex-col sm:flex-row gap-6">
                         <!-- Avatar Upload -->
                         <div class="flex-shrink-0">
@@ -210,7 +197,7 @@ const handleMediaError = (error: string) => {
                             </small>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <ConsoleFormSection :columns="2">
                             <div>
                                 <label for="address" class="block text-sm font-medium text-gray-700 mb-1">
                                     Address
@@ -233,65 +220,51 @@ const handleMediaError = (error: string) => {
                                     placeholder="https://yourwebsite.com"
                                 />
                             </div>
+                        </ConsoleFormSection>
+                    </div>
+                </ConsoleFormCard>
+
+                <!-- Social Links Section -->
+                <ConsoleFormCard title="Social Media" icon="pi pi-share-alt">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="facebook" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="pi pi-facebook mr-1"></i> Facebook
+                            </label>
+                            <InputText
+                                id="facebook"
+                                v-model="form.social_links.facebook"
+                                class="w-full"
+                                placeholder="https://facebook.com/yourbusiness"
+                            />
+                        </div>
+                        <div>
+                            <label for="instagram" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="pi pi-instagram mr-1"></i> Instagram
+                            </label>
+                            <InputText
+                                id="instagram"
+                                v-model="form.social_links.instagram"
+                                class="w-full"
+                                placeholder="https://instagram.com/yourbusiness"
+                            />
+                        </div>
+                        <div>
+                            <label for="twitter" class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="pi pi-twitter mr-1"></i> Twitter / X
+                            </label>
+                            <InputText
+                                id="twitter"
+                                v-model="form.social_links.twitter"
+                                class="w-full"
+                                placeholder="https://twitter.com/yourbusiness"
+                            />
                         </div>
                     </div>
-                </div>
-            </div>
+                </ConsoleFormCard>
 
-            <!-- Social Links Section -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                    <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                        <i class="pi pi-share-alt text-[#106B4F]"></i>
-                        Social Media
-                    </h2>
-                </div>
-                <div class="p-4 lg:p-5 space-y-4">
-                    <div>
-                        <label for="facebook" class="block text-sm font-medium text-gray-700 mb-1">
-                            <i class="pi pi-facebook mr-1"></i> Facebook
-                        </label>
-                        <InputText
-                            id="facebook"
-                            v-model="form.social_links.facebook"
-                            class="w-full"
-                            placeholder="https://facebook.com/yourbusiness"
-                        />
-                    </div>
-                    <div>
-                        <label for="instagram" class="block text-sm font-medium text-gray-700 mb-1">
-                            <i class="pi pi-instagram mr-1"></i> Instagram
-                        </label>
-                        <InputText
-                            id="instagram"
-                            v-model="form.social_links.instagram"
-                            class="w-full"
-                            placeholder="https://instagram.com/yourbusiness"
-                        />
-                    </div>
-                    <div>
-                        <label for="twitter" class="block text-sm font-medium text-gray-700 mb-1">
-                            <i class="pi pi-twitter mr-1"></i> Twitter / X
-                        </label>
-                        <InputText
-                            id="twitter"
-                            v-model="form.social_links.twitter"
-                            class="w-full"
-                            placeholder="https://twitter.com/yourbusiness"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gallery Section -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                    <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                        <i class="pi pi-images text-[#106B4F]"></i>
-                        Photo Gallery
-                    </h2>
-                </div>
-                <div class="p-4 lg:p-5">
+                <!-- Gallery Section -->
+                <ConsoleFormCard title="Photo Gallery" icon="pi pi-images">
                     <GalleryUpload
                         v-model="gallery"
                         :upload-url="uploadMultipleUrl"
@@ -303,18 +276,10 @@ const handleMediaError = (error: string) => {
                     <small class="text-gray-500 mt-2 block">
                         Showcase your work with up to 5 photos. Drag to reorder.
                     </small>
-                </div>
-            </div>
+                </ConsoleFormCard>
 
-            <!-- Videos Section -->
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
-                <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                    <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                        <i class="pi pi-video text-[#106B4F]"></i>
-                        Videos
-                    </h2>
-                </div>
-                <div class="p-4 lg:p-5">
+                <!-- Videos Section -->
+                <ConsoleFormCard title="Videos" icon="pi pi-video">
                     <VideoEmbedForm
                         v-model="videos"
                         :add-url="addVideoUrl"
@@ -325,19 +290,17 @@ const handleMediaError = (error: string) => {
                     <small class="text-gray-500 mt-2 block">
                         Add YouTube or Vimeo videos to showcase your work.
                     </small>
-                </div>
-            </div>
+                </ConsoleFormCard>
 
-            <!-- Save Button -->
-            <div class="flex justify-end gap-3">
-                <Button
-                    label="Save Changes"
-                    icon="pi pi-check"
-                    type="button"
-                    :loading="form.processing"
-                    class="!bg-[#106B4F] !border-[#106B4F]"
-                    @click="submit"
-                />
+                <!-- Save Button -->
+                <div class="flex justify-end">
+                    <ConsoleButton
+                        label="Save Changes"
+                        icon="pi pi-check"
+                        :loading="form.processing"
+                        @click="submit"
+                    />
+                </div>
             </div>
         </div>
     </ConsoleLayout>

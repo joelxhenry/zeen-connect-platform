@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import {
+    ConsolePageHeader,
+    ConsoleFormCard,
+    ConsoleEmptyState,
+    ConsoleAlertBanner,
+    ConsoleButton,
+    ConsoleDataCard,
+} from '@/components/console';
+import AppLink from '@/components/common/AppLink.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
@@ -112,20 +121,21 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
 
         <div class="w-full max-w-7xl mx-auto">
             <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                    <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0 mb-1">Team Members</h1>
-                    <p class="text-gray-500 m-0 text-sm lg:text-base">
-                        Manage your team and their permissions
-                    </p>
-                </div>
-                <AppLink href="/team/invite">
-                    <Button label="Invite Member" icon="pi pi-user-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
-                </AppLink>
-            </div>
+            <ConsolePageHeader
+                title="Team Members"
+                subtitle="Manage your team and their permissions"
+            >
+                <template #actions>
+                    <ConsoleButton
+                        label="Invite Member"
+                        icon="pi pi-user-plus"
+                        href="/team/invite"
+                    />
+                </template>
+            </ConsolePageHeader>
 
             <!-- Team Info Card -->
-            <div class="bg-white rounded-xl p-4 lg:p-5 shadow-sm mb-6">
+            <ConsoleFormCard class="mb-6">
                 <div class="flex flex-wrap items-center gap-4 lg:gap-8">
                     <div>
                         <span class="text-gray-500 text-sm">Plan</span>
@@ -151,106 +161,109 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                     </div>
                 </div>
 
-                <div v-if="teamInfo.would_exceed_free_slots" class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                    <p class="text-sm text-orange-700 m-0">
-                        <i class="pi pi-info-circle mr-1"></i>
-                        Adding more members will incur an additional ₦{{ teamInfo.fee_per_extra.toLocaleString() }}/month per member.
-                    </p>
-                </div>
-            </div>
+                <ConsoleAlertBanner
+                    v-if="teamInfo.would_exceed_free_slots"
+                    variant="warning"
+                    class="mt-4"
+                >
+                    Adding more members will incur an additional ₦{{ teamInfo.fee_per_extra.toLocaleString() }}/month per member.
+                </ConsoleAlertBanner>
+            </ConsoleFormCard>
 
             <!-- Empty State -->
-            <div v-if="teamMembers.length === 0" class="bg-white rounded-xl p-8 lg:p-12 shadow-sm text-center">
-                <i class="pi pi-users text-4xl lg:text-5xl text-gray-300 mb-4 block"></i>
-                <h2 class="text-lg lg:text-xl font-semibold text-[#0D1F1B] m-0 mb-2">No team members yet</h2>
-                <p class="text-gray-500 m-0 mb-6 max-w-md mx-auto">
-                    Invite team members to help manage bookings, services, and more.
-                </p>
-                <AppLink href="/team/invite">
-                    <Button label="Invite Your First Team Member" icon="pi pi-user-plus" class="!bg-[#106B4F] !border-[#106B4F]" />
-                </AppLink>
+            <div v-if="teamMembers.length === 0" class="bg-white rounded-xl shadow-sm">
+                <ConsoleEmptyState
+                    icon="pi pi-users"
+                    title="No team members yet"
+                    description="Invite team members to help manage bookings, services, and more."
+                    action-label="Invite Your First Team Member"
+                    action-href="/team/invite"
+                    action-icon="pi pi-user-plus"
+                />
             </div>
 
             <!-- Team Members List -->
             <div v-else class="space-y-4">
-                <div v-for="member in teamMembers" :key="member.id"
-                    class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                    <div class="p-4 lg:p-5">
-                        <div class="flex items-start gap-4">
-                            <Avatar
-                                :image="member.avatar || undefined"
-                                :label="member.name?.[0]?.toUpperCase()"
-                                size="large"
-                                shape="circle"
-                                class="shrink-0 !bg-[#106B4F] !text-white"
-                            />
+                <ConsoleDataCard
+                    v-for="member in teamMembers"
+                    :key="member.id"
+                >
+                    <div class="flex items-start gap-4">
+                        <Avatar
+                            :image="member.avatar || undefined"
+                            :label="member.name?.[0]?.toUpperCase()"
+                            size="large"
+                            shape="circle"
+                            class="shrink-0 !bg-[#106B4F] !text-white"
+                        />
 
-                            <div class="flex-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-2 mb-1">
-                                    <h3 class="font-semibold text-[#0D1F1B] m-0">{{ member.name }}</h3>
-                                    <Tag
-                                        :value="member.status_label"
-                                        :severity="getStatusSeverity(member.status)"
-                                        class="!text-xs"
-                                    />
-                                    <Tag
-                                        v-if="member.is_expired"
-                                        value="Expired"
-                                        severity="danger"
-                                        class="!text-xs"
-                                    />
-                                </div>
-                                <p class="text-sm text-gray-500 m-0 mb-2">{{ member.email }}</p>
-                                <p class="text-sm text-gray-400 m-0">{{ member.permissions_summary }}</p>
-                            </div>
-
-                            <div class="flex items-center gap-2 shrink-0">
-                                <AppLink v-if="member.status !== 'pending'" :href="`/team/${member.id}/edit`">
-                                    <Button icon="pi pi-pencil" size="small" severity="secondary" outlined v-tooltip="'Edit Permissions'" />
-                                </AppLink>
-
-                                <Button
-                                    v-if="member.status === 'pending' && !member.is_expired"
-                                    icon="pi pi-send"
-                                    size="small"
-                                    severity="info"
-                                    outlined
-                                    v-tooltip="'Resend Invite'"
-                                    @click="resendInvite(member)"
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 class="font-semibold text-[#0D1F1B] m-0">{{ member.name }}</h3>
+                                <Tag
+                                    :value="member.status_label"
+                                    :severity="getStatusSeverity(member.status)"
+                                    class="!text-xs"
                                 />
-
-                                <Button
-                                    v-if="member.status === 'active'"
-                                    icon="pi pi-ban"
-                                    size="small"
-                                    severity="warn"
-                                    outlined
-                                    v-tooltip="'Suspend'"
-                                    @click="suspendMember(member)"
-                                />
-
-                                <Button
-                                    v-if="member.status === 'suspended'"
-                                    icon="pi pi-check"
-                                    size="small"
-                                    severity="success"
-                                    outlined
-                                    v-tooltip="'Reactivate'"
-                                    @click="reactivateMember(member)"
-                                />
-
-                                <Button
-                                    icon="pi pi-trash"
-                                    size="small"
+                                <Tag
+                                    v-if="member.is_expired"
+                                    value="Expired"
                                     severity="danger"
-                                    outlined
-                                    v-tooltip="'Remove'"
-                                    @click="deleteMember(member)"
+                                    class="!text-xs"
                                 />
                             </div>
+                            <p class="text-sm text-gray-500 m-0 mb-2">{{ member.email }}</p>
+                            <p class="text-sm text-gray-400 m-0">{{ member.permissions_summary }}</p>
                         </div>
 
-                        <div v-if="member.invited_at || member.accepted_at" class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-4 text-xs text-gray-400">
+                        <div class="flex items-center gap-2 shrink-0">
+                            <AppLink v-if="member.status !== 'pending'" :href="`/team/${member.id}/edit`">
+                                <Button icon="pi pi-pencil" size="small" severity="secondary" outlined v-tooltip="'Edit Permissions'" />
+                            </AppLink>
+
+                            <Button
+                                v-if="member.status === 'pending' && !member.is_expired"
+                                icon="pi pi-send"
+                                size="small"
+                                severity="info"
+                                outlined
+                                v-tooltip="'Resend Invite'"
+                                @click="resendInvite(member)"
+                            />
+
+                            <Button
+                                v-if="member.status === 'active'"
+                                icon="pi pi-ban"
+                                size="small"
+                                severity="warn"
+                                outlined
+                                v-tooltip="'Suspend'"
+                                @click="suspendMember(member)"
+                            />
+
+                            <Button
+                                v-if="member.status === 'suspended'"
+                                icon="pi pi-check"
+                                size="small"
+                                severity="success"
+                                outlined
+                                v-tooltip="'Reactivate'"
+                                @click="reactivateMember(member)"
+                            />
+
+                            <Button
+                                icon="pi pi-trash"
+                                size="small"
+                                severity="danger"
+                                outlined
+                                v-tooltip="'Remove'"
+                                @click="deleteMember(member)"
+                            />
+                        </div>
+                    </div>
+
+                    <template #footer>
+                        <div v-if="member.invited_at || member.accepted_at" class="flex flex-wrap gap-4 text-xs text-gray-400">
                             <span v-if="member.invited_at">
                                 <i class="pi pi-send mr-1"></i>
                                 Invited {{ member.invited_at }}
@@ -260,8 +273,8 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                                 Joined {{ member.accepted_at }}
                             </span>
                         </div>
-                    </div>
-                </div>
+                    </template>
+                </ConsoleDataCard>
             </div>
         </div>
     </ConsoleLayout>

@@ -2,6 +2,12 @@
 import { ref, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import {
+    ConsolePageHeader,
+    ConsoleFormCard,
+    ConsoleEmptyState,
+    ConsoleButton,
+} from '@/components/console';
 import InputSwitch from 'primevue/inputswitch';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
@@ -158,28 +164,25 @@ const removeBlockedDate = (index: number) => {
     <ConsoleLayout title="Availability">
         <div class="w-full max-w-7xl mx-auto">
             <!-- Page Header -->
-            <div class="mb-6">
-                <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0 mb-1">
-                    Manage Availability
-                </h1>
-                <p class="text-gray-500 m-0 text-sm lg:text-base">
-                    Set your working hours and block specific dates when you're unavailable
-                </p>
-            </div>
+            <ConsolePageHeader
+                title="Manage Availability"
+                subtitle="Set your working hours and block specific dates when you're unavailable"
+            />
 
             <!-- Two Column Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <!-- Weekly Schedule Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="flex justify-between items-center px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                        <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                            <i class="pi pi-calendar text-[#106B4F]"></i>
-                            Weekly Schedule
-                        </h2>
-                        <Button label="Save" icon="pi pi-check" size="small" :loading="scheduleForm.processing"
-                            @click="saveSchedule" class="!bg-[#106B4F] !border-[#106B4F]" />
-                    </div>
-                    <div class="p-4 lg:p-5 space-y-3">
+                <ConsoleFormCard title="Weekly Schedule" icon="pi pi-calendar">
+                    <template #header-actions>
+                        <ConsoleButton
+                            label="Save"
+                            icon="pi pi-check"
+                            size="small"
+                            :loading="scheduleForm.processing"
+                            @click="saveSchedule"
+                        />
+                    </template>
+                    <div class="space-y-3">
                         <div v-for="day in scheduleForm.schedule" :key="day.day_of_week"
                             class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-gray-50 rounded-lg">
                             <div class="flex items-center gap-3 min-w-[140px]">
@@ -204,55 +207,57 @@ const removeBlockedDate = (index: number) => {
                             {{ scheduleForm.errors.schedule }}
                         </small>
                     </div>
-                </div>
+                </ConsoleFormCard>
 
                 <!-- Blocked Dates Card -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="flex justify-between items-center px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
-                        <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                            <i class="pi pi-ban text-red-500"></i>
-                            Blocked Dates
-                        </h2>
-                        <Button label="Save" icon="pi pi-check" size="small" :loading="blockedDatesForm.processing"
-                            @click="saveBlockedDates" class="!bg-[#106B4F] !border-[#106B4F]" />
+                <ConsoleFormCard title="Blocked Dates" icon="pi pi-ban" icon-color="danger">
+                    <template #header-actions>
+                        <ConsoleButton
+                            label="Save"
+                            icon="pi pi-check"
+                            size="small"
+                            :loading="blockedDatesForm.processing"
+                            @click="saveBlockedDates"
+                        />
+                    </template>
+                    <!-- Add New Blocked Date -->
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4 pb-4 border-b border-gray-100">
+                        <DatePicker v-model="newBlockedDate" :minDate="new Date()" placeholder="Select date"
+                            dateFormat="M dd, yy" showIcon class="flex-1" />
+                        <InputText v-model="newBlockedReason" placeholder="Reason (optional)" class="flex-1" />
+                        <Button icon="pi pi-plus" @click="addBlockedDate" :disabled="!newBlockedDate"
+                            v-tooltip="'Add Blocked Date'" severity="secondary" />
                     </div>
-                    <div class="p-4 lg:p-5">
-                        <!-- Add New Blocked Date -->
-                        <div class="flex flex-col sm:flex-row gap-3 mb-4 pb-4 border-b border-gray-100">
-                            <DatePicker v-model="newBlockedDate" :minDate="new Date()" placeholder="Select date"
-                                dateFormat="M dd, yy" showIcon class="flex-1" />
-                            <InputText v-model="newBlockedReason" placeholder="Reason (optional)" class="flex-1" />
-                            <Button icon="pi pi-plus" @click="addBlockedDate" :disabled="!newBlockedDate"
-                                v-tooltip="'Add Blocked Date'" severity="secondary" />
-                        </div>
 
-                        <!-- Blocked Dates List -->
-                        <div v-if="blockedDatesForm.blocked_dates.length === 0" class="text-center py-8 text-gray-400">
-                            <i class="pi pi-calendar-times text-3xl mb-2 block"></i>
-                            <p class="m-0 text-sm">No blocked dates</p>
-                        </div>
-                        <div v-else class="space-y-2 max-h-[300px] overflow-y-auto">
-                            <div v-for="(blocked, index) in blockedDatesForm.blocked_dates" :key="index"
-                                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group">
-                                <div class="flex-1 min-w-0">
-                                    <span class="block font-medium text-sm text-[#0D1F1B]">
-                                        {{ formatDate(blocked.date) }}
-                                    </span>
-                                    <span v-if="blocked.reason" class="block text-xs text-gray-500 truncate">
-                                        {{ blocked.reason }}
-                                    </span>
-                                </div>
-                                <Button icon="pi pi-times" severity="danger" text rounded size="small"
-                                    @click="removeBlockedDate(index)"
-                                    class="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <!-- Blocked Dates List -->
+                    <ConsoleEmptyState
+                        v-if="blockedDatesForm.blocked_dates.length === 0"
+                        icon="pi pi-calendar-times"
+                        title="No blocked dates"
+                        description="Add dates when you're unavailable for bookings"
+                        size="compact"
+                    />
+                    <div v-else class="space-y-2 max-h-[300px] overflow-y-auto">
+                        <div v-for="(blocked, index) in blockedDatesForm.blocked_dates" :key="index"
+                            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group">
+                            <div class="flex-1 min-w-0">
+                                <span class="block font-medium text-sm text-[#0D1F1B]">
+                                    {{ formatDate(blocked.date) }}
+                                </span>
+                                <span v-if="blocked.reason" class="block text-xs text-gray-500 truncate">
+                                    {{ blocked.reason }}
+                                </span>
                             </div>
+                            <Button icon="pi pi-times" severity="danger" text rounded size="small"
+                                @click="removeBlockedDate(index)"
+                                class="opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-
-                        <small v-if="blockedDatesForm.errors.blocked_dates" class="text-red-500 text-xs mt-2 block">
-                            {{ blockedDatesForm.errors.blocked_dates }}
-                        </small>
                     </div>
-                </div>
+
+                    <small v-if="blockedDatesForm.errors.blocked_dates" class="text-red-500 text-xs mt-2 block">
+                        {{ blockedDatesForm.errors.blocked_dates }}
+                    </small>
+                </ConsoleFormCard>
             </div>
         </div>
     </ConsoleLayout>

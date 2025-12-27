@@ -2,6 +2,11 @@
 import { ref, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import {
+    ConsolePageHeader,
+    ConsoleFormCard,
+    ConsoleButton,
+} from '@/components/console';
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Checkbox from 'primevue/checkbox';
@@ -163,14 +168,13 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
 
         <div class="w-full max-w-2xl mx-auto">
             <!-- Page Header -->
-            <div class="mb-6">
-                <h1 class="text-xl lg:text-2xl font-semibold text-[#0D1F1B] m-0 mb-1">Edit Team Member</h1>
-                <p class="text-gray-500 m-0 text-sm lg:text-base">
-                    Update permissions for this team member
-                </p>
-            </div>
+            <ConsolePageHeader
+                title="Edit Team Member"
+                subtitle="Update permissions for this team member"
+                back-href="/team"
+            />
 
-            <div class="bg-white rounded-xl shadow-sm p-6">
+            <ConsoleFormCard>
                 <!-- Member Info -->
                 <div class="flex items-start gap-4 mb-6 pb-6 border-b border-gray-100">
                     <Avatar
@@ -202,9 +206,9 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                     </div>
                 </div>
 
-                <form @submit.prevent="submit">
+                <form @submit.prevent="submit" class="space-y-6">
                     <!-- Presets -->
-                    <div class="mb-6">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Quick Presets</label>
                         <div class="flex flex-wrap gap-2">
                             <Button
@@ -220,7 +224,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                     </div>
 
                     <!-- Permissions -->
-                    <div class="mb-6">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
                         <small v-if="form.errors.permissions" class="text-red-500 block mb-2">{{ form.errors.permissions }}</small>
 
@@ -254,28 +258,28 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                     <!-- Actions -->
                     <div class="flex flex-wrap justify-between gap-3 pt-4 border-t border-gray-100">
                         <div class="flex gap-2">
-                            <Button
+                            <ConsoleButton
                                 v-if="member.status === 'active'"
                                 label="Suspend"
                                 icon="pi pi-ban"
-                                severity="warn"
+                                variant="secondary"
                                 outlined
                                 size="small"
                                 @click="suspendMember"
                             />
-                            <Button
+                            <ConsoleButton
                                 v-if="member.status === 'suspended'"
                                 label="Reactivate"
                                 icon="pi pi-check"
-                                severity="success"
+                                variant="success"
                                 outlined
                                 size="small"
                                 @click="reactivateMember"
                             />
-                            <Button
+                            <ConsoleButton
                                 label="Remove"
                                 icon="pi pi-trash"
-                                severity="danger"
+                                variant="danger"
                                 outlined
                                 size="small"
                                 @click="deleteMember"
@@ -283,20 +287,21 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                         </div>
 
                         <div class="flex gap-3">
-                            <AppLink href="/team">
-                                <Button label="Cancel" severity="secondary" outlined />
-                            </AppLink>
-                            <Button
+                            <ConsoleButton
+                                label="Cancel"
+                                variant="secondary"
+                                href="/team"
+                            />
+                            <ConsoleButton
                                 label="Save Changes"
                                 icon="pi pi-check"
                                 type="submit"
                                 :loading="form.processing"
-                                class="!bg-[#106B4F] !border-[#106B4F]"
                             />
                         </div>
                     </div>
                 </form>
-            </div>
+            </ConsoleFormCard>
         </div>
     </ConsoleLayout>
 </template>

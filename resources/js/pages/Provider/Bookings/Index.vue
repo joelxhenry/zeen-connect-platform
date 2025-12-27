@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import {
+    ConsolePageHeader,
+    ConsoleEmptyState,
+    ConsoleButton,
+} from '@/components/console';
 import ProviderBookingCard from '@/components/booking/ProviderBookingCard.vue';
 import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
@@ -99,12 +104,10 @@ const confirmBooking = (booking: Booking) => {
     <ConsoleLayout title="Bookings">
         <div class="max-w-5xl mx-auto">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                    <h1 class="text-2xl font-semibold text-[#0D1F1B] m-0">Bookings</h1>
-                    <p class="text-gray-500 m-0 mt-1">Manage your appointments</p>
-                </div>
-            </div>
+            <ConsolePageHeader
+                title="Bookings"
+                subtitle="Manage your appointments"
+            />
 
             <!-- Status Tabs -->
             <div class="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
@@ -131,21 +134,20 @@ const confirmBooking = (booking: Booking) => {
             </div>
 
             <!-- Empty State -->
-            <div v-if="bookings.data.length === 0" class="text-center py-16 bg-white rounded-xl shadow-sm">
-                <i class="pi pi-calendar text-5xl text-gray-300 mb-4 block"></i>
-                <h3 class="text-lg font-medium text-[#0D1F1B] m-0">No bookings found</h3>
-                <p class="text-gray-500 mt-2">
-                    {{ currentStatus === 'pending'
-                        ? "You don't have any pending bookings"
+            <div v-if="bookings.data.length === 0" class="bg-white rounded-xl shadow-sm">
+                <ConsoleEmptyState
+                    icon="pi pi-calendar"
+                    title="No bookings found"
+                    :description="currentStatus === 'pending'
+                        ? 'You don\'t have any pending bookings'
                         : currentStatus === 'confirmed'
-                            ? "You don't have any confirmed bookings"
+                            ? 'You don\'t have any confirmed bookings'
                             : currentStatus === 'completed'
-                                ? "You don't have any completed bookings"
+                                ? 'You don\'t have any completed bookings'
                                 : currentStatus === 'cancelled'
-                                    ? "No cancelled bookings"
-                                    : "You don't have any bookings yet"
-                    }}
-                </p>
+                                    ? 'No cancelled bookings'
+                                    : 'You don\'t have any bookings yet'"
+                />
             </div>
 
             <!-- Bookings List -->
@@ -159,21 +161,19 @@ const confirmBooking = (booking: Booking) => {
 
                 <!-- Pagination -->
                 <div v-if="bookings.last_page > 1" class="flex justify-center gap-2 pt-4">
-                    <Button
+                    <ConsoleButton
                         icon="pi pi-chevron-left"
                         :disabled="bookings.current_page === 1"
-                        severity="secondary"
-                        text
+                        variant="ghost"
                         @click="router.get(ProviderBookingController.index().url, { status: currentStatus, page: bookings.current_page - 1 })"
                     />
                     <span class="flex items-center px-3 text-sm text-gray-500">
                         Page {{ bookings.current_page }} of {{ bookings.last_page }}
                     </span>
-                    <Button
+                    <ConsoleButton
                         icon="pi pi-chevron-right"
                         :disabled="bookings.current_page === bookings.last_page"
-                        severity="secondary"
-                        text
+                        variant="ghost"
                         @click="router.get(ProviderBookingController.index().url, { status: currentStatus, page: bookings.current_page + 1 })"
                     />
                 </div>

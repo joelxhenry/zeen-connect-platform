@@ -7,59 +7,16 @@ import {
     ConsoleButton,
 } from '@/components/console';
 import ProviderBookingCard from '@/components/booking/ProviderBookingCard.vue';
-import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
 import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
-
-interface Client {
-    name: string;
-    email: string;
-    phone?: string;
-    avatar?: string;
-    is_guest: boolean;
-}
-
-interface Booking {
-    id: number;
-    uuid: string;
-    client: Client;
-    service: {
-        name: string;
-        duration_minutes: number;
-    };
-    booking_date: string;
-    formatted_date: string;
-    formatted_time: string;
-    status: string;
-    status_label: string;
-    status_color: string;
-    total_display: string;
-    client_notes?: string;
-    is_past: boolean;
-    is_today: boolean;
-    can_confirm: boolean;
-    can_complete: boolean;
-    can_cancel: boolean;
-    is_guest_booking: boolean;
-}
+import type { Booking, BookingCounts, BookingStatusOption, PaginatedBookings } from '@/types/models/booking';
 
 interface Props {
-    bookings: {
-        data: Booking[];
-        current_page: number;
-        last_page: number;
-        total: number;
-    };
-    currentStatus: string;
-    currentDate: string | null;
-    counts: {
-        all: number;
-        pending: number;
-        confirmed: number;
-        completed: number;
-        cancelled: number;
-    };
-    statusOptions: Array<{ value: string; label: string; color: string }>;
+    bookings: PaginatedBookings;
+    current_status: string;
+    current_date: string | null;
+    counts: BookingCounts;
+    status_options: BookingStatusOption[];
 }
 
 const props = defineProps<Props>();
@@ -116,7 +73,7 @@ const confirmBooking = (booking: Booking) => {
                     :key="tab.value"
                     @click="switchTab(tab.value)"
                     class="px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-[1px] whitespace-nowrap flex items-center gap-2"
-                    :class="currentStatus === tab.value
+                    :class="current_status === tab.value
                         ? 'border-[#106B4F] text-[#106B4F]'
                         : 'border-transparent text-gray-500 hover:text-gray-700'"
                 >
@@ -124,7 +81,7 @@ const confirmBooking = (booking: Booking) => {
                     <span
                         v-if="counts[tab.countKey] > 0"
                         class="px-2 py-0.5 text-xs rounded-full"
-                        :class="currentStatus === tab.value
+                        :class="current_status === tab.value
                             ? 'bg-[#106B4F] text-white'
                             : 'bg-gray-200 text-gray-600'"
                     >
@@ -138,13 +95,13 @@ const confirmBooking = (booking: Booking) => {
                 <ConsoleEmptyState
                     icon="pi pi-calendar"
                     title="No bookings found"
-                    :description="currentStatus === 'pending'
+                    :description="current_status === 'pending'
                         ? 'You don\'t have any pending bookings'
-                        : currentStatus === 'confirmed'
+                        : current_status === 'confirmed'
                             ? 'You don\'t have any confirmed bookings'
-                            : currentStatus === 'completed'
+                            : current_status === 'completed'
                                 ? 'You don\'t have any completed bookings'
-                                : currentStatus === 'cancelled'
+                                : current_status === 'cancelled'
                                     ? 'No cancelled bookings'
                                     : 'You don\'t have any bookings yet'"
                 />
@@ -165,7 +122,7 @@ const confirmBooking = (booking: Booking) => {
                         icon="pi pi-chevron-left"
                         :disabled="bookings.current_page === 1"
                         variant="ghost"
-                        @click="router.get(ProviderBookingController.index().url, { status: currentStatus, page: bookings.current_page - 1 })"
+                        @click="router.get(ProviderBookingController.index().url, { status: current_status, page: bookings.current_page - 1 })"
                     />
                     <span class="flex items-center px-3 text-sm text-gray-500">
                         Page {{ bookings.current_page }} of {{ bookings.last_page }}
@@ -174,7 +131,7 @@ const confirmBooking = (booking: Booking) => {
                         icon="pi pi-chevron-right"
                         :disabled="bookings.current_page === bookings.last_page"
                         variant="ghost"
-                        @click="router.get(ProviderBookingController.index().url, { status: currentStatus, page: bookings.current_page + 1 })"
+                        @click="router.get(ProviderBookingController.index().url, { status: current_status, page: bookings.current_page + 1 })"
                     />
                 </div>
             </div>

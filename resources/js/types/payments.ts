@@ -214,38 +214,38 @@ export interface PowerTranzCredentials {
 // Page Props Types
 export interface PaymentsIndexProps {
     summary: EarningsSummary;
-    recentPayments: Payment[];
+    recent_payments: Payment[];
     payouts: Payout[];
-    monthlyEarnings: MonthlyEarnings[];
-    hasGatewayConfigured: boolean;
-    gatewayMode: GatewayMode | null;
-    gatewayName?: string;
+    monthly_earnings: MonthlyEarnings[];
+    has_gateway_configured: boolean;
+    gateway_mode: GatewayMode | null;
+    gateway_name?: string;
 }
 
 export interface PaymentHistoryProps {
     payments: PaginatedData<Payment>;
-    currentStatus: string;
+    current_status: string;
     counts: {
         all: number;
         completed: number;
         pending: number;
         failed: number;
     };
-    statusOptions: Array<{ value: string; label: string }>;
+    status_options: Array<{ value: string; label: string }>;
 }
 
 export interface WalletProps {
     balance: BalanceSummary;
-    payoutSettings: PayoutSettings;
-    ledgerEntries: PaginatedData<LedgerEntry>;
-    scheduledPayouts: ScheduledPayout[];
-    hasGateway: boolean;
+    payout_settings: PayoutSettings;
+    ledger_entries: PaginatedData<LedgerEntry>;
+    scheduled_payouts: ScheduledPayout[];
+    has_gateway: boolean;
     filters: {
         type: string;
         date_from?: string;
         date_to?: string;
     };
-    typeOptions: Array<{ value: string; label: string }>;
+    type_options: Array<{ value: string; label: string }>;
 }
 
 export interface RefundsProps {

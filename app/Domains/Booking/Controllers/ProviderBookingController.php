@@ -6,6 +6,7 @@ use App\Domains\Booking\Actions\UpdateBookingStatusAction;
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Requests\UpdateBookingStatusRequest;
+use App\Domains\Booking\Resources\BookingResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,42 +49,14 @@ class ProviderBookingController extends Controller
 
         $bookings = $query->paginate(15)->withQueryString();
 
-        // Transform for frontend
-        $bookings->getCollection()->transform(fn ($booking) => [
-            'id' => $booking->id,
-            'uuid' => $booking->uuid,
-            'client' => $booking->isGuestBooking() ? [
-                'name' => $booking->guest_name,
-                'email' => $booking->guest_email,
-                'phone' => $booking->guest_phone,
-                'avatar' => null,
-                'is_guest' => true,
-            ] : [
-                'name' => $booking->client?->name,
-                'email' => $booking->client?->email,
-                'phone' => $booking->client?->phone,
-                'avatar' => $booking->client?->avatar,
-                'is_guest' => false,
-            ],
-            'service' => [
-                'name' => $booking->service->name,
-                'duration_minutes' => $booking->service->duration_minutes,
-            ],
-            'booking_date' => $booking->booking_date->format('Y-m-d'),
-            'formatted_date' => $booking->formatted_date,
-            'formatted_time' => $booking->formatted_time,
-            'status' => $booking->status->value,
-            'status_label' => $booking->status->label(),
-            'status_color' => $booking->status->color(),
-            'total_display' => $booking->total_display,
-            'client_notes' => $booking->client_notes,
-            'is_past' => $booking->isPast(),
-            'is_today' => $booking->isToday(),
-            'can_confirm' => $booking->canBeConfirmed(),
-            'can_complete' => $booking->canBeCompleted(),
-            'can_cancel' => $booking->canBeCancelled(),
-            'is_guest_booking' => $booking->isGuestBooking(),
-        ]);
+        // Transform for frontend using BookingResource
+        $bookings->getCollection()->transform(
+            fn ($booking) => (new BookingResource($booking))
+                ->withClient(true)
+                ->withService(true)
+                ->withProvider(false)
+                ->resolve()
+        );
 
         // Get counts for status tabs
         $counts = [
@@ -96,10 +69,10 @@ class ProviderBookingController extends Controller
 
         return Inertia::render('Provider/Bookings/Index', [
             'bookings' => $bookings,
-            'currentStatus' => $status,
-            'currentDate' => $date,
+            'current_status' => $status,
+            'current_date' => $date,
             'counts' => $counts,
-            'statusOptions' => BookingStatus::options(),
+            'status_options' => BookingStatus::options(),
         ]);
     }
 
@@ -114,72 +87,18 @@ class ProviderBookingController extends Controller
             ->where('provider_id', $provider->id)
             ->with([
                 'client:id,name,email,phone,avatar',
-                'service:id,name,description,duration_minutes,price',
+                'service:id,uuid,name,description,duration_minutes,price',
                 'payment',
             ])
             ->firstOrFail();
 
         return Inertia::render('Provider/Bookings/Show', [
-            'booking' => [
-                'id' => $booking->id,
-                'uuid' => $booking->uuid,
-                'client' => $booking->isGuestBooking() ? [
-                    'name' => $booking->guest_name,
-                    'email' => $booking->guest_email,
-                    'phone' => $booking->guest_phone,
-                    'avatar' => null,
-                    'is_guest' => true,
-                ] : [
-                    'name' => $booking->client?->name,
-                    'email' => $booking->client?->email,
-                    'phone' => $booking->client?->phone,
-                    'avatar' => $booking->client?->avatar,
-                    'is_guest' => false,
-                ],
-                'service' => [
-                    'name' => $booking->service->name,
-                    'description' => $booking->service->description,
-                    'duration_minutes' => $booking->service->duration_minutes,
-                    'price' => (float) $booking->service->price,
-                ],
-                'booking_date' => $booking->booking_date->format('Y-m-d'),
-                'formatted_date' => $booking->formatted_date,
-                'formatted_time' => $booking->formatted_time,
-                'status' => $booking->status->value,
-                'status_label' => $booking->status->label(),
-                'status_color' => $booking->status->color(),
-                'service_price' => (float) $booking->service_price,
-                'platform_fee' => (float) $booking->platform_fee,
-                'total_amount' => (float) $booking->total_amount,
-                'total_display' => $booking->total_display,
-                'client_notes' => $booking->client_notes,
-                'provider_notes' => $booking->provider_notes,
-                'cancellation_reason' => $booking->cancellation_reason,
-                'is_past' => $booking->isPast(),
-                'is_today' => $booking->isToday(),
-                'can_confirm' => $booking->canBeConfirmed(),
-                'can_complete' => $booking->canBeCompleted(),
-                'can_cancel' => $booking->canBeCancelled(),
-                'confirmed_at' => $booking->confirmed_at?->format('M j, Y g:i A'),
-                'completed_at' => $booking->completed_at?->format('M j, Y g:i A'),
-                'cancelled_at' => $booking->cancelled_at?->format('M j, Y g:i A'),
-                'created_at' => $booking->created_at->format('M j, Y g:i A'),
-                // Guest booking fields
-                'is_guest_booking' => $booking->isGuestBooking(),
-                // Payment/deposit fields
-                'deposit_amount' => (float) ($booking->deposit_amount ?? 0),
-                'deposit_paid' => $booking->isDepositPaid(),
-                'balance_amount' => $booking->balance_amount,
-                'payment' => $booking->payment ? [
-                    'uuid' => $booking->payment->uuid,
-                    'amount' => (float) $booking->payment->amount,
-                    'status' => $booking->payment->status->value,
-                    'status_label' => $booking->payment->status->label(),
-                    'payment_type' => $booking->payment->payment_type ?? 'full',
-                    'card_display' => $booking->payment->card_display,
-                    'paid_at' => $booking->payment->paid_at?->format('M j, Y g:i A'),
-                ] : null,
-            ],
+            'booking' => (new BookingResource($booking))
+                ->withClient(true)
+                ->withService(true)
+                ->withProvider(false)
+                ->withPayment(true)
+                ->resolve(),
         ]);
     }
 

@@ -24,7 +24,7 @@ import { resolveUrl } from '@/utils/url';
 const props = defineProps<PaymentHistoryProps>();
 const toast = useToast();
 
-const currentStatus = ref(props.currentStatus);
+const currentStatus = ref(props.current_status);
 const searchQuery = ref('');
 
 // Refund dialog

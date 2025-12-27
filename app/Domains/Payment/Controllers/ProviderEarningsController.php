@@ -11,6 +11,7 @@ use App\Domains\Payment\Models\Payment;
 use App\Domains\Payment\Models\Payout;
 use App\Domains\Payment\Models\ProviderGatewayConfig;
 use App\Domains\Payment\Models\ScheduledPayout;
+use App\Domains\Payment\Resources\PaymentResource;
 use App\Domains\Payment\Services\LedgerService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -135,12 +136,12 @@ class ProviderEarningsController extends Controller
                 'available_balance' => $balanceSummary['available'],
                 'available_balance_display' => '$' . number_format($balanceSummary['available'], 2),
             ],
-            'recentPayments' => $recentPayments,
+            'recent_payments' => $recentPayments,
             'payouts' => $payouts,
-            'monthlyEarnings' => $monthlyEarnings,
-            'hasGatewayConfigured' => $hasGateway,
-            'gatewayMode' => $hasGateway ? $gatewayMode : null,
-            'gatewayName' => $gatewayConfig?->gateway?->name,
+            'monthly_earnings' => $monthlyEarnings,
+            'has_gateway_configured' => $hasGateway,
+            'gateway_mode' => $hasGateway ? $gatewayMode : null,
+            'gateway_name' => $gatewayConfig?->gateway?->name,
         ]);
     }
 
@@ -162,26 +163,12 @@ class ProviderEarningsController extends Controller
 
         $payments = $query->paginate(20)->withQueryString();
 
-        $payments->getCollection()->transform(fn ($payment) => [
-            'id' => $payment->id,
-            'uuid' => $payment->uuid,
-            'booking_uuid' => $payment->booking->uuid,
-            'client_name' => $payment->client->name,
-            'service_name' => $payment->booking->service->name,
-            'booking_date' => $payment->booking->formatted_date,
-            'amount' => $payment->amount,
-            'amount_display' => $payment->amount_display,
-            'platform_fee' => $payment->platform_fee,
-            'platform_fee_display' => $payment->platform_fee_display,
-            'provider_amount' => $payment->provider_amount,
-            'provider_amount_display' => $payment->provider_amount_display,
-            'status' => $payment->status->value,
-            'status_label' => $payment->status->label(),
-            'status_color' => $payment->status->color(),
-            'card_display' => $payment->card_display,
-            'paid_at' => $payment->paid_at?->format('M j, Y g:i A'),
-            'created_at' => $payment->created_at->format('M j, Y g:i A'),
-        ]);
+        $payments->getCollection()->transform(
+            fn ($payment) => (new PaymentResource($payment))
+                ->withClient(true)
+                ->withBooking(true)
+                ->resolve()
+        );
 
         // Get counts
         $counts = [
@@ -193,9 +180,9 @@ class ProviderEarningsController extends Controller
 
         return Inertia::render('Provider/Payments/History', [
             'payments' => $payments,
-            'currentStatus' => $status,
+            'current_status' => $status,
             'counts' => $counts,
-            'statusOptions' => PaymentStatus::options(),
+            'status_options' => PaymentStatus::options(),
         ]);
     }
 
@@ -330,16 +317,16 @@ class ProviderEarningsController extends Controller
                 'pending_payout' => $balanceSummary['pending_payout'],
                 'pending_payout_display' => '$' . number_format($balanceSummary['pending_payout'], 2),
             ],
-            'payoutSettings' => $payoutSettings,
-            'ledgerEntries' => $ledgerEntries,
-            'scheduledPayouts' => $scheduledPayouts,
-            'hasGateway' => $hasGateway,
+            'payout_settings' => $payoutSettings,
+            'ledger_entries' => $ledgerEntries,
+            'scheduled_payouts' => $scheduledPayouts,
+            'has_gateway' => $hasGateway,
             'filters' => [
                 'type' => $type,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
             ],
-            'typeOptions' => [
+            'type_options' => [
                 ['value' => 'all', 'label' => 'All Transactions'],
                 ['value' => 'credit', 'label' => 'Credits'],
                 ['value' => 'debit', 'label' => 'Debits'],

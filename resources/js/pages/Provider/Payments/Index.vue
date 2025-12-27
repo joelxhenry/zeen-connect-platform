@@ -43,7 +43,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
             </ConsolePageHeader>
 
             <!-- No Gateway Alert -->
-            <ConsoleAlertBanner v-if="!hasGatewayConfigured" variant="warning" class="mb-6">
+            <ConsoleAlertBanner v-if="!has_gateway_configured" variant="warning" class="mb-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
                         <p class="font-medium m-0 mb-1">Set up a payment method</p>
@@ -56,7 +56,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
             </ConsoleAlertBanner>
 
             <!-- Gateway Mode Info -->
-            <ConsoleAlertBanner v-if="hasGatewayConfigured && gatewayMode === 'escrow'" variant="info" class="mb-6">
+            <ConsoleAlertBanner v-if="has_gateway_configured && gateway_mode === 'escrow'" variant="info" class="mb-6">
                 <div class="flex items-start gap-2">
                     <i class="pi pi-info-circle mt-0.5" />
                     <div>
@@ -74,7 +74,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                     icon-color="primary" />
                 <ConsoleStatCard title="This Month" :value="summary.this_month_display || '$0.00'" icon="pi pi-calendar"
                     icon-color="accent" />
-                <ConsoleStatCard v-if="gatewayMode === 'escrow'" title="Available Balance"
+                <ConsoleStatCard v-if="gateway_mode === 'escrow'" title="Available Balance"
                     :value="summary.available_balance_display || '$0.00'" icon="pi pi-wallet" icon-color="success"
                     :href="provider.payments.wallet().url" />
                 <ConsoleStatCard v-else title="Pending Payout" :value="summary.pending_payout_display"
@@ -87,7 +87,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
             <div class="flex flex-wrap gap-3 mb-6">
                 <ConsoleButton label="View All Payments" icon="pi pi-list" variant="secondary" outlined
                     :href="provider.payments.history().url" />
-                <ConsoleButton v-if="gatewayMode === 'escrow'" label="Wallet & Payouts" icon="pi pi-wallet"
+                <ConsoleButton v-if="gateway_mode === 'escrow'" label="Wallet & Payouts" icon="pi pi-wallet"
                     variant="secondary" outlined :href="provider.payments.wallet().url" />
                 <ConsoleButton label="Refunds" icon="pi pi-replay" variant="secondary" outlined
                     :href="provider.payments.refunds().url" />
@@ -102,12 +102,12 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                             variant="secondary" outlined :href="provider.payments.history().url" />
                     </template>
 
-                    <ConsoleEmptyState v-if="recentPayments.length === 0" icon="pi pi-credit-card"
+                    <ConsoleEmptyState v-if="recent_payments.length === 0" icon="pi pi-credit-card"
                         title="No payments yet"
                         description="Payments will appear here once customers book your services." size="compact" />
 
                     <div v-else class="space-y-3">
-                        <div v-for="payment in recentPayments" :key="payment.uuid"
+                        <div v-for="payment in recent_payments" :key="payment.uuid"
                             class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div class="flex-1 min-w-0">
                                 <p class="font-medium text-[#0D1F1B] m-0 truncate">
@@ -132,7 +132,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                 <!-- Recent Payouts -->
                 <ConsoleFormCard title="Recent Payouts" icon="pi pi-send">
                     <template #header-actions>
-                        <ConsoleButton v-if="gatewayMode === 'escrow'" label="Wallet" icon="pi pi-arrow-right"
+                        <ConsoleButton v-if="gateway_mode === 'escrow'" label="Wallet" icon="pi pi-arrow-right"
                             icon-pos="right" size="small" variant="secondary" outlined
                             :href="provider.payments.wallet().url" />
                     </template>
@@ -168,12 +168,12 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
             </div>
 
             <!-- Monthly Earnings Chart (if data available) -->
-            <ConsoleFormCard v-if="monthlyEarnings.length > 0" title="Monthly Earnings" icon="pi pi-chart-bar"
+            <ConsoleFormCard v-if="monthly_earnings.length > 0" title="Monthly Earnings" icon="pi pi-chart-bar"
                 class="mt-6">
                 <div class="h-48 flex items-end justify-between gap-2">
-                    <div v-for="month in monthlyEarnings" :key="month.month" class="flex-1 flex flex-col items-center">
+                    <div v-for="month in monthly_earnings" :key="month.month" class="flex-1 flex flex-col items-center">
                         <div class="w-full bg-[#106B4F] rounded-t-md transition-all hover:bg-[#0D5A42]" :style="{
-                            height: `${Math.max(10, (month.total / Math.max(...monthlyEarnings.map(m => m.total))) * 100)}%`,
+                            height: `${Math.max(10, (month.total / Math.max(...monthly_earnings.map((m: { total: number }) => m.total))) * 100)}%`,
                             minHeight: '10px',
                         }" v-tooltip="{ value: `${month.month_label}: ${month.total_display}`, showDelay: 100 }" />
                         <span class="text-xs text-gray-500 mt-2">

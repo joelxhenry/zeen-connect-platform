@@ -3,6 +3,8 @@
 namespace App\Domains\Admin\Controllers;
 
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Resources\ProviderResource;
+use App\Domains\Provider\Resources\ProviderSimpleResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,27 +60,9 @@ class ProviderController extends Controller
 
         $providers = $query->paginate(20)->withQueryString();
 
-        $providers->getCollection()->transform(fn ($provider) => [
-            'id' => $provider->id,
-            'uuid' => $provider->uuid,
-            'slug' => $provider->slug,
-            'business_name' => $provider->business_name,
-            'user' => [
-                'name' => $provider->user->name,
-                'email' => $provider->user->email,
-                'avatar' => $provider->user->avatar,
-            ],
-            'status' => $provider->status,
-            'is_featured' => $provider->is_featured,
-            'rating_avg' => $provider->rating_avg,
-            'rating_count' => $provider->rating_count,
-            'total_bookings' => $provider->total_bookings,
-            'services_count' => $provider->services_count,
-            'reviews_count' => $provider->reviews_count,
-            'commission_rate' => $provider->commission_rate,
-            'verified_at' => $provider->verified_at?->format('M d, Y'),
-            'created_at' => $provider->created_at->format('M d, Y'),
-        ]);
+        $providers->getCollection()->transform(
+            fn ($provider) => (new ProviderSimpleResource($provider))->resolve()
+        );
 
         return Inertia::render('Admin/Providers/Index', [
             'providers' => $providers,
@@ -112,42 +96,12 @@ class ProviderController extends Controller
             ->firstOrFail();
 
         return Inertia::render('Admin/Providers/Show', [
-            'provider' => [
-                'id' => $provider->id,
-                'uuid' => $provider->uuid,
-                'slug' => $provider->slug,
-                'business_name' => $provider->business_name,
-                'tagline' => $provider->tagline,
-                'bio' => $provider->bio,
-                'website' => $provider->website,
-                'social_links' => $provider->social_links,
-                'status' => $provider->status,
-                'is_featured' => $provider->is_featured,
-                'commission_rate' => $provider->commission_rate,
-                'rating_avg' => $provider->rating_avg,
-                'rating_count' => $provider->rating_count,
-                'total_bookings' => $provider->total_bookings,
-                'services_count' => $provider->services_count,
-                'reviews_count' => $provider->reviews_count,
-                'verified_at' => $provider->verified_at?->format('M d, Y H:i'),
-                'created_at' => $provider->created_at->format('M d, Y H:i'),
-                'user' => [
-                    'id' => $provider->user->id,
-                    'name' => $provider->user->name,
-                    'email' => $provider->user->email,
-                    'phone' => $provider->user->phone,
-                    'avatar' => $provider->user->avatar,
-                    'joined' => $provider->user->created_at->format('M d, Y'),
-                ],
-                'services' => $provider->services->map(fn ($service) => [
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'category' => $service->category->name,
-                    'price' => $service->price_display,
-                    'duration' => $service->duration_display,
-                    'is_active' => $service->is_active,
-                ]),
-            ],
+            'provider' => (new ProviderResource($provider))
+                ->withUser(true)
+                ->withServices(true)
+                ->withAdminDetails(true)
+                ->withCounts(true)
+                ->resolve(),
         ]);
     }
 

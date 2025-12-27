@@ -21,13 +21,13 @@ interface Props {
         rating_count: number;
     };
     stats: {
-        totalEarnings: number;
-        pendingPayout: number;
-        completedBookings: number;
-        activeServices: number;
-        pendingBookings: number;
+        total_earnings: number;
+        pending_payout: number;
+        completed_bookings: number;
+        active_services: number;
+        pending_bookings: number;
     };
-    upcomingBookings: Array<{
+    upcoming_bookings: Array<{
         uuid: string;
         client: { name: string; avatar?: string };
         service: { name: string };
@@ -38,13 +38,13 @@ interface Props {
         status_label: string;
         status_color: string;
     }>;
-    recentPayments: Array<{
+    recent_payments: Array<{
         uuid: string;
         amount: string;
         service_name: string;
         date: string;
     }>;
-    recentReviews: Array<{
+    recent_reviews: Array<{
         uuid: string;
         rating: number;
         comment: string;
@@ -53,7 +53,7 @@ interface Props {
         date: string;
         has_response: boolean;
     }>;
-    unrespondedReviewsCount: number;
+    unresponded_reviews_count: number;
 }
 
 const props = defineProps<Props>();
@@ -105,37 +105,37 @@ const getStatusSeverity = (status: string) => {
 
             <!-- Alert Banner for Pending Bookings -->
             <ConsoleAlertBanner
-                v-if="stats.pendingBookings > 0"
+                v-if="stats.pending_bookings > 0"
                 variant="warning"
                 action-label="View All"
                 :action-href="provider.bookings.index.url({ query: { status: 'pending' }})"
             >
-                You have <strong>{{ stats.pendingBookings }}</strong> pending booking{{ stats.pendingBookings > 1 ? 's' : '' }} awaiting confirmation
+                You have <strong>{{ stats.pending_bookings }}</strong> pending booking{{ stats.pending_bookings > 1 ? 's' : '' }} awaiting confirmation
             </ConsoleAlertBanner>
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
                 <ConsoleStatCard
                     title="Total Earnings"
-                    :value="formatCurrency(stats.totalEarnings)"
+                    :value="formatCurrency(stats.total_earnings)"
                     icon="pi pi-wallet"
                     icon-color="primary"
                 />
                 <ConsoleStatCard
                     title="Pending Payout"
-                    :value="formatCurrency(stats.pendingPayout)"
+                    :value="formatCurrency(stats.pending_payout)"
                     icon="pi pi-clock"
                     icon-color="warning"
                 />
                 <ConsoleStatCard
                     title="Completed"
-                    :value="stats.completedBookings"
+                    :value="stats.completed_bookings"
                     icon="pi pi-check-circle"
                     icon-color="accent"
                 />
                 <ConsoleStatCard
                     title="Services"
-                    :value="stats.activeServices"
+                    :value="stats.active_services"
                     icon="pi pi-th-large"
                     icon-color="purple"
                 />
@@ -154,7 +154,7 @@ const getStatusSeverity = (status: string) => {
 
                         <div class="p-4 lg:p-5">
                             <ConsoleEmptyState
-                                v-if="upcomingBookings.length === 0"
+                                v-if="upcoming_bookings.length === 0"
                                 icon="pi pi-calendar"
                                 title="No upcoming bookings"
                                 description="Set your availability to start receiving bookings from clients"
@@ -164,7 +164,7 @@ const getStatusSeverity = (status: string) => {
                             />
                             <div v-else class="grid gap-3">
                                 <div
-                                    v-for="booking in upcomingBookings"
+                                    v-for="booking in upcoming_bookings"
                                     :key="booking.uuid"
                                     class="flex flex-wrap items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                 >
@@ -206,15 +206,15 @@ const getStatusSeverity = (status: string) => {
                         </template>
 
                         <div class="p-4 lg:p-5">
-                            <div v-if="recentPayments.length === 0" class="text-center py-6 text-gray-400">
+                            <div v-if="recent_payments.length === 0" class="text-center py-6 text-gray-400">
                                 <p class="m-0 text-sm">No payments yet</p>
                             </div>
                             <div v-else class="space-y-2">
                                 <div
-                                    v-for="(payment, index) in recentPayments.slice(0, 4)"
+                                    v-for="(payment, index) in recent_payments.slice(0, 4)"
                                     :key="payment.uuid"
                                     class="flex justify-between items-center py-2"
-                                    :class="{ 'border-b border-gray-100': index !== Math.min(recentPayments.length, 4) - 1 }"
+                                    :class="{ 'border-b border-gray-100': index !== Math.min(recent_payments.length, 4) - 1 }"
                                 >
                                     <div class="flex flex-col min-w-0 flex-1">
                                         <span class="text-sm text-[#0D1F1B] truncate">{{ payment.service_name }}</span>
@@ -234,7 +234,7 @@ const getStatusSeverity = (status: string) => {
                                     <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
                                         <i class="pi pi-star text-yellow-500"></i>
                                         Reviews
-                                        <Tag v-if="unrespondedReviewsCount > 0" severity="danger" :value="`${unrespondedReviewsCount}`" rounded class="!text-[10px] !px-1.5 !py-0.5 !min-w-[20px]" />
+                                        <Tag v-if="unresponded_reviews_count > 0" severity="danger" :value="`${unresponded_reviews_count}`" rounded class="!text-[10px] !px-1.5 !py-0.5 !min-w-[20px]" />
                                     </h2>
                                     <AppLink :href="provider.reviews.index.url()" class="text-xs lg:text-sm text-[#106B4F] no-underline hover:underline">
                                         View All
@@ -242,12 +242,12 @@ const getStatusSeverity = (status: string) => {
                                 </div>
                             </div>
                             <div class="p-4 lg:p-5">
-                                <div v-if="recentReviews.length === 0" class="text-center py-6 text-gray-400">
+                                <div v-if="recent_reviews.length === 0" class="text-center py-6 text-gray-400">
                                     <p class="m-0 text-sm">No reviews yet</p>
                                 </div>
                                 <div v-else class="space-y-3">
                                     <div
-                                        v-for="review in recentReviews.slice(0, 3)"
+                                        v-for="review in recent_reviews.slice(0, 3)"
                                         :key="review.uuid"
                                         class="pb-3 border-b border-gray-100 last:border-0 last:pb-0"
                                     >

@@ -1,3 +1,8 @@
+import type { Provider, MediaItem, VideoEmbed } from './models/index';
+
+// Re-export centralized types for backward compatibility
+export type { Provider, MediaItem, VideoEmbed };
+
 export interface User {
     id: number;
     uuid: string;
@@ -10,33 +15,6 @@ export interface User {
     email_verified_at?: string;
     created_at: string;
     updated_at: string;
-}
-
-export interface Provider {
-    id: number;
-    uuid: string;
-    user_id: number;
-    business_name: string;
-    slug: string;
-    bio?: string;
-    tagline?: string;
-    address?: string;
-    website?: string;
-    social_links?: Record<string, string>;
-    status: 'pending' | 'active' | 'suspended' | 'inactive';
-    commission_rate: number;
-    rating_avg: number;
-    rating_count: number;
-    total_bookings: number;
-    is_featured: boolean;
-    verified_at?: string;
-    created_at: string;
-    updated_at: string;
-    user?: User;
-    avatar_url?: string | null;
-    cover_photo_url?: string | null;
-    gallery?: MediaItem[];
-    videos?: VideoEmbed[];
 }
 
 export interface Client {
@@ -81,38 +59,6 @@ export interface Service {
     videos?: VideoEmbed[];
 }
 
-export interface MediaItem {
-    id: number;
-    uuid: string;
-    collection: string;
-    filename: string;
-    mime_type: string;
-    size: number;
-    human_size: string;
-    url: string;
-    thumbnail: string;
-    medium: string;
-    large: string;
-    is_image: boolean;
-    order: number;
-}
-
-export interface VideoEmbed {
-    id: number;
-    uuid: string;
-    platform: 'youtube' | 'vimeo';
-    video_id: string;
-    url: string;
-    embed_url: string;
-    embed_code: string;
-    watch_url: string;
-    title: string | null;
-    thumbnail_url: string | null;
-    duration: number | null;
-    human_duration: string | null;
-    order: number;
-}
-
 export interface ProviderAvailability {
     id?: number;
     provider_id?: number;
@@ -131,53 +77,6 @@ export interface BlockedDate {
     reason?: string | null;
     created_at?: string;
     updated_at?: string;
-}
-
-export type TeamMemberStatus = 'pending' | 'active' | 'suspended';
-
-export interface TeamMember {
-    id: number;
-    uuid: string;
-    provider_id: number;
-    user_id: number | null;
-    email: string;
-    name: string | null;
-    avatar?: string | null;
-    permissions: string[];
-    permissions_summary?: string;
-    status: TeamMemberStatus;
-    status_label?: string;
-    status_color?: string;
-    invited_at: string | null;
-    accepted_at: string | null;
-    is_expired?: boolean;
-    is_pending?: boolean;
-    user?: User;
-}
-
-export interface TeamPermission {
-    key: string;
-    label: string;
-    description: string;
-    group: string;
-}
-
-export interface TeamPreset {
-    label: string;
-    description: string;
-    permissions: string[];
-}
-
-export interface TeamInfo {
-    tier: string;
-    tier_label: string;
-    supports_team: boolean;
-    free_slots: number;
-    active_count: number;
-    extra_count: number;
-    fee_per_extra: number;
-    total_extra_fee: number;
-    would_exceed_free_slots: boolean;
 }
 
 export interface PageProps {

@@ -4,6 +4,7 @@ namespace App\Domains\Provider\Controllers;
 
 use App\Domains\Provider\Actions\UpdateProviderProfileAction;
 use App\Domains\Provider\Requests\UpdateProviderProfileRequest;
+use App\Domains\Provider\Resources\ProviderResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -27,15 +28,11 @@ class ProfileController extends Controller
         // Load media relationships
         $provider->load(['media', 'videoEmbeds']);
 
-        // Prepare provider data with media
-        $providerData = $provider->toArray();
-        $providerData['avatar'] = $provider->getFirstMedia('avatar')?->toMediaArray();
-        $providerData['cover'] = $provider->getFirstMedia('cover')?->toMediaArray();
-        $providerData['gallery'] = $provider->getMedia('gallery')->map->toMediaArray()->toArray();
-        $providerData['videos'] = $provider->videoEmbeds->map->toVideoArray()->toArray();
-
         return Inertia::render('Provider/Profile/Edit', [
-            'provider' => $providerData,
+            'provider' => (new ProviderResource($provider))
+                ->withMedia(true)
+                ->withAdminDetails(true)
+                ->resolve(),
         ]);
     }
 

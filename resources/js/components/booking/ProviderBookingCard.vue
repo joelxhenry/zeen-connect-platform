@@ -2,39 +2,9 @@
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
+import AppLink from '@/components/common/AppLink.vue';
 import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
-
-interface Client {
-    name: string;
-    email: string;
-    phone?: string;
-    avatar?: string;
-    is_guest: boolean;
-}
-
-interface Booking {
-    id: number;
-    uuid: string;
-    client: Client;
-    service: {
-        name: string;
-        duration_minutes: number;
-    };
-    booking_date: string;
-    formatted_date: string;
-    formatted_time: string;
-    status: string;
-    status_label: string;
-    status_color: string;
-    total_display: string;
-    client_notes?: string;
-    is_past: boolean;
-    is_today: boolean;
-    can_confirm: boolean;
-    can_complete: boolean;
-    can_cancel: boolean;
-    is_guest_booking: boolean;
-}
+import type { Booking } from '@/types/models/booking';
 
 interface Props {
     booking: Booking;
@@ -69,17 +39,17 @@ const getInitials = (name: string) => {
             <div class="flex items-start gap-4">
                 <!-- Client Avatar -->
                 <Avatar
-                    v-if="booking.client.avatar"
+                    v-if="booking.client?.avatar"
                     :image="booking.client.avatar"
                     shape="circle"
                     class="!w-12 !h-12 shrink-0"
                 />
                 <Avatar
                     v-else
-                    :label="getInitials(booking.client.name)"
+                    :label="getInitials(booking.client?.name ?? '')"
                     shape="circle"
                     class="!w-12 !h-12 shrink-0"
-                    :class="booking.client.is_guest ? '!bg-gray-400' : '!bg-[#106B4F]'"
+                    :class="booking.client?.is_guest ? '!bg-gray-400' : '!bg-[#106B4F]'"
                 />
 
                 <!-- Booking Info -->
@@ -87,12 +57,12 @@ const getInitials = (name: string) => {
                     <div class="flex flex-wrap justify-between items-start gap-2">
                         <div>
                             <h3 class="font-medium text-[#0D1F1B] m-0 flex items-center gap-2">
-                                {{ booking.client.name || 'Unknown Client' }}
-                                <span v-if="booking.client.is_guest" class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                {{ booking.client?.name || 'Unknown Client' }}
+                                <span v-if="booking.client?.is_guest" class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
                                     Guest
                                 </span>
                             </h3>
-                            <p class="text-sm text-gray-500 m-0">{{ booking.service.name }}</p>
+                            <p class="text-sm text-gray-500 m-0">{{ booking.service?.name }}</p>
                         </div>
                         <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" />
                     </div>

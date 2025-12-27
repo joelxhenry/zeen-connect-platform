@@ -24,20 +24,20 @@ class DashboardController extends Controller
 
         // Get stats
         $stats = [
-            'totalEarnings' => Payment::where('provider_id', $provider->id)
+            'total_earnings' => Payment::where('provider_id', $provider->id)
                 ->where('status', PaymentStatus::COMPLETED)
                 ->sum('provider_amount') / 100, // Convert from cents
-            'pendingPayout' => Payment::where('provider_id', $provider->id)
+            'pending_payout' => Payment::where('provider_id', $provider->id)
                 ->where('status', PaymentStatus::COMPLETED)
                 ->whereNull('payout_id')
                 ->sum('provider_amount') / 100,
-            'completedBookings' => Booking::where('provider_id', $provider->id)
+            'completed_bookings' => Booking::where('provider_id', $provider->id)
                 ->where('status', BookingStatus::COMPLETED)
                 ->count(),
-            'activeServices' => Service::where('provider_id', $provider->id)
+            'active_services' => Service::where('provider_id', $provider->id)
                 ->where('is_active', true)
                 ->count(),
-            'pendingBookings' => Booking::where('provider_id', $provider->id)
+            'pending_bookings' => Booking::where('provider_id', $provider->id)
                 ->where('status', BookingStatus::PENDING)
                 ->count(),
         ];
@@ -116,10 +116,10 @@ class DashboardController extends Controller
                 'rating_count' => $provider->rating_count,
             ],
             'stats' => $stats,
-            'upcomingBookings' => $upcomingBookings,
-            'recentPayments' => $recentPayments,
-            'recentReviews' => $recentReviews,
-            'unrespondedReviewsCount' => $unrespondedReviewsCount,
+            'upcoming_bookings' => $upcomingBookings,
+            'recent_payments' => $recentPayments,
+            'recent_reviews' => $recentReviews,
+            'unresponded_reviews_count' => $unrespondedReviewsCount,
         ]);
     }
 }

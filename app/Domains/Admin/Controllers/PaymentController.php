@@ -4,6 +4,7 @@ namespace App\Domains\Admin\Controllers;
 
 use App\Domains\Payment\Enums\PaymentStatus;
 use App\Domains\Payment\Models\Payment;
+use App\Domains\Payment\Resources\PaymentResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -59,27 +60,13 @@ class PaymentController extends Controller
 
         $payments = $query->paginate(20)->withQueryString();
 
-        $payments->getCollection()->transform(fn ($payment) => [
-            'id' => $payment->id,
-            'uuid' => $payment->uuid,
-            'client' => [
-                'name' => $payment->client->name,
-                'email' => $payment->client->email,
-            ],
-            'provider' => [
-                'business_name' => $payment->provider->business_name,
-            ],
-            'booking_uuid' => $payment->booking->uuid,
-            'amount' => $payment->amount_display,
-            'platform_fee' => $payment->platform_fee_display,
-            'provider_amount' => $payment->provider_amount_display,
-            'gateway' => $payment->gateway,
-            'card_display' => $payment->card_display,
-            'status' => $payment->status->value,
-            'status_label' => $payment->status->label(),
-            'paid_at' => $payment->paid_at?->format('M d, Y H:i'),
-            'created_at' => $payment->created_at->format('M d, Y'),
-        ]);
+        $payments->getCollection()->transform(
+            fn ($payment) => (new PaymentResource($payment))
+                ->withClient(true)
+                ->withProvider(true)
+                ->withBooking(true)
+                ->resolve()
+        );
 
         // Calculate totals
         $totals = [
@@ -112,50 +99,19 @@ class PaymentController extends Controller
         $payment = Payment::where('uuid', $uuid)
             ->with([
                 'client:id,name,email,phone',
-                'provider:id,business_name,slug',
+                'provider:id,uuid,business_name,slug',
                 'booking:id,uuid,booking_date,start_time,end_time,status',
                 'booking.service:id,name',
             ])
             ->firstOrFail();
 
         return Inertia::render('Admin/Payments/Show', [
-            'payment' => [
-                'id' => $payment->id,
-                'uuid' => $payment->uuid,
-                'client' => [
-                    'id' => $payment->client->id,
-                    'name' => $payment->client->name,
-                    'email' => $payment->client->email,
-                    'phone' => $payment->client->phone,
-                ],
-                'provider' => [
-                    'id' => $payment->provider->id,
-                    'business_name' => $payment->provider->business_name,
-                    'slug' => $payment->provider->slug,
-                ],
-                'booking' => [
-                    'uuid' => $payment->booking->uuid,
-                    'date' => $payment->booking->booking_date->format('M d, Y'),
-                    'time' => date('g:i A', strtotime($payment->booking->start_time)),
-                    'service' => $payment->booking->service->name,
-                    'status' => $payment->booking->status->value,
-                ],
-                'amount' => $payment->amount_display,
-                'platform_fee' => $payment->platform_fee_display,
-                'provider_amount' => $payment->provider_amount_display,
-                'currency' => $payment->currency,
-                'gateway' => $payment->gateway,
-                'gateway_transaction_id' => $payment->gateway_transaction_id,
-                'gateway_order_id' => $payment->gateway_order_id,
-                'gateway_response_code' => $payment->gateway_response_code,
-                'card_display' => $payment->card_display,
-                'status' => $payment->status->value,
-                'status_label' => $payment->status->label(),
-                'failure_reason' => $payment->failure_reason,
-                'paid_at' => $payment->paid_at?->format('M d, Y H:i'),
-                'refunded_at' => $payment->refunded_at?->format('M d, Y H:i'),
-                'created_at' => $payment->created_at->format('M d, Y H:i'),
-            ],
+            'payment' => (new PaymentResource($payment))
+                ->withClient(true)
+                ->withProvider(true)
+                ->withBooking(true)
+                ->withGatewayDetails(true)
+                ->resolve(),
         ]);
     }
 }

@@ -12,13 +12,12 @@ export * from './subscription';
 export * from './payment';
 export * from './media';
 export * from './provider';
+export * from './service';
 
 // Re-export legacy types from models.ts (will be migrated incrementally)
 export type {
     User,
     Client,
-    Category,
-    Service,
     ProviderAvailability,
     BlockedDate,
     PageProps,

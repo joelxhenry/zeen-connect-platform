@@ -1,32 +1,18 @@
-import type { Category, MediaItem, Service as BaseService } from './models';
+import type {
+    Service as BaseService,
+    ServiceEditForm,
+    Category,
+    ServiceBookingSettings,
+} from './models/service';
 
-// Re-export base Service type
+// Re-export types for backward compatibility
 export type { Category };
 
-// Extended Service type with booking settings and stats
-export interface Service extends BaseService {
-    use_provider_defaults: boolean;
-    requires_approval?: boolean;
-    deposit_type?: 'none' | 'fixed' | 'percentage';
-    deposit_amount?: number | null;
-    cancellation_policy?: 'flexible' | 'moderate' | 'strict';
-    advance_booking_days?: number;
-    min_booking_notice_hours?: number;
-    cover?: MediaItem | null;
-    total_bookings?: number;
-    price_display?: string;
-    duration_display?: string;
-}
+// Extended Service type with booking settings and stats (alias for ServiceEditForm)
+export type Service = ServiceEditForm;
 
-// Booking settings from provider defaults
-export interface BookingSettings {
-    requires_approval: boolean;
-    deposit_type: 'none' | 'fixed' | 'percentage';
-    deposit_amount: number | null;
-    cancellation_policy: 'flexible' | 'moderate' | 'strict';
-    advance_booking_days: number;
-    min_booking_notice_hours: number;
-}
+// Alias for ServiceBookingSettings
+export type BookingSettings = ServiceBookingSettings;
 
 // Tier-based restrictions
 export interface TierRestrictions {

@@ -9,6 +9,7 @@ use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
+use App\Domains\Service\Resources\ServiceResource;
 use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
@@ -45,6 +46,8 @@ class ProviderSiteBookingController extends Controller
         $provider->load([
             'user:id,name,avatar',
             'subscription',
+            'services.category',
+            'services.provider',
         ]);
 
         // Get available dates for the next 30 days
@@ -65,24 +68,11 @@ class ProviderSiteBookingController extends Controller
                 'slug' => $provider->slug,
                 'avatar' => $provider->user?->avatar,
                 'tier' => Arr::get($tierInfo, 'tier', 'free'),
-                'tier_label' => Arr::get($tierInfo, 'tier_label', 'Free')
+                'tier_label' => Arr::get($tierInfo, 'tier_label', 'Free'),
             ],
-            'services' => $provider->services->map(fn($service) => [
-                'id' => $service->id,
-                'name' => $service->name,
-                'description' => $service->description,
-                'duration_minutes' => $service->duration_minutes,
-                'duration_display' => $service->duration_display,
-                'price' => (float) $service->price,
-                'price_display' => $service->price_display,
-                'category' => $service->category ? [
-                    'id' => $service->category->id,
-                    'name' => $service->category->name,
-                    'icon' => $service->category->icon,
-                ] : null,
-                // Pre-calculate fees for each service
-                'fees' => $this->subscriptionService->calculateFees($provider, (float) $service->price),
-            ]),
+            'services' => $provider->services->map(
+                fn ($service) => (new ServiceResource($service))->withCategory()->withFees()->resolve()
+            ),
             'availableDates' => $availableDates,
             'preselectedService' => $request->service ? (int) $request->service : null,
             'isAuthenticated' => (bool) $request->user(),

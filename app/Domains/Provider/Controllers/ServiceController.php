@@ -8,6 +8,8 @@ use App\Domains\Provider\Requests\StoreServiceRequest;
 use App\Domains\Provider\Requests\UpdateServiceRequest;
 use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
+use App\Domains\Service\Resources\CategoryResource;
+use App\Domains\Service\Resources\ServiceResource;
 use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -40,12 +42,12 @@ class ServiceController extends Controller
         ];
 
         // Get categories for filtering
-        $categories = Category::active()->ordered()->get(['id', 'name']);
+        $categories = Category::active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Index', [
-            'services' => $services,
+            'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategory()->withCounts()->resolve()),
             'stats' => $stats,
-            'categories' => $categories,
+            'categories' => CategoryResource::collection($categories),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
@@ -57,7 +59,7 @@ class ServiceController extends Controller
         $categories = Category::active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Create', [
-            'categories' => $categories,
+            'categories' => CategoryResource::collection($categories),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
@@ -86,15 +88,15 @@ class ServiceController extends Controller
         $categories = Category::active()->ordered()->get();
 
         // Load media relationships
-        $service->load(['category', 'media']);
-
-        // Prepare service data with cover photo
-        $serviceData = $service->toArray();
-        $serviceData['cover'] = $service->cover?->toMediaArray();
+        $service->load(['category', 'media', 'videoEmbeds']);
 
         return Inertia::render('Provider/Services/Edit', [
-            'service' => $serviceData,
-            'categories' => $categories,
+            'service' => (new ServiceResource($service))
+                ->withCategory()
+                ->withMedia()
+                ->withBookingSettings()
+                ->resolve(),
+            'categories' => CategoryResource::collection($categories),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);

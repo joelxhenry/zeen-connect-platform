@@ -36,7 +36,7 @@ class Service extends Model
         'min_booking_notice_hours',
     ];
 
-    protected $appends = ['cover'];
+    // Note: cover is not in $appends - use ServiceResource->withMedia() when needed
 
     protected function casts(): array
     {

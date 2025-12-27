@@ -164,6 +164,38 @@ export interface BookingStatusOption {
 }
 
 /**
+ * Fee calculation result from SubscriptionService.calculateFees().
+ * Used during booking creation to display fee breakdown.
+ */
+export interface BookingFees {
+    tier: string;
+    tier_label: string;
+    service_price: number;
+
+    deposit_amount: number;
+    deposit_percentage: number;
+    requires_deposit: boolean;
+
+    // Separated fee structure
+    zeen_fee: number;
+    zeen_fee_rate: number;
+    gateway_fee: number;
+    gateway_fee_rate: number;
+    total_fees: number;
+    total_fee_rate: number;
+
+    // Legacy aliases for backwards compatibility
+    platform_fee: number;
+    platform_fee_rate: number;
+
+    // Fee payer determines who bears the fees
+    convenience_fee: number;
+    fee_payer: 'provider' | 'client';
+    client_pays: number;
+    provider_receives: number;
+}
+
+/**
  * Paginated bookings response.
  */
 export interface PaginatedBookings {

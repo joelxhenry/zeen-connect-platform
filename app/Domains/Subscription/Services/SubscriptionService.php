@@ -53,6 +53,10 @@ class SubscriptionService
     /**
      * Calculate all fees for a booking based on provider tier and service price.
      * Returns separated Zeen fee and Gateway fee.
+     *
+     * Fee calculation logic:
+     * - Zeen fee: percentage of full service price (platform fee)
+     * - Gateway fee: percentage of the amount being charged (deposit or full)
      */
     public function calculateFees(Provider $provider, float $servicePrice): array
     {
@@ -62,11 +66,21 @@ class SubscriptionService
         // Get fee rates as percentages
         $zeenFeeRate = $this->getZeenFeeRate($provider);
         $gatewayFeeRate = $this->getGatewayFeeRate();
-        $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
 
-        // Calculate individual fees
+        // Calculate deposit first (needed for gateway fee calculation)
+        $depositPercentage = $this->getEffectiveDepositPercentage($provider);
+        $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
+        $requiresDeposit = $depositAmount > 0;
+
+        // Zeen fee is always based on full service price
         $zeenFee = round($servicePrice * ($zeenFeeRate / 100), 2);
-        $gatewayFee = round($servicePrice * ($gatewayFeeRate / 100), 2);
+
+        // Gateway fee is based on what's actually being charged
+        // If deposit required: gateway fee on deposit amount
+        // If full payment: gateway fee on full service price
+        $chargeAmount = $requiresDeposit ? $depositAmount : $servicePrice;
+        $gatewayFee = round($chargeAmount * ($gatewayFeeRate / 100), 2);
+
         $totalFees = $zeenFee + $gatewayFee;
 
         // Calculate amounts based on who pays the fees
@@ -82,17 +96,17 @@ class SubscriptionService
             $providerReceives = $servicePrice - $totalFees;
         }
 
-        // Deposit calculation (backwards compatibility)
-        $depositPercentage = $this->getEffectiveDepositPercentage($provider);
-        $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
-
-        // Legacy platform_fee for backwards compatibility (same as zeen_fee + gateway_fee)
-        $platformFee = $totalFees;
+        // Combined rate for display purposes
+        $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
 
         return [
             'tier' => $tier->value,
             'tier_label' => $tier->label(),
             'service_price' => $servicePrice,
+
+            'deposit_amount' => $depositAmount,
+            'deposit_percentage' => $depositPercentage,
+            'requires_deposit' => $requiresDeposit,
 
             // New separated fee structure
             'zeen_fee' => $zeenFee,
@@ -101,19 +115,15 @@ class SubscriptionService
             'gateway_fee_rate' => $gatewayFeeRate,
             'total_fees' => $totalFees,
             'total_fee_rate' => $totalFeeRate,
+
+            // Legacy aliases for backwards compatibility
+            'platform_fee' => $totalFees,
+            'platform_fee_rate' => $totalFeeRate,
+
             'convenience_fee' => $convenienceFee,
             'fee_payer' => $feePayer,
             'client_pays' => $clientPays,
             'provider_receives' => $providerReceives,
-
-            // Legacy fields for backwards compatibility
-            'platform_fee' => $platformFee,
-            'platform_fee_rate' => $totalFeeRate,
-            'deposit_amount' => $depositAmount,
-            'deposit_percentage' => $depositPercentage,
-            'provider_payout' => $providerReceives,
-            'requires_deposit' => $depositAmount > 0,
-            'has_platform_fee' => $totalFees > 0,
         ];
     }
 

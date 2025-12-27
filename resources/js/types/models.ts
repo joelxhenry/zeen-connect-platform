@@ -1,7 +1,7 @@
-import type { Provider, MediaItem, VideoEmbed } from './models/index';
+import type { Provider, MediaItem, VideoEmbed, Service, Category } from './models/index';
 
 // Re-export centralized types for backward compatibility
-export type { Provider, MediaItem, VideoEmbed };
+export type { Provider, MediaItem, VideoEmbed, Service, Category };
 
 export interface User {
     id: number;
@@ -25,38 +25,6 @@ export interface Client {
     preferences?: Record<string, unknown>;
     total_bookings: number;
     user?: User;
-}
-
-export interface Category {
-    id: number;
-    uuid: string;
-    name: string;
-    slug: string;
-    icon?: string;
-    description?: string;
-    is_active: boolean;
-    sort_order: number;
-    created_at: string;
-    updated_at: string;
-}
-
-export interface Service {
-    id: number;
-    uuid: string;
-    provider_id: number;
-    category_id: number;
-    name: string;
-    description?: string;
-    duration_minutes: number;
-    price: number;
-    is_active: boolean;
-    sort_order: number;
-    created_at: string;
-    updated_at: string;
-    provider?: Provider;
-    category?: Category;
-    gallery?: MediaItem[];
-    videos?: VideoEmbed[];
 }
 
 export interface ProviderAvailability {

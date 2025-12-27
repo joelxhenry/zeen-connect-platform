@@ -1,18 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import Button from 'primevue/button';
+import type { BookingFees } from '@/types/models/booking';
 
 interface Slot {
     start_time: string;
     end_time: string;
     display: string;
-}
-
-interface Fees {
-    deposit_amount: number;
-    deposit_percentage: number;
-    processing_fee: number;
-    processing_fee_payer: string | null;
-    requires_deposit: boolean;
 }
 
 interface Service {
@@ -25,7 +19,7 @@ interface Props {
     service: Service | null;
     date: Date | null;
     slot: Slot | null;
-    fees: Fees | null;
+    fees: BookingFees | null;
     canSubmit: boolean;
     loading?: boolean;
 }
@@ -45,8 +39,7 @@ const formatSlotTime = (slot: Slot) => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 };
 
-const formattedServicePrice = (price: number) => `$${price.toFixed(2)}`;
-const formattedDepositAmount = (amount: number) => `$${amount.toFixed(2)}`;
+const formatCurrency = (amount: number) => `$${amount.toFixed(2)}`;
 
 const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
@@ -55,6 +48,27 @@ const formatDate = (date: Date) => {
         day: 'numeric',
     });
 };
+
+// Check if service fee should be shown (when fee_payer is client and there's a convenience fee)
+const showServiceFee = computed(() => {
+    return props.fees && props.fees.convenience_fee > 0 && props.fees.fee_payer === 'client';
+});
+
+// Calculate due now amount
+const dueNowAmount = computed(() => {
+    if (!props.fees || !props.service) return 0;
+
+    if (props.fees.requires_deposit) {
+        // For deposits, add the full service fee upfront (fee is based on full service price)
+        if (props.fees.fee_payer === 'client' && props.fees.convenience_fee > 0) {
+            return props.fees.deposit_amount + props.fees.convenience_fee;
+        }
+        return props.fees.deposit_amount;
+    }
+
+    // Full payment - use client_pays which includes convenience fee if applicable
+    return props.fees.client_pays;
+});
 </script>
 
 <template>
@@ -91,23 +105,23 @@ const formatDate = (date: Date) => {
                 <div class="booking-summary__pricing">
                     <div class="booking-summary__line">
                         <span>Service Total</span>
-                        <span class="booking-summary__amount">{{ formattedServicePrice(service.price) }}</span>
+                        <span class="booking-summary__amount">{{ formatCurrency(service.price) }}</span>
                     </div>
 
                     <template v-if="fees?.requires_deposit">
                         <div class="booking-summary__line booking-summary__line--highlight">
                             <span>Deposit ({{ fees.deposit_percentage }}%)</span>
-                            <span class="booking-summary__amount">{{ formattedDepositAmount(fees.deposit_amount) }}</span>
+                            <span class="booking-summary__amount">{{ formatCurrency(fees.deposit_amount) }}</span>
                         </div>
                         <p class="booking-summary__note">
-                            Pay {{ formattedDepositAmount(fees.deposit_amount) }} now, rest at appointment
+                            Pay deposit now, rest at appointment
                         </p>
                     </template>
 
-                    <template v-if="fees && fees.processing_fee > 0 && fees.processing_fee_payer === 'client'">
+                    <template v-if="showServiceFee">
                         <div class="booking-summary__line booking-summary__line--muted">
-                            <span>Processing Fee</span>
-                            <span>${{ fees.processing_fee.toFixed(2) }}</span>
+                            <span>Service Fee</span>
+                            <span>{{ formatCurrency(fees!.convenience_fee) }}</span>
                         </div>
                     </template>
                 </div>
@@ -118,10 +132,7 @@ const formatDate = (date: Date) => {
                 <div class="booking-summary__total">
                     <span>Due Now</span>
                     <span class="booking-summary__total-amount">
-                        {{ fees?.requires_deposit
-                            ? formattedDepositAmount(fees.deposit_amount)
-                            : formattedServicePrice(service.price)
-                        }}
+                        {{ formatCurrency(dueNowAmount) }}
                     </span>
                 </div>
 

@@ -15,6 +15,8 @@ import RadioButton from 'primevue/radiobutton';
 import { useToast } from 'primevue/usetoast';
 import SettingsController from '@/actions/App/Domains/Provider/Controllers/SettingsController';
 import FeeBreakdownPreview from '@/components/provider/FeeBreakdownPreview.vue';
+import provider from '@/routes/provider';
+import { resolveUrl } from '@/utils/url';
 
 interface BookingSettings {
     requires_approval: boolean;
@@ -71,7 +73,7 @@ const showDepositAmount = computed(() =>
 );
 
 const submit = () => {
-    form.put(SettingsController.updateBookingSettings().url, {
+    form.put(resolveUrl(provider.settings.booking().url), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -97,10 +99,8 @@ const submit = () => {
     <ConsoleLayout title="Settings">
         <div class="w-full max-w-3xl mx-auto">
             <!-- Page Header -->
-            <ConsolePageHeader
-                title="Settings"
-                subtitle="Configure your default booking settings. These will apply to all services unless overridden."
-            />
+            <ConsolePageHeader title="Settings"
+                subtitle="Configure your default booking settings. These will apply to all services unless overridden." />
 
             <form @submit.prevent="submit" class="space-y-6">
                 <!-- Booking Settings Card -->
@@ -133,14 +133,8 @@ const submit = () => {
                                 <label for="deposit_type" class="block text-sm font-medium text-gray-700 mb-1">
                                     Deposit Requirement
                                 </label>
-                                <Select
-                                    id="deposit_type"
-                                    v-model="form.deposit_type"
-                                    :options="depositTypeOptions"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    class="w-full"
-                                />
+                                <Select id="deposit_type" v-model="form.deposit_type" :options="depositTypeOptions"
+                                    optionLabel="label" optionValue="value" class="w-full" />
                                 <small class="text-xs text-gray-500 mt-1 block">
                                     Require clients to pay a deposit when booking
                                 </small>
@@ -149,19 +143,15 @@ const submit = () => {
                             <!-- Deposit Amount (conditional) -->
                             <div v-if="showDepositAmount">
                                 <label for="deposit_amount" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ form.deposit_type === 'percentage' ? 'Deposit Percentage' : 'Deposit Amount (JMD)' }}
+                                    {{ form.deposit_type === 'percentage' ? 'Deposit Percentage' : `Deposit Amount
+                                    (JMD)` }}
                                 </label>
-                                <InputNumber
-                                    id="deposit_amount"
-                                    v-model="form.deposit_amount"
+                                <InputNumber id="deposit_amount" v-model="form.deposit_amount"
                                     :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
                                     :currency="form.deposit_type === 'fixed' ? 'JMD' : undefined"
-                                    :suffix="form.deposit_type === 'percentage' ? '%' : undefined"
-                                    :min="0"
-                                    :max="form.deposit_type === 'percentage' ? 100 : undefined"
-                                    class="w-full"
-                                    :class="{ 'p-invalid': form.errors.deposit_amount }"
-                                />
+                                    :suffix="form.deposit_type === 'percentage' ? '%' : undefined" :min="0"
+                                    :max="form.deposit_type === 'percentage' ? 100 : undefined" class="w-full"
+                                    :class="{ 'p-invalid': form.errors.deposit_amount }" />
                                 <small v-if="form.errors.deposit_amount" class="text-red-500">
                                     {{ form.errors.deposit_amount }}
                                 </small>
@@ -173,14 +163,9 @@ const submit = () => {
                             <label for="cancellation_policy" class="block text-sm font-medium text-gray-700 mb-1">
                                 Cancellation Policy
                             </label>
-                            <Select
-                                id="cancellation_policy"
-                                v-model="form.cancellation_policy"
-                                :options="cancellationPolicyOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-full"
-                            />
+                            <Select id="cancellation_policy" v-model="form.cancellation_policy"
+                                :options="cancellationPolicyOptions" optionLabel="label" optionValue="value"
+                                class="w-full" />
                             <small class="text-xs text-gray-500 mt-1 block">
                                 Define when clients can cancel and receive a refund
                             </small>
@@ -192,14 +177,9 @@ const submit = () => {
                                 <label for="advance_booking_days" class="block text-sm font-medium text-gray-700 mb-1">
                                     Advance Booking (days)
                                 </label>
-                                <InputNumber
-                                    id="advance_booking_days"
-                                    v-model="form.advance_booking_days"
-                                    :min="1"
-                                    :max="365"
-                                    class="w-full"
-                                    :class="{ 'p-invalid': form.errors.advance_booking_days }"
-                                />
+                                <InputNumber id="advance_booking_days" v-model="form.advance_booking_days" :min="1"
+                                    :max="365" class="w-full"
+                                    :class="{ 'p-invalid': form.errors.advance_booking_days }" />
                                 <small class="text-xs text-gray-500 mt-1 block">
                                     How far in advance clients can book (1-365 days)
                                 </small>
@@ -208,17 +188,13 @@ const submit = () => {
                                 </small>
                             </div>
                             <div>
-                                <label for="min_booking_notice_hours" class="block text-sm font-medium text-gray-700 mb-1">
+                                <label for="min_booking_notice_hours"
+                                    class="block text-sm font-medium text-gray-700 mb-1">
                                     Minimum Notice (hours)
                                 </label>
-                                <InputNumber
-                                    id="min_booking_notice_hours"
-                                    v-model="form.min_booking_notice_hours"
-                                    :min="1"
-                                    :max="168"
-                                    class="w-full"
-                                    :class="{ 'p-invalid': form.errors.min_booking_notice_hours }"
-                                />
+                                <InputNumber id="min_booking_notice_hours" v-model="form.min_booking_notice_hours"
+                                    :min="1" :max="168" class="w-full"
+                                    :class="{ 'p-invalid': form.errors.min_booking_notice_hours }" />
                                 <small class="text-xs text-gray-500 mt-1 block">
                                     Minimum hours notice required for bookings (1-168)
                                 </small>
@@ -234,8 +210,10 @@ const submit = () => {
                 <ConsoleFormCard title="Transaction Fees" icon="pi pi-percentage">
                     <div class="space-y-5">
                         <p class="text-sm text-gray-500 m-0">
-                            Your {{ tierRestrictions.tier_label }} tier has a {{ tierRestrictions.total_fee_rate }}% transaction fee
-                            ({{ tierRestrictions.zeen_fee_rate }}% Zeen + {{ tierRestrictions.gateway_fee_rate }}% gateway).
+                            Your {{ tierRestrictions.tier_label }} tier has a {{ tierRestrictions.total_fee_rate }}%
+                            transaction fee
+                            ({{ tierRestrictions.zeen_fee_rate }}% Zeen + {{ tierRestrictions.gateway_fee_rate }}%
+                            gateway).
                             Choose who pays these fees.
                         </p>
 
@@ -248,8 +226,7 @@ const submit = () => {
                             <div class="flex flex-col gap-3">
                                 <label
                                     class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
-                                    :class="form.fee_payer === 'provider' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
-                                >
+                                    :class="form.fee_payer === 'provider' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
                                     <RadioButton v-model="form.fee_payer" value="provider" class="mt-0.5" />
                                     <div>
                                         <span class="block text-sm font-medium text-gray-900">I absorb the fees</span>
@@ -261,13 +238,14 @@ const submit = () => {
 
                                 <label
                                     class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
-                                    :class="form.fee_payer === 'client' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
-                                >
+                                    :class="form.fee_payer === 'client' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
                                     <RadioButton v-model="form.fee_payer" value="client" class="mt-0.5" />
                                     <div>
-                                        <span class="block text-sm font-medium text-gray-900">Client pays the fees</span>
+                                        <span class="block text-sm font-medium text-gray-900">Client pays the
+                                            fees</span>
                                         <span class="block text-xs text-gray-500 mt-0.5">
-                                            Fees are added as a "transaction fee" on top of the service price at checkout.
+                                            Fees are added as a "transaction fee" on top of the service price at
+                                            checkout.
                                         </span>
                                     </div>
                                 </label>
@@ -275,23 +253,14 @@ const submit = () => {
                         </div>
 
                         <!-- Fee Breakdown Preview -->
-                        <FeeBreakdownPreview
-                            :fee-payer="form.fee_payer"
-                            :zeen-fee-rate="tierRestrictions.zeen_fee_rate"
-                            :gateway-fee-rate="tierRestrictions.gateway_fee_rate"
-                            :example-amount="10000"
-                        />
+                        <FeeBreakdownPreview :fee-payer="form.fee_payer" :zeen-fee-rate="tierRestrictions.zeen_fee_rate"
+                            :gateway-fee-rate="tierRestrictions.gateway_fee_rate" :example-amount="10000" />
                     </div>
                 </ConsoleFormCard>
 
                 <!-- Form Actions -->
                 <div class="flex justify-end">
-                    <ConsoleButton
-                        label="Save Settings"
-                        icon="pi pi-check"
-                        type="submit"
-                        :loading="form.processing"
-                    />
+                    <ConsoleButton label="Save Settings" icon="pi pi-check" type="submit" :loading="form.processing" />
                 </div>
             </form>
         </div>

@@ -1,47 +1,30 @@
 <script setup lang="ts">
 import Tag from 'primevue/tag';
-
-interface Service {
-    id: number;
-    name: string;
-    description?: string;
-    duration_display: string;
-    price_display: string;
-    category?: {
-        id: number;
-        name: string;
-        icon?: string;
-    } | null;
-}
+import type { ServiceForBooking } from '@/types/models/service';
 
 interface Props {
-    services: Service[];
-    modelValue: Service | null;
+    services: ServiceForBooking[];
+    modelValue: ServiceForBooking | null;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-    'update:modelValue': [value: Service | null];
+    'update:modelValue': [value: ServiceForBooking | null];
 }>();
 
-const selectService = (service: Service) => {
+const selectService = (service: ServiceForBooking) => {
     emit('update:modelValue', service);
 };
 
-const isSelected = (service: Service) => {
+const isSelected = (service: ServiceForBooking) => {
     return props.modelValue?.id === service.id;
 };
 </script>
 
 <template>
     <div class="service-selector">
-        <div
-            v-for="service in services"
-            :key="service.id"
-            class="service-card"
-            :class="{ 'service-card--selected': isSelected(service) }"
-            @click="selectService(service)"
-        >
+        <div v-for="service in services" :key="service.id" class="service-card"
+            :class="{ 'service-card--selected': isSelected(service) }" @click="selectService(service)">
             <div class="service-card__content">
                 <div class="service-card__info">
                     <h3 class="service-card__name">{{ service.name }}</h3>
@@ -53,11 +36,7 @@ const isSelected = (service: Service) => {
                             <i class="pi pi-clock"></i>
                             {{ service.duration_display }}
                         </span>
-                        <Tag
-                            v-if="service.category"
-                            :value="service.category.name"
-                            severity="secondary"
-                        />
+                        <Tag v-if="service.category" :value="service.category.name" severity="secondary" />
                     </div>
                 </div>
                 <span class="service-card__price">{{ service.price_display }}</span>

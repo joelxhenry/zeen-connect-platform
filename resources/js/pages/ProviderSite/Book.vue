@@ -6,6 +6,7 @@ import Calendar from 'primevue/calendar';
 import { useToast } from 'primevue/usetoast';
 import { useApi } from '@/composables/useApi';
 import { ApiError } from '@/types/api';
+import type { ServiceForBooking } from '@/types/models/service';
 
 // Booking components
 import StepCard from '@/components/booking/StepCard.vue';
@@ -13,33 +14,6 @@ import ServiceSelector from '@/components/booking/ServiceSelector.vue';
 import TimeSlotPicker from '@/components/booking/TimeSlotPicker.vue';
 import GuestInfoForm from '@/components/booking/GuestInfoForm.vue';
 import BookingSummary from '@/components/booking/BookingSummary.vue';
-
-interface Service {
-    id: number;
-    name: string;
-    description: string;
-    duration_minutes: number;
-    duration_display: string;
-    price: number;
-    price_display: string;
-    category: {
-        id: number;
-        name: string;
-        icon: string;
-    } | null;
-    fees: {
-        tier: string;
-        tier_label: string;
-        service_price: number;
-        deposit_amount: number;
-        deposit_percentage: number;
-        platform_fee: number;
-        platform_fee_rate: number;
-        processing_fee: number;
-        processing_fee_payer: string | null;
-        requires_deposit: boolean;
-    };
-}
 
 interface Props {
     provider: {
@@ -51,7 +25,7 @@ interface Props {
         tier: string;
         tier_label: string;
     };
-    services: Service[];
+    services: ServiceForBooking[];
     availableDates: string[];
     preselectedService: number | null;
     isAuthenticated: boolean;
@@ -78,11 +52,11 @@ const toast = useToast();
 const api = useApi({ showErrorToast: false });
 
 // Form state
-const selectedService = ref<Service | null>(
-    props.preselectedService
-        ? props.services.find(s => s.id === props.preselectedService) || null
-        : null
-);
+const preselectedServiceData = props.preselectedService
+    ? props.services.find(s => s.id === props.preselectedService) || null
+    : null;
+
+const selectedService = ref<ServiceForBooking | null>(preselectedServiceData);
 const selectedDate = ref<Date | null>(null);
 const selectedSlot = ref<Slot | null>(null);
 const availableSlots = ref<Slot[]>([]);
@@ -91,7 +65,7 @@ const loadingSlots = ref(false);
 // Form for submission
 const form = useForm({
     provider_id: props.provider.id,
-    service_id: null as number | null,
+    service_id: preselectedServiceData?.id ?? null,
     date: '',
     start_time: '',
     notes: '',
@@ -149,7 +123,7 @@ const canSubmit = computed(() => {
 
 // Watchers
 watch(selectedService, (service) => {
-    form.service_id = service?.id || null;
+    form.service_id = service?.id ?? null;
     selectedDate.value = null;
     selectedSlot.value = null;
     availableSlots.value = [];

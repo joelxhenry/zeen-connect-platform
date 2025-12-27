@@ -11,6 +11,7 @@ use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Provider\Controllers\SettingsController;
 use App\Domains\Provider\Controllers\TeamMemberController;
 use App\Domains\Review\Controllers\ProviderReviewController;
+use App\Domains\Subscription\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -92,6 +93,9 @@ Route::prefix('team')->name('provider.team.')->group(function () {
     Route::post('/{member}/suspend', [TeamMemberController::class, 'suspend'])->name('suspend');
     Route::post('/{member}/reactivate', [TeamMemberController::class, 'reactivate'])->name('reactivate');
 });
+
+// Subscription management
+Route::get('/subscription', [SubscriptionController::class, 'index'])->name('provider.subscription.index');
 
 // Media management
 Route::prefix('media')->name('provider.media.')->group(function () {

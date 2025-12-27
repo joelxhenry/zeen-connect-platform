@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureUserIsClient;
 use App\Http\Middleware\EnsureUserIsProvider;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\ResolveProviderFromSubdomain;
+use App\Http\Middleware\SetAdminSessionCookie;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -52,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(prepend: [
+            SetAdminSessionCookie::class,
             HandleCors::class,
         ], append: [
             AddXsrfTokenCookie::class,
@@ -94,6 +96,12 @@ return Application::configure(basePath: dirname(__DIR__))
             $scheme = $request->secure() ? 'https' : 'http';
             $port = $request->getPort();
             $portSuffix = ($port && $port !== 80 && $port !== 443) ? ':' . $port : '';
+            $host = $request->getHost();
+
+            // If on admin domain, redirect to admin login
+            if ($host === config('app.admin_domain')) {
+                return $scheme . '://' . config('app.admin_domain') . $portSuffix . '/login';
+            }
 
             return $scheme . '://' . config('app.auth_domain') . $portSuffix . '/login';
         });

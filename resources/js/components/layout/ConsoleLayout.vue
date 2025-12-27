@@ -36,6 +36,7 @@ const navItems = [
     { label: 'Payments', icon: 'pi pi-wallet', route: provider.payments.index.url() },
     { label: 'Reviews', icon: 'pi pi-star', route: provider.reviews.index.url() },
     { label: 'Team', icon: 'pi pi-users', route: provider.team.index.url() },
+    { label: 'Subscription', icon: 'pi pi-credit-card', route: provider.subscription.index.url() },
     { label: 'Settings', icon: 'pi pi-cog', route: provider.settings.edit.url() },
 ];
 

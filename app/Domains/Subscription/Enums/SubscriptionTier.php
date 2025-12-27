@@ -87,4 +87,61 @@ enum SubscriptionTier: string
             self::ENTERPRISE => PHP_INT_MAX,
         };
     }
+
+    /**
+     * Check if this tier has access to a specific feature.
+     */
+    public function hasFeature(SubscriptionFeature $feature): bool
+    {
+        return in_array($feature, $this->features(), true);
+    }
+
+    /**
+     * Get all features available for this tier.
+     *
+     * @return array<SubscriptionFeature>
+     */
+    public function features(): array
+    {
+        return match ($this) {
+            self::FREE => [
+                SubscriptionFeature::DIGITAL_STOREFRONT,
+                SubscriptionFeature::EMAIL_NOTIFICATIONS,
+                SubscriptionFeature::CLIENT_DATABASE,
+                SubscriptionFeature::BOOKING_LINK,
+            ],
+            self::PREMIUM => [
+                ...self::FREE->features(),
+                SubscriptionFeature::TEAM_MEMBERS,
+                SubscriptionFeature::WHATSAPP_NOTIFICATIONS,
+                SubscriptionFeature::PRIORITY_LISTING,
+            ],
+            self::ENTERPRISE => [
+                ...self::PREMIUM->features(),
+                SubscriptionFeature::EMBEDDABLE_WIDGETS,
+                SubscriptionFeature::API_ACCESS,
+                SubscriptionFeature::WHITE_LABELING,
+                SubscriptionFeature::CUSTOM_DEPOSITS,
+            ],
+        };
+    }
+
+    /**
+     * Get all features with their availability status for this tier.
+     *
+     * @return array<array{feature: SubscriptionFeature, available: bool, value: string, label: string, description: string, icon: string}>
+     */
+    public function allFeaturesWithStatus(): array
+    {
+        $availableFeatures = $this->features();
+
+        return array_map(fn (SubscriptionFeature $feature) => [
+            'feature' => $feature,
+            'available' => in_array($feature, $availableFeatures, true),
+            'value' => $feature->value,
+            'label' => $feature->label(),
+            'description' => $feature->description(),
+            'icon' => $feature->icon(),
+        ], SubscriptionFeature::all());
+    }
 }

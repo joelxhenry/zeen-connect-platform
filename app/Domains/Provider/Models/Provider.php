@@ -229,6 +229,32 @@ class Provider extends Model
     }
 
     /**
+     * Check if the provider has access to a specific feature.
+     */
+    public function hasFeature(\App\Domains\Subscription\Enums\SubscriptionFeature $feature): bool
+    {
+        return $this->getTier()->hasFeature($feature);
+    }
+
+    /**
+     * Get all features available to this provider.
+     *
+     * @return array<\App\Domains\Subscription\Enums\SubscriptionFeature>
+     */
+    public function getAvailableFeatures(): array
+    {
+        return $this->getTier()->features();
+    }
+
+    /**
+     * Get all features with availability status for this provider.
+     */
+    public function getAllFeaturesWithStatus(): array
+    {
+        return $this->getTier()->allFeaturesWithStatus();
+    }
+
+    /**
      * Check if the provider is active.
      */
     public function isActive(): bool

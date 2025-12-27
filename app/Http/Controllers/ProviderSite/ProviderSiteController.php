@@ -29,6 +29,9 @@ class ProviderSiteController extends Controller
         $provider->load([
             'user:id,name,avatar,email',
             'availability' => fn ($q) => $q->where('is_available', true)->orderBy('day_of_week'),
+            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media', 'displayMedia'])->orderBy('sort_order'),
+            'media',
+            'videoEmbeds',
         ]);
 
         // Group services by category
@@ -53,6 +56,7 @@ class ProviderSiteController extends Controller
                         'duration_display' => $service->duration_display,
                         'price' => (float) $service->price,
                         'price_display' => $service->price_display,
+                        'display_image' => $service->display_image_url,
                     ]),
                 ];
             })
@@ -103,9 +107,11 @@ class ProviderSiteController extends Controller
     {
         $provider = $this->getProvider();
 
-        // Load full service details with categories
+        // Load full service details with categories and media
         $provider->load([
-            'services' => fn ($q) => $q->where('is_active', true)->with('category:id,name,icon,slug')->orderBy('sort_order'),
+            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media', 'displayMedia'])->orderBy('sort_order'),
+            'media',
+            'videoEmbeds',
         ]);
 
         // Group services by category
@@ -130,6 +136,7 @@ class ProviderSiteController extends Controller
                         'duration_display' => $service->duration_display,
                         'price' => (float) $service->price,
                         'price_display' => $service->price_display,
+                        'display_image' => $service->display_image_url,
                     ]),
                 ];
             })
@@ -147,6 +154,9 @@ class ProviderSiteController extends Controller
     public function reviews(Request $request): Response
     {
         $provider = $this->getProvider();
+
+        // Load media for provider display
+        $provider->load(['media', 'videoEmbeds']);
 
         // Paginated reviews
         $reviews = $provider->visibleReviews()
@@ -187,8 +197,8 @@ class ProviderSiteController extends Controller
             'business_name' => $provider->business_name,
             'tagline' => $provider->tagline,
             'bio' => $provider->bio,
-            'avatar' => $provider->user?->avatar,
-            'cover_image' => $provider->cover_image,
+            'avatar' => $provider->avatar_url ?? $provider->user?->avatar,
+            'cover_image' => $provider->cover_photo_url,
             'website' => $provider->website,
             'social_links' => $provider->social_links,
             'address' => $provider->address,
@@ -199,6 +209,12 @@ class ProviderSiteController extends Controller
             'is_featured' => $provider->is_featured,
             'verified_at' => $provider->verified_at,
             'services_count' => $provider->services->count(),
+            'gallery' => $provider->relationLoaded('media')
+                ? $provider->gallery->toArray()
+                : [],
+            'videos' => $provider->relationLoaded('videoEmbeds')
+                ? $provider->videos->toArray()
+                : [],
         ];
     }
 

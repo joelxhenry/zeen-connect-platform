@@ -12,6 +12,7 @@ interface Service {
     duration_display: string;
     price: number;
     price_display: string;
+    display_image?: string;
 }
 
 interface ServiceCategory {
@@ -60,7 +61,10 @@ const getBookingUrl = (serviceId: number) => {
                             <span class="service-count">{{ categoryGroup.services.length }} {{ categoryGroup.services.length === 1 ? 'service' : 'services' }}</span>
                         </div>
                         <div class="services-list">
-                            <div v-for="service in categoryGroup.services" :key="service.id" class="service-item">
+                            <div v-for="service in categoryGroup.services" :key="service.id" class="service-item" :class="{ 'has-image': service.display_image }">
+                                <div v-if="service.display_image" class="service-image">
+                                    <img :src="service.display_image" :alt="service.name" />
+                                </div>
                                 <div class="service-info">
                                     <h3>{{ service.name }}</h3>
                                     <p v-if="service.description" class="description">{{ service.description }}</p>
@@ -176,6 +180,25 @@ const getBookingUrl = (serviceId: number) => {
 
 .service-item:last-child {
     border-bottom: none;
+}
+
+.service-item.has-image {
+    flex-wrap: wrap;
+}
+
+.service-image {
+    width: 120px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .service-info {

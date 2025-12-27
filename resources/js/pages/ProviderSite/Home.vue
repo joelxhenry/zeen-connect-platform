@@ -11,6 +11,7 @@ import ProviderStats from '@/components/provider/ProviderStats.vue';
 import ServiceCard from '@/components/provider/ServiceCard.vue';
 import ReviewCard from '@/components/provider/ReviewCard.vue';
 import BusinessHours from '@/components/provider/BusinessHours.vue';
+import ProviderPortfolio from '@/components/provider/ProviderPortfolio.vue';
 
 interface Service {
     id: number;
@@ -21,6 +22,30 @@ interface Service {
     duration_display: string;
     price: number;
     price_display: string;
+    display_image?: string;
+}
+
+interface GalleryImage {
+    id: number;
+    uuid: string;
+    url: string;
+    thumbnail: string;
+    medium: string;
+    large: string;
+    filename: string;
+}
+
+interface Video {
+    id: number;
+    uuid: string;
+    platform: 'youtube' | 'vimeo';
+    video_id: string;
+    url: string;
+    embed_url: string;
+    watch_url: string;
+    title?: string;
+    thumbnail_url?: string;
+    human_duration?: string;
 }
 
 interface ServiceCategory {
@@ -76,6 +101,8 @@ interface Props {
         is_featured: boolean;
         verified_at?: string;
         services_count: number;
+        gallery?: GalleryImage[];
+        videos?: Video[];
     };
     servicesByCategory: ServiceCategory[];
     availability: Availability[];
@@ -100,7 +127,7 @@ const stats = {
 };
 
 const getServiceBookingUrl = (serviceId: number) => {
-    return ProviderSiteBookingController.create({ provider: props.provider.slug, service: serviceId }).url;
+    return ProviderSiteBookingController.create({ provider: props.provider.slug }).url;
 };
 </script>
 
@@ -111,7 +138,6 @@ const getServiceBookingUrl = (serviceId: number) => {
         </template>
 
         <div class="provider-home">
-
             <!-- Stats Section -->
             <ProviderStats :stats="stats" />
 
@@ -123,28 +149,36 @@ const getServiceBookingUrl = (serviceId: number) => {
                 </div>
             </section>
 
+            <!-- Portfolio Section (Gallery + Videos) -->
+            <section
+                v-if="(provider.gallery && provider.gallery.length > 0) || (provider.videos && provider.videos.length > 0)"
+                class="portfolio-section">
+                <div class="section-container">
+                    <h2>Portfolio</h2>
+                    <ProviderPortfolio :images="provider.gallery || []" :videos="provider.videos || []"
+                        :maxDisplay="6" />
+                </div>
+            </section>
+
             <!-- Services Preview -->
             <section v-if="servicesByCategory.length > 0" class="services-section">
                 <div class="section-container">
                     <div class="section-header">
                         <h2>Services</h2>
-                        <AppLink :href="ProviderSiteController.services({ provider: provider.slug }).url" class="view-all">
+                        <AppLink :href="ProviderSiteController.services({ provider: provider.slug }).url"
+                            class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
                         </AppLink>
                     </div>
                     <div class="services-grid">
                         <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
-                            <ServiceCard
-                                v-for="service in categoryGroup.services"
-                                :key="service.id"
-                                :service="service"
-                                :category="categoryGroup.category"
-                                :bookingUrl="getServiceBookingUrl(service.id)"
-                            />
+                            <ServiceCard v-for="service in categoryGroup.services" :key="service.id" :service="service"
+                                :category="categoryGroup.category" :bookingUrl="getServiceBookingUrl(service.id)" />
                         </template>
                     </div>
                 </div>
             </section>
+
 
             <!-- Availability Section -->
             <section v-if="availability.length > 0" class="availability-section">
@@ -162,19 +196,17 @@ const getServiceBookingUrl = (serviceId: number) => {
                             <h2>Reviews</h2>
                             <div class="review-summary">
                                 <Rating :modelValue="reviewStats.average" readonly :cancel="false" />
-                                <span>{{ reviewStats.average_display }} out of 5 ({{ reviewStats.total }} reviews)</span>
+                                <span>{{ reviewStats.average_display }} out of 5 ({{ reviewStats.total }}
+                                    reviews)</span>
                             </div>
                         </div>
-                        <AppLink :href="ProviderSiteController.reviews({ provider: provider.slug }).url" class="view-all">
+                        <AppLink :href="ProviderSiteController.reviews({ provider: provider.slug }).url"
+                            class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
                         </AppLink>
                     </div>
                     <div class="reviews-grid">
-                        <ReviewCard
-                            v-for="review in reviews"
-                            :key="review.id"
-                            :review="review"
-                        />
+                        <ReviewCard v-for="review in reviews" :key="review.id" :review="review" />
                     </div>
                 </div>
             </section>
@@ -185,12 +217,8 @@ const getServiceBookingUrl = (serviceId: number) => {
                     <h2>Ready to book?</h2>
                     <p>Choose a service and find a time that works for you.</p>
                     <AppLink :href="bookingUrl">
-                        <Button
-                            label="Book an Appointment"
-                            icon="pi pi-calendar"
-                            size="large"
-                            class="!bg-white !text-[#106B4F] !border-white"
-                        />
+                        <Button label="Book an Appointment" icon="pi pi-calendar" size="large"
+                            class="!bg-white !text-[#106B4F] !border-white" />
                     </AppLink>
                 </div>
             </section>
@@ -267,6 +295,18 @@ const getServiceBookingUrl = (serviceId: number) => {
     gap: 1rem;
 }
 
+.portfolio-section {
+    padding: 3rem 0;
+    background: white;
+}
+
+.portfolio-section h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0D1F1B;
+}
+
 .availability-section {
     padding: 3rem 0;
     background: white;
@@ -330,6 +370,7 @@ const getServiceBookingUrl = (serviceId: number) => {
 }
 
 @media (max-width: 768px) {
+
     .services-grid,
     .reviews-grid {
         grid-template-columns: 1fr;

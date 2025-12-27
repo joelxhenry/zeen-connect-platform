@@ -2,6 +2,8 @@
 
 namespace App\Domains\Provider\Models;
 
+use App\Domains\Media\Traits\HasMedia;
+use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
@@ -10,6 +12,7 @@ use App\Models\User;
 use App\Support\Traits\HasSlug;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,12 +22,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use HasFactory, HasSlug, HasUuid, SoftDeletes;
+    use HasFactory, HasMedia, HasSlug, HasUuid, HasVideoEmbeds, SoftDeletes;
 
     protected $fillable = [
         'user_id',
         'business_name',
         'slug',
+        'domain',
         'bio',
         'tagline',
         'address',
@@ -82,13 +86,50 @@ class Provider extends Model
             if (empty($provider->slug)) {
                 $provider->slug = static::generateSlug($provider->business_name);
             }
+            if (empty($provider->domain)) {
+                $provider->domain = static::generateDomain($provider->business_name);
+            }
         });
 
         static::updating(function ($provider) {
             if ($provider->isDirty('business_name') && ! $provider->isDirty('slug')) {
                 $provider->slug = static::generateSlug($provider->business_name, $provider->id);
             }
+            if ($provider->isDirty('business_name') && ! $provider->isDirty('domain')) {
+                $provider->domain = static::generateDomain($provider->business_name, $provider->id);
+            }
         });
+    }
+
+    /**
+     * Generate a unique domain from a business name.
+     */
+    public static function generateDomain(string $value, ?int $excludeId = null): string
+    {
+        $domain = Str::slug($value);
+        $originalDomain = $domain;
+        $counter = 1;
+
+        while (static::domainExists($domain, $excludeId)) {
+            $domain = $originalDomain . '-' . $counter;
+            $counter++;
+        }
+
+        return $domain;
+    }
+
+    /**
+     * Check if a domain already exists.
+     */
+    protected static function domainExists(string $domain, ?int $excludeId = null): bool
+    {
+        $query = static::where('domain', $domain);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->exists();
     }
 
     /**
@@ -217,7 +258,7 @@ class Provider extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-            ->whereHas('user', fn ($q) => $q->where('is_active', true));
+            ->whereHas('user', fn($q) => $q->where('is_active', true));
     }
 
     /**
@@ -233,7 +274,7 @@ class Provider extends Model
      */
     public function getPublicUrlAttribute(): string
     {
-        return route('provider.public', $this->slug);
+        return route('providersite.home', $this->domain);
     }
 
     /**

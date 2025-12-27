@@ -13,6 +13,7 @@ interface Service {
     description?: string;
     duration_display: string;
     price_display: string;
+    display_image?: string;
 }
 
 interface Props {
@@ -20,33 +21,42 @@ interface Props {
     category?: Category | null;
     bookingUrl: string;
     showCategory?: boolean;
+    showImage?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
     showCategory: true,
     category: null,
+    showImage: true,
 });
 </script>
 
 <template>
-    <AppLink :href="bookingUrl" class="service-card">
-        <div class="service-card__info">
-            <h3>{{ service.name }}</h3>
-            <p v-if="service.description" class="service-card__description">
-                {{ service.description }}
-            </p>
-            <div class="service-card__meta">
-                <span class="service-card__duration">
-                    <i class="pi pi-clock"></i>
-                    {{ service.duration_display }}
-                </span>
-                <span v-if="showCategory && category" class="service-card__category">
-                    {{ category.name }}
-                </span>
-            </div>
+    <AppLink :href="bookingUrl" class="service-card" :class="{ 'service-card--with-image': showImage && service.display_image }">
+        <!-- Service Image -->
+        <div v-if="showImage && service.display_image" class="service-card__image">
+            <img :src="service.display_image" :alt="service.name" />
         </div>
-        <div class="service-card__price">
-            {{ service.price_display }}
+
+        <div class="service-card__content">
+            <div class="service-card__info">
+                <h3>{{ service.name }}</h3>
+                <p v-if="service.description" class="service-card__description">
+                    {{ service.description }}
+                </p>
+                <div class="service-card__meta">
+                    <span class="service-card__duration">
+                        <i class="pi pi-clock"></i>
+                        {{ service.duration_display }}
+                    </span>
+                    <span v-if="showCategory && category" class="service-card__category">
+                        {{ category.name }}
+                    </span>
+                </div>
+            </div>
+            <div class="service-card__price">
+                {{ service.price_display }}
+            </div>
         </div>
     </AppLink>
 </template>
@@ -54,19 +64,44 @@ withDefaults(defineProps<Props>(), {
 <style scoped>
 .service-card {
     background: white;
-    padding: 1.25rem;
     border-radius: 0.75rem;
     text-decoration: none;
     display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+    flex-direction: column;
     transition: box-shadow 0.15s, transform 0.15s;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
 .service-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
+}
+
+.service-card__image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #f3f4f6;
+}
+
+.service-card__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-card__image img {
+    transform: scale(1.05);
+}
+
+.service-card__content {
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex: 1;
 }
 
 .service-card__info {
@@ -122,5 +157,7 @@ withDefaults(defineProps<Props>(), {
     color: #106B4F;
     white-space: nowrap;
     font-size: 1.125rem;
+    display: flex;
+    align-items: flex-start;
 }
 </style>

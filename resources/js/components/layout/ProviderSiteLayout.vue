@@ -7,9 +7,8 @@ import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
 import site from '@/routes/providersite';
-import client from '@/routes/client';
 import { login } from '@/routes';
-import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
+import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
 
 defineProps<{
     title?: string;
@@ -23,7 +22,7 @@ const user = (page.props.auth as { user?: User } | undefined)?.user;
 const __provider = page.props.__provider as {
     id: number;
     business_name: string;
-    slug: string;
+    domain: string;
     avatar?: string;
     cover_image?: string;
 } | null;
@@ -48,23 +47,22 @@ const getInitials = (name: string) => {
 
 
 const homeUrl = computed(() => {
-    return site.home({ provider: __provider?.slug ?? '' }).url;
+    return site.home({ provider: __provider?.domain ?? '' }).url;
 });
 
 
 const servicesUrl = computed(() => {
-    return site.services({ provider: __provider?.slug ?? '' }).url;
+    return site.services({ provider: __provider?.domain ?? '' }).url;
 });
 
 
 const reviewsUrl = computed(() => {
-    return site.reviews({ provider: __provider?.slug ?? '' }).url;
+    return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
 
-const getBookingUrl = (service?: number) => {
-    
-   return '#';
+const getBookingUrl = () => {
+    return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
 
 
@@ -110,7 +108,7 @@ const getBookingUrl = (service?: number) => {
 
                     <div class="auth-nav">
                         <template v-if="user">
-                            <AppLink :href="client.bookings.index().url" class="nav-link text-sm">
+                            <AppLink :href="getBookingUrl()" class="nav-link text-sm">
                                 My Bookings
                             </AppLink>
                         </template>

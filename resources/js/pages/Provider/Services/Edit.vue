@@ -13,6 +13,8 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import provider from '@/routes/provider';
 import FeeCalculator from '@/components/service/FeeCalculator.vue';
+import ServiceGalleryUpload from '@/components/media/ServiceGalleryUpload.vue';
+import type { MediaItem } from '@/types/models';
 
 interface Category {
     id: number;
@@ -20,6 +22,7 @@ interface Category {
 }
 
 interface Service {
+    id: number;
     uuid: string;
     name: string;
     category_id: number;
@@ -34,6 +37,8 @@ interface Service {
     cancellation_policy?: 'flexible' | 'moderate' | 'strict';
     advance_booking_days?: number;
     min_booking_notice_hours?: number;
+    display_media_id?: number | null;
+    gallery?: MediaItem[];
 }
 
 interface BookingSettings {
@@ -65,6 +70,41 @@ interface Props {
 const props = defineProps<Props>();
 const confirm = useConfirm();
 const toast = useToast();
+
+// Gallery state (managed separately from form)
+const gallery = ref<MediaItem[]>(props.service.gallery || []);
+const displayMediaId = ref<number | null>(props.service.display_media_id || null);
+
+// Computed URLs for media operations (use UUID for route model binding)
+const uploadUrl = computed(() => `/media/services/${props.service.uuid}/multiple`);
+const setDisplayUrl = computed(() => `/services/${props.service.uuid}/set-display-image`);
+
+const handleGalleryUploaded = (media: MediaItem) => {
+    toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Image uploaded successfully',
+        life: 3000,
+    });
+};
+
+const handleGalleryError = (error: string) => {
+    toast.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: error,
+        life: 5000,
+    });
+};
+
+const handleDisplayChanged = (mediaId: number | null) => {
+    toast.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Display image updated',
+        life: 3000,
+    });
+};
 
 const form = useForm({
     name: props.service.name,
@@ -255,6 +295,29 @@ const deleteService = () => {
                             <InputSwitch v-model="form.is_active" />
                             <label class="text-sm font-medium text-gray-700">Active (visible to clients)</label>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Service Gallery Card -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
+                        <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
+                            <i class="pi pi-images text-[#106B4F]"></i>
+                            Service Images
+                        </h2>
+                    </div>
+                    <div class="p-4 lg:p-5">
+                        <ServiceGalleryUpload
+                            v-model="gallery"
+                            v-model:displayMediaId="displayMediaId"
+                            :service-id="service.id"
+                            :upload-url="uploadUrl"
+                            :set-display-url="setDisplayUrl"
+                            :max-files="5"
+                            @uploaded="handleGalleryUploaded"
+                            @displayChanged="handleDisplayChanged"
+                            @error="handleGalleryError"
+                        />
                     </div>
                 </div>
 

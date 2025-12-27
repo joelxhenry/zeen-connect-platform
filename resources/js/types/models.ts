@@ -33,6 +33,10 @@ export interface Provider {
     created_at: string;
     updated_at: string;
     user?: User;
+    avatar_url?: string | null;
+    cover_photo_url?: string | null;
+    gallery?: MediaItem[];
+    videos?: VideoEmbed[];
 }
 
 export interface Client {
@@ -73,6 +77,40 @@ export interface Service {
     updated_at: string;
     provider?: Provider;
     category?: Category;
+    gallery?: MediaItem[];
+    videos?: VideoEmbed[];
+}
+
+export interface MediaItem {
+    id: number;
+    uuid: string;
+    collection: string;
+    filename: string;
+    mime_type: string;
+    size: number;
+    human_size: string;
+    url: string;
+    thumbnail: string;
+    medium: string;
+    large: string;
+    is_image: boolean;
+    order: number;
+}
+
+export interface VideoEmbed {
+    id: number;
+    uuid: string;
+    platform: 'youtube' | 'vimeo';
+    video_id: string;
+    url: string;
+    embed_url: string;
+    embed_code: string;
+    watch_url: string;
+    title: string | null;
+    thumbnail_url: string | null;
+    duration: number | null;
+    human_duration: string | null;
+    order: number;
 }
 
 export interface ProviderAvailability {

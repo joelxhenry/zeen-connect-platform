@@ -3,6 +3,7 @@
 namespace App\Domains\Review\Models;
 
 use App\Domains\Booking\Models\Booking;
+use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
 use App\Models\User;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 
 class Review extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'uuid',

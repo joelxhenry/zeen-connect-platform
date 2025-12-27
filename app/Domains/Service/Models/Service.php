@@ -2,6 +2,9 @@
 
 namespace App\Domains\Service\Models;
 
+use App\Domains\Media\Models\Media;
+use App\Domains\Media\Traits\HasMedia;
+use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Provider\Models\Provider;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
-    use HasFactory, HasUuid, SoftDeletes;
+    use HasFactory, HasMedia, HasUuid, HasVideoEmbeds, SoftDeletes;
 
     protected $fillable = [
         'provider_id',
@@ -29,6 +32,7 @@ class Service extends Model
         'cancellation_policy',
         'advance_booking_days',
         'min_booking_notice_hours',
+        'display_media_id',
     ];
 
     protected function casts(): array
@@ -112,5 +116,57 @@ class Service extends Model
     public function getPriceDisplayAttribute(): string
     {
         return '$' . number_format($this->price, 2);
+    }
+
+    /**
+     * Get the display image for this service.
+     */
+    public function displayMedia(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'display_media_id');
+    }
+
+    /**
+     * Get the display image URL, falling back to first gallery image.
+     */
+    public function getDisplayImageUrlAttribute(): ?string
+    {
+        // First check if there's a designated display image
+        if ($this->display_media_id && $this->displayMedia) {
+            return $this->displayMedia->medium;
+        }
+
+        // Fall back to first gallery image
+        $firstGalleryImage = $this->getFirstMedia('gallery');
+        return $firstGalleryImage?->medium;
+    }
+
+    /**
+     * Get the display image thumbnail URL.
+     */
+    public function getDisplayImageThumbnailAttribute(): ?string
+    {
+        if ($this->display_media_id && $this->displayMedia) {
+            return $this->displayMedia->thumbnail;
+        }
+
+        $firstGalleryImage = $this->getFirstMedia('gallery');
+        return $firstGalleryImage?->thumbnail;
+    }
+
+    /**
+     * Set the display image from a media ID.
+     */
+    public function setDisplayImage(?int $mediaId): void
+    {
+        // Verify the media belongs to this service
+        if ($mediaId) {
+            $media = $this->media()->where('id', $mediaId)->first();
+            if (!$media) {
+                return;
+            }
+        }
+
+        $this->update(['display_media_id' => $mediaId]);
     }
 }

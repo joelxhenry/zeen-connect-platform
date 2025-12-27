@@ -24,8 +24,18 @@ class ProfileController extends Controller
         $user = Auth::user();
         $provider = $user->provider;
 
+        // Load media relationships
+        $provider->load(['media', 'videoEmbeds']);
+
+        // Prepare provider data with media
+        $providerData = $provider->toArray();
+        $providerData['avatar'] = $provider->getFirstMedia('avatar')?->toMediaArray();
+        $providerData['cover'] = $provider->getFirstMedia('cover')?->toMediaArray();
+        $providerData['gallery'] = $provider->getMedia('gallery')->map->toMediaArray()->toArray();
+        $providerData['videos'] = $provider->videoEmbeds->map->toVideoArray()->toArray();
+
         return Inertia::render('Provider/Profile/Edit', [
-            'provider' => $provider,
+            'provider' => $providerData,
         ]);
     }
 

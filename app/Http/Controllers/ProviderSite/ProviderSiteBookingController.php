@@ -11,6 +11,7 @@ use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
+use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -109,12 +110,12 @@ class ProviderSiteBookingController extends Controller
 
         // Verify service belongs to this provider
         if ($service->provider_id !== $provider->id) {
-            return response()->json(['error' => 'Service not found'], 404);
+            return ApiResponse::notFound('Service not found');
         }
 
         $slots = $this->availabilityService->getAvailableSlots($provider, $service, $request->date);
 
-        return response()->json(['slots' => $slots]);
+        return ApiResponse::success(['slots' => $slots]);
     }
 
     /**

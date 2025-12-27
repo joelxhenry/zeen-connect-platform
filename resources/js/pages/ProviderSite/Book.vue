@@ -4,7 +4,8 @@ import { useForm } from '@inertiajs/vue3';
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Calendar from 'primevue/calendar';
 import { useToast } from 'primevue/usetoast';
-import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
+import { useApi } from '@/composables/useApi';
+import { ApiError } from '@/types/api';
 
 // Booking components
 import StepCard from '@/components/booking/StepCard.vue';
@@ -68,8 +69,13 @@ interface Slot {
     display: string;
 }
 
+interface SlotsResponse {
+    slots: Slot[];
+}
+
 const props = defineProps<Props>();
 const toast = useToast();
+const api = useApi({ showErrorToast: false });
 
 // Form state
 const selectedService = ref<Service | null>(
@@ -170,19 +176,21 @@ const fetchSlots = async () => {
 
     loadingSlots.value = true;
     try {
-        // Use provider site route for slots
-        const response = await fetch(ProviderSiteBookingController.getSlots({ provider: props.provider.slug }).url + '?' + new URLSearchParams({
-            service_id: selectedService.value.id.toString(),
-            date: form.date,
-        }));
-        const data = await response.json();
-        availableSlots.value = data.slots || [];
+        // Use relative path since we're already on the provider's subdomain
+        const result = await api.get<SlotsResponse>('/book/slots', {
+            params: {
+                service_id: selectedService.value.id,
+                date: form.date,
+            },
+        });
+        availableSlots.value = result.slots || [];
         selectedSlot.value = null;
-    } catch (error) {
+    } catch (e) {
+        const message = e instanceof ApiError ? e.message : 'Failed to load available time slots';
         toast.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to load available time slots',
+            detail: message,
             life: 3000,
         });
     } finally {
@@ -191,8 +199,8 @@ const fetchSlots = async () => {
 };
 
 const submit = () => {
-    // Use provider site route for booking
-    form.post(ProviderSiteBookingController.store({ provider: props.provider.slug }).url, {
+    // Use relative path since we're already on the provider's subdomain
+    form.post('/book', {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({

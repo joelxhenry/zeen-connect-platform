@@ -11,16 +11,16 @@ class ResolveProviderFromSubdomain
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Get provider slug from subdomain route parameter
+        // Get provider domain from subdomain route parameter
         // The {provider} in Route::domain('{provider}.zeen.com') binds to this
-        $slug = $request->route('provider');
+        $domain = $request->route('provider');
 
-        if (!$slug) {
+        if (!$domain) {
             abort(404, 'Provider not found');
         }
 
-        // Find provider by slug
-        $provider = Provider::where('slug', $slug)
+        // Find provider by domain
+        $provider = Provider::where('domain', $domain)
             ->with(['user', 'services' => fn($query) => $query->where('is_active', true)->orderBy('name')])
             ->first();
 

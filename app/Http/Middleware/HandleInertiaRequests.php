@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Domains\Admin\Models\SystemSetting;
+use App\Domains\Provider\Models\Provider;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -55,12 +56,12 @@ class HandleInertiaRequests extends Middleware
             '__provider' => function () use ($getProvider) {
                 $provider = $getProvider();
 
-                return $provider ? [
+                return $provider instanceof Provider ? [
                     'id' => $provider->id,
                     'business_name' => $provider->business_name,
-                    'slug' => $provider->slug,
-                    'avatar' => $provider->user?->avatar,
-                    'cover_image' => $provider->cover_image,
+                    'domain' => $provider->domain,
+                    'avatar' => $provider->getAvatarUrlAttribute(),
+                    'cover_image' => $provider->getCoverPhotoUrlAttribute(),
                 ] : null;
             },
             // Domain URLs

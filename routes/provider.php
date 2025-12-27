@@ -4,6 +4,8 @@ use App\Domains\Booking\Controllers\ProviderBookingController;
 use App\Domains\Media\Controllers\MediaController;
 use App\Domains\Media\Controllers\VideoEmbedController;
 use App\Domains\Payment\Controllers\ProviderEarningsController;
+use App\Domains\Payment\Controllers\ProviderGatewaySetupController;
+use App\Domains\Payment\Controllers\ProviderRefundController;
 use App\Domains\Provider\Controllers\AvailabilityController;
 use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
@@ -70,9 +72,32 @@ Route::prefix('bookings')->name('provider.bookings.')->group(function () {
 
 // Earnings/Payment management
 Route::prefix('payments')->name('provider.payments.')->group(function () {
+    // Earnings dashboard
     Route::get('/', [ProviderEarningsController::class, 'index'])->name('index');
     Route::get('/history', [ProviderEarningsController::class, 'payments'])->name('history');
     Route::get('/payouts/{uuid}', [ProviderEarningsController::class, 'showPayout'])->name('payout');
+
+    // Wallet & Payouts
+    Route::get('/wallet', [ProviderEarningsController::class, 'wallet'])->name('wallet');
+    Route::post('/payout/request', [ProviderEarningsController::class, 'requestPayout'])->name('payout.request');
+    Route::put('/payout/schedule', [ProviderEarningsController::class, 'updatePayoutSchedule'])->name('payout.schedule');
+    Route::post('/payout/{uuid}/cancel', [ProviderEarningsController::class, 'cancelPayout'])->name('payout.cancel');
+
+    // Gateway Setup
+    Route::prefix('setup')->name('setup.')->group(function () {
+        Route::get('/', [ProviderGatewaySetupController::class, 'index'])->name('index');
+        Route::get('/{gateway}', [ProviderGatewaySetupController::class, 'create'])->name('create');
+        Route::get('/{gateway}/edit', [ProviderGatewaySetupController::class, 'edit'])->name('edit');
+        Route::post('/{gateway}', [ProviderGatewaySetupController::class, 'store'])->name('store');
+        Route::put('/{gateway}', [ProviderGatewaySetupController::class, 'update'])->name('update');
+        Route::delete('/{gateway}', [ProviderGatewaySetupController::class, 'destroy'])->name('destroy');
+        Route::post('/{gateway}/verify', [ProviderGatewaySetupController::class, 'verify'])->name('verify');
+        Route::post('/{gateway}/primary', [ProviderGatewaySetupController::class, 'makePrimary'])->name('primary');
+    });
+
+    // Refunds
+    Route::get('/refunds', [ProviderRefundController::class, 'index'])->name('refunds');
+    Route::post('/{uuid}/refund', [ProviderRefundController::class, 'store'])->name('refund');
 });
 
 // Review management

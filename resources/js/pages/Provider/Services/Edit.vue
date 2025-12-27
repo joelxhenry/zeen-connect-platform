@@ -13,12 +13,20 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import provider from '@/routes/provider';
 import FeeCalculator from '@/components/service/FeeCalculator.vue';
-import ServiceGalleryUpload from '@/components/media/ServiceGalleryUpload.vue';
-import type { MediaItem } from '@/types/models';
+import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 
 interface Category {
     id: number;
     name: string;
+}
+
+interface MediaItem {
+    id: number;
+    uuid: string;
+    url: string;
+    thumbnail: string;
+    medium: string;
+    filename: string;
 }
 
 interface Service {
@@ -37,8 +45,7 @@ interface Service {
     cancellation_policy?: 'flexible' | 'moderate' | 'strict';
     advance_booking_days?: number;
     min_booking_notice_hours?: number;
-    display_media_id?: number | null;
-    gallery?: MediaItem[];
+    cover?: MediaItem | null;
 }
 
 interface BookingSettings {
@@ -71,38 +78,27 @@ const props = defineProps<Props>();
 const confirm = useConfirm();
 const toast = useToast();
 
-// Gallery state (managed separately from form)
-const gallery = ref<MediaItem[]>(props.service.gallery || []);
-const displayMediaId = ref<number | null>(props.service.display_media_id || null);
+// Cover image state (managed separately from form)
+const cover = ref<MediaItem | null>(props.service.cover || null);
 
-// Computed URLs for media operations (use UUID for route model binding)
-const uploadUrl = computed(() => `/media/services/${props.service.uuid}/multiple`);
-const setDisplayUrl = computed(() => `/services/${props.service.uuid}/set-display-image`);
+// URL for cover image upload (use UUID for route model binding)
+const uploadUrl = computed(() => `/media/services/${props.service.uuid}`);
 
-const handleGalleryUploaded = (media: MediaItem) => {
+const handleCoverUploaded = (media: MediaItem) => {
     toast.add({
         severity: 'success',
         summary: 'Success',
-        detail: 'Image uploaded successfully',
+        detail: 'Cover image uploaded',
         life: 3000,
     });
 };
 
-const handleGalleryError = (error: string) => {
+const handleCoverError = (error: string) => {
     toast.add({
         severity: 'error',
         summary: 'Error',
         detail: error,
         life: 5000,
-    });
-};
-
-const handleDisplayChanged = (mediaId: number | null) => {
-    toast.add({
-        severity: 'success',
-        summary: 'Success',
-        detail: 'Display image updated',
-        life: 3000,
     });
 };
 
@@ -298,26 +294,27 @@ const deleteService = () => {
                     </div>
                 </div>
 
-                <!-- Service Gallery Card -->
+                <!-- Cover Image Card -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="px-4 lg:px-5 py-3 lg:py-4 border-b border-gray-200">
                         <h2 class="text-sm lg:text-base font-semibold text-[#0D1F1B] m-0 flex items-center gap-2">
-                            <i class="pi pi-images text-[#106B4F]"></i>
-                            Service Images
+                            <i class="pi pi-image text-[#106B4F]"></i>
+                            Cover Image
                         </h2>
                     </div>
                     <div class="p-4 lg:p-5">
-                        <ServiceGalleryUpload
-                            v-model="gallery"
-                            v-model:displayMediaId="displayMediaId"
-                            :service-id="service.id"
+                        <SingleImageUpload
+                            v-model="cover"
                             :upload-url="uploadUrl"
-                            :set-display-url="setDisplayUrl"
-                            :max-files="5"
-                            @uploaded="handleGalleryUploaded"
-                            @displayChanged="handleDisplayChanged"
-                            @error="handleGalleryError"
+                            collection="cover"
+                            shape="cover"
+                            placeholder="Upload Cover Image"
+                            @uploaded="handleCoverUploaded"
+                            @error="handleCoverError"
                         />
+                        <small class="text-gray-500 mt-2 block">
+                            This image will be displayed in service listings.
+                        </small>
                     </div>
                 </div>
 

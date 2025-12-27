@@ -42,7 +42,6 @@ Route::resource('services', ServiceController::class)->except(['show'])->names([
     'destroy' => 'provider.services.destroy',
 ]);
 Route::post('/services/{service}/toggle-active', [ServiceController::class, 'toggleActive'])->name('provider.services.toggle-active');
-Route::post('/services/{service}/set-display-image', [ServiceController::class, 'setDisplayImage'])->name('provider.services.set-display-image');
 
 // Settings management
 Route::prefix('settings')->name('provider.settings.')->group(function () {

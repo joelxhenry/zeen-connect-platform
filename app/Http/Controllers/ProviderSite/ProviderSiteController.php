@@ -29,7 +29,7 @@ class ProviderSiteController extends Controller
         $provider->load([
             'user:id,name,avatar,email',
             'availability' => fn ($q) => $q->where('is_available', true)->orderBy('day_of_week'),
-            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media', 'displayMedia'])->orderBy('sort_order'),
+            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media'])->orderBy('sort_order'),
             'media',
             'videoEmbeds',
         ]);
@@ -109,7 +109,7 @@ class ProviderSiteController extends Controller
 
         // Load full service details with categories and media
         $provider->load([
-            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media', 'displayMedia'])->orderBy('sort_order'),
+            'services' => fn ($q) => $q->where('is_active', true)->with(['category:id,name,icon,slug', 'media'])->orderBy('sort_order'),
             'media',
             'videoEmbeds',
         ]);

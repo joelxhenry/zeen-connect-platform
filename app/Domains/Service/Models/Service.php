@@ -32,7 +32,6 @@ class Service extends Model
         'cancellation_policy',
         'advance_booking_days',
         'min_booking_notice_hours',
-        'display_media_id',
     ];
 
     protected function casts(): array
@@ -119,54 +118,34 @@ class Service extends Model
     }
 
     /**
-     * Get the display image for this service.
+     * Get the cover image media object.
      */
-    public function displayMedia(): BelongsTo
+    public function getCoverAttribute(): ?Media
     {
-        return $this->belongsTo(Media::class, 'display_media_id');
+        return $this->getFirstMedia('cover');
     }
 
     /**
-     * Get the display image URL, falling back to first gallery image.
+     * Get the cover image URL.
+     */
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->cover?->medium;
+    }
+
+    /**
+     * Get the cover image thumbnail URL.
+     */
+    public function getCoverThumbnailAttribute(): ?string
+    {
+        return $this->cover?->thumbnail;
+    }
+
+    /**
+     * Get the display image URL (alias for cover_url for backwards compatibility).
      */
     public function getDisplayImageUrlAttribute(): ?string
     {
-        // First check if there's a designated display image
-        if ($this->display_media_id && $this->displayMedia) {
-            return $this->displayMedia->medium;
-        }
-
-        // Fall back to first gallery image
-        $firstGalleryImage = $this->getFirstMedia('gallery');
-        return $firstGalleryImage?->medium;
-    }
-
-    /**
-     * Get the display image thumbnail URL.
-     */
-    public function getDisplayImageThumbnailAttribute(): ?string
-    {
-        if ($this->display_media_id && $this->displayMedia) {
-            return $this->displayMedia->thumbnail;
-        }
-
-        $firstGalleryImage = $this->getFirstMedia('gallery');
-        return $firstGalleryImage?->thumbnail;
-    }
-
-    /**
-     * Set the display image from a media ID.
-     */
-    public function setDisplayImage(?int $mediaId): void
-    {
-        // Verify the media belongs to this service
-        if ($mediaId) {
-            $media = $this->media()->where('id', $mediaId)->first();
-            if (!$media) {
-                return;
-            }
-        }
-
-        $this->update(['display_media_id' => $mediaId]);
+        return $this->cover_url;
     }
 }

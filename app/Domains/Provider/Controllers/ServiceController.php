@@ -12,9 +12,7 @@ use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -89,12 +87,11 @@ class ServiceController extends Controller
         $categories = Category::active()->ordered()->get();
 
         // Load media relationships
-        $service->load(['category', 'media', 'displayMedia']);
+        $service->load(['category', 'media']);
 
-        // Prepare service data with media
+        // Prepare service data with cover photo
         $serviceData = $service->toArray();
-        $serviceData['gallery'] = $service->getMedia('gallery')->map->toMediaArray()->toArray();
-        $serviceData['display_media_id'] = $service->display_media_id;
+        $serviceData['cover'] = $service->cover?->toMediaArray();
 
         return Inertia::render('Provider/Services/Edit', [
             'service' => $serviceData,
@@ -154,33 +151,4 @@ class ServiceController extends Controller
             ->with('success', "Service {$status} successfully.");
     }
 
-    /**
-     * Set the display image for a service.
-     */
-    public function setDisplayImage(Request $request, Service $service): JsonResponse
-    {
-        $provider = Auth::user()->provider;
-
-        // Ensure the service belongs to this provider
-        if ($service->provider_id !== $provider->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $mediaId = $request->input('media_id');
-
-        // Validate the media belongs to this service
-        if ($mediaId) {
-            $media = $service->media()->where('id', $mediaId)->first();
-            if (! $media) {
-                return response()->json(['error' => 'Media not found for this service'], 404);
-            }
-        }
-
-        $service->update(['display_media_id' => $mediaId]);
-
-        return response()->json([
-            'success' => true,
-            'display_media_id' => $mediaId,
-        ]);
-    }
 }

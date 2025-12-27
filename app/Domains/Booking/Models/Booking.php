@@ -42,9 +42,14 @@ class Booking extends Model
         // Deposit tracking
         'deposit_amount',
         'deposit_paid',
-        // Fee tracking
+        // Fee tracking (legacy)
         'platform_fee_amount',
         'processing_fee_amount',
+        // New separated fee structure
+        'zeen_fee',
+        'gateway_fee',
+        'convenience_fee',
+        'fee_payer',
     ];
 
     protected function casts(): array
@@ -64,6 +69,10 @@ class Booking extends Model
             'deposit_paid' => 'boolean',
             'platform_fee_amount' => 'decimal:2',
             'processing_fee_amount' => 'decimal:2',
+            // New fee columns
+            'zeen_fee' => 'decimal:2',
+            'gateway_fee' => 'decimal:2',
+            'convenience_fee' => 'decimal:2',
         ];
     }
 

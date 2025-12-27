@@ -47,7 +47,7 @@ class Provider extends Model
         'cancellation_policy',
         'advance_booking_days',
         'min_booking_notice_hours',
-        'processing_fee_payer',
+        'fee_payer',
         'deposit_percentage',
     ];
 

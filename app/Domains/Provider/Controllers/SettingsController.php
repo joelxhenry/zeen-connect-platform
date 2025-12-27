@@ -4,6 +4,7 @@ namespace App\Domains\Provider\Controllers;
 
 use App\Domains\Provider\Actions\UpdateProviderBookingSettingsAction;
 use App\Domains\Provider\Requests\UpdateProviderBookingSettingsRequest;
+use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ class SettingsController extends Controller
 {
     public function __construct(
         private UpdateProviderBookingSettingsAction $updateBookingSettingsAction,
+        private SubscriptionService $subscriptionService,
     ) {}
 
     public function edit(): Response
@@ -22,6 +24,8 @@ class SettingsController extends Controller
 
         return Inertia::render('Provider/Settings/Edit', [
             'bookingSettings' => $provider->getBookingSettings(),
+            'feePayer' => $provider->fee_payer ?? 'provider',
+            'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }
 

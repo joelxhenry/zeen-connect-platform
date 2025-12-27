@@ -23,7 +23,11 @@ interface TierInfo {
     monthly_price: number;
     monthly_price_display: string;
     deposit_percentage: number;
-    platform_fee_rate: number;
+    zeen_fee_rate: number;
+    gateway_fee_rate: number;
+    total_fee_rate: number;
+    platform_fee_rate: number; // Legacy
+    team_slots: number | 'unlimited';
     team_description: string;
     features: Array<{
         value: string;
@@ -37,7 +41,10 @@ interface CurrentTier {
     label: string;
     color: string;
     deposit_percentage: number;
-    platform_fee_rate: number;
+    zeen_fee_rate: number;
+    gateway_fee_rate: number;
+    total_fee_rate: number;
+    platform_fee_rate: number; // Legacy
     team_description: string;
 }
 
@@ -86,17 +93,20 @@ const unavailableFeatures = props.features.filter(f => !f.available);
                 <template #header-actions>
                     <Tag :value="currentTier.label" :severity="getTagSeverity(currentTier.color)" />
                 </template>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <span class="text-gray-500 text-sm block mb-1">Transaction Fee</span>
+                        <p class="font-semibold text-[#0D1F1B] m-0">
+                            {{ currentTier.total_fee_rate }}%
+                        </p>
+                        <p class="text-xs text-gray-500 m-0 mt-1">
+                            {{ currentTier.zeen_fee_rate }}% Zeen + {{ currentTier.gateway_fee_rate }}% Gateway
+                        </p>
+                    </div>
                     <div>
                         <span class="text-gray-500 text-sm block mb-1">Deposit Requirement</span>
                         <p class="font-semibold text-[#0D1F1B] m-0">
                             {{ currentTier.deposit_percentage > 0 ? `${currentTier.deposit_percentage}%` : 'No minimum' }}
-                        </p>
-                    </div>
-                    <div>
-                        <span class="text-gray-500 text-sm block mb-1">Platform Fee</span>
-                        <p class="font-semibold text-[#0D1F1B] m-0">
-                            {{ currentTier.platform_fee_rate > 0 ? `${currentTier.platform_fee_rate}%` : 'No fee' }}
                         </p>
                     </div>
                     <div>
@@ -172,9 +182,27 @@ const unavailableFeatures = props.features.filter(f => !f.available);
                         </thead>
                         <tbody>
                             <tr class="border-b border-gray-50">
-                                <td class="p-4 text-gray-600">Platform Fee</td>
+                                <td class="p-4 text-gray-600">
+                                    <div>Zeen Fee</div>
+                                    <div class="text-xs text-gray-400">Platform fee</div>
+                                </td>
                                 <td v-for="tier in allTiers" :key="tier.value" class="p-4 text-center">
-                                    {{ tier.platform_fee_rate > 0 ? `${tier.platform_fee_rate}%` : 'None' }}
+                                    {{ tier.zeen_fee_rate }}%
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-50">
+                                <td class="p-4 text-gray-600">
+                                    <div>Gateway Fee</div>
+                                    <div class="text-xs text-gray-400">Payment processing</div>
+                                </td>
+                                <td v-for="tier in allTiers" :key="tier.value" class="p-4 text-center">
+                                    {{ tier.gateway_fee_rate }}%
+                                </td>
+                            </tr>
+                            <tr class="border-b border-gray-100 bg-gray-50">
+                                <td class="p-4 text-gray-700 font-medium">Total Fee</td>
+                                <td v-for="tier in allTiers" :key="tier.value" class="p-4 text-center font-semibold">
+                                    {{ tier.total_fee_rate }}%
                                 </td>
                             </tr>
                             <tr class="border-b border-gray-50">
@@ -186,7 +214,7 @@ const unavailableFeatures = props.features.filter(f => !f.available);
                             <tr class="border-b border-gray-50">
                                 <td class="p-4 text-gray-600">Team Members</td>
                                 <td v-for="tier in allTiers" :key="tier.value" class="p-4 text-center text-sm">
-                                    {{ tier.team_description }}
+                                    {{ tier.team_slots === 'unlimited' ? 'Unlimited' : tier.team_slots }}
                                 </td>
                             </tr>
                             <tr v-for="feature in features" :key="feature.value" class="border-b border-gray-50">

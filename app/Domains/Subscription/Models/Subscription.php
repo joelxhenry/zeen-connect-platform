@@ -46,7 +46,7 @@ class Subscription extends Model
         }
 
         // Free tier never expires
-        if ($this->tier === SubscriptionTier::FREE) {
+        if ($this->tier === SubscriptionTier::STARTER) {
             return true;
         }
 

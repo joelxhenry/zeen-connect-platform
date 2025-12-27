@@ -36,6 +36,8 @@ class Service extends Model
         'min_booking_notice_hours',
     ];
 
+    protected $appends = ['cover'];
+
     protected function casts(): array
     {
         return [

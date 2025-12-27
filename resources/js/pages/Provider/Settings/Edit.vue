@@ -11,8 +11,10 @@ import {
 import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import InputSwitch from 'primevue/inputswitch';
+import RadioButton from 'primevue/radiobutton';
 import { useToast } from 'primevue/usetoast';
 import SettingsController from '@/actions/App/Domains/Provider/Controllers/SettingsController';
+import FeeBreakdownPreview from '@/components/provider/FeeBreakdownPreview.vue';
 
 interface BookingSettings {
     requires_approval: boolean;
@@ -23,8 +25,20 @@ interface BookingSettings {
     min_booking_notice_hours: number;
 }
 
+interface TierRestrictions {
+    tier: string;
+    tier_label: string;
+    zeen_fee_rate: number;
+    gateway_fee_rate: number;
+    total_fee_rate: number;
+    team_slots: number | 'unlimited';
+    monthly_price: number;
+}
+
 interface Props {
     bookingSettings: BookingSettings;
+    feePayer: 'provider' | 'client';
+    tierRestrictions: TierRestrictions;
 }
 
 const props = defineProps<Props>();
@@ -37,6 +51,7 @@ const form = useForm({
     cancellation_policy: props.bookingSettings.cancellation_policy,
     advance_booking_days: props.bookingSettings.advance_booking_days,
     min_booking_notice_hours: props.bookingSettings.min_booking_notice_hours,
+    fee_payer: props.feePayer,
 });
 
 const depositTypeOptions = [
@@ -212,6 +227,60 @@ const submit = () => {
                                 </small>
                             </div>
                         </ConsoleFormSection>
+                    </div>
+                </ConsoleFormCard>
+
+                <!-- Payment Fees Card -->
+                <ConsoleFormCard title="Transaction Fees" icon="pi pi-percentage">
+                    <div class="space-y-5">
+                        <p class="text-sm text-gray-500 m-0">
+                            Your {{ tierRestrictions.tier_label }} tier has a {{ tierRestrictions.total_fee_rate }}% transaction fee
+                            ({{ tierRestrictions.zeen_fee_rate }}% Zeen + {{ tierRestrictions.gateway_fee_rate }}% gateway).
+                            Choose who pays these fees.
+                        </p>
+
+                        <!-- Fee Payer Selection -->
+                        <div class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Who pays transaction fees?
+                            </label>
+
+                            <div class="flex flex-col gap-3">
+                                <label
+                                    class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                                    :class="form.fee_payer === 'provider' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+                                >
+                                    <RadioButton v-model="form.fee_payer" value="provider" class="mt-0.5" />
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-900">I absorb the fees</span>
+                                        <span class="block text-xs text-gray-500 mt-0.5">
+                                            Fees are deducted from your payout. Clients see only the service price.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label
+                                    class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                                    :class="form.fee_payer === 'client' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+                                >
+                                    <RadioButton v-model="form.fee_payer" value="client" class="mt-0.5" />
+                                    <div>
+                                        <span class="block text-sm font-medium text-gray-900">Client pays the fees</span>
+                                        <span class="block text-xs text-gray-500 mt-0.5">
+                                            Fees are added as a "transaction fee" on top of the service price at checkout.
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Fee Breakdown Preview -->
+                        <FeeBreakdownPreview
+                            :fee-payer="form.fee_payer"
+                            :zeen-fee-rate="tierRestrictions.zeen_fee_rate"
+                            :gateway-fee-rate="tierRestrictions.gateway_fee_rate"
+                            :example-amount="10000"
+                        />
                     </div>
                 </ConsoleFormCard>
 

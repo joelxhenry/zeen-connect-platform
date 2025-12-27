@@ -6,16 +6,13 @@ import {
     ConsolePageHeader,
     ConsoleEmptyState,
     ConsoleDataCard,
-    ConsoleFormCard,
     ConsoleStatCard,
     ConsoleButton,
 } from '@/components/console';
 import TierRestrictionBanner from '@/components/service/TierRestrictionBanner.vue';
-import AppLink from '@/components/common/AppLink.vue';
+import ServiceCard from '@/components/service/ServiceCard.vue';
+import ServiceFilters from '@/components/service/ServiceFilters.vue';
 import provider from '@/routes/provider';
-import InputText from 'primevue/inputtext';
-import Select from 'primevue/select';
-import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
@@ -30,19 +27,6 @@ const toast = useToast();
 const searchQuery = ref('');
 const selectedCategory = ref<number | null>(null);
 const selectedStatus = ref<'all' | 'active' | 'inactive'>('all');
-
-// Category filter options
-const categoryOptions = computed(() => [
-    { value: null, label: 'All Categories' },
-    ...props.categories.map(cat => ({ value: cat.id, label: cat.name })),
-]);
-
-// Status filter options
-const statusOptions = [
-    { value: 'all', label: 'All Status' },
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-];
 
 // Filtered services
 const filteredServices = computed(() => {
@@ -76,10 +60,6 @@ const clearFilters = () => {
     selectedCategory.value = null;
     selectedStatus.value = 'all';
 };
-
-const hasActiveFilters = computed(() => {
-    return searchQuery.value || selectedCategory.value !== null || selectedStatus.value !== 'all';
-});
 
 const deleteService = (service: Service) => {
     confirm.require({
@@ -115,12 +95,6 @@ const toggleActive = (service: Service) => {
             });
         },
     });
-};
-
-const getPlaceholderImage = (service: Service) => {
-    // Generate a consistent placeholder based on service name
-    const hue = service.name.charCodeAt(0) * 10 % 360;
-    return `linear-gradient(135deg, hsl(${hue}, 40%, 85%) 0%, hsl(${hue}, 50%, 75%) 100%)`;
 };
 </script>
 
@@ -179,43 +153,15 @@ const getPlaceholderImage = (service: Service) => {
             />
 
             <!-- Filters -->
-            <ConsoleFormCard v-if="services.length > 0" class="mb-6">
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <div class="flex-1">
-                        <InputText
-                            v-model="searchQuery"
-                            placeholder="Search services..."
-                            class="w-full"
-                        >
-                            <template #prefix>
-                                <i class="pi pi-search text-gray-400" />
-                            </template>
-                        </InputText>
-                    </div>
-                    <Select
-                        v-model="selectedCategory"
-                        :options="categoryOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        class="w-full sm:w-48"
-                    />
-                    <Select
-                        v-model="selectedStatus"
-                        :options="statusOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        class="w-full sm:w-36"
-                    />
-                    <Button
-                        v-if="hasActiveFilters"
-                        icon="pi pi-times"
-                        severity="secondary"
-                        outlined
-                        v-tooltip="'Clear filters'"
-                        @click="clearFilters"
-                    />
-                </div>
-            </ConsoleFormCard>
+            <ServiceFilters
+                v-if="services.length > 0"
+                v-model:search="searchQuery"
+                v-model:category="selectedCategory"
+                v-model:status="selectedStatus"
+                :categories="categories"
+                class="mb-6"
+                @clear="clearFilters"
+            />
 
             <!-- Empty State - No Services -->
             <ConsoleDataCard v-if="services.length === 0" :hoverable="false">
@@ -244,103 +190,14 @@ const getPlaceholderImage = (service: Service) => {
 
             <!-- Services Grid -->
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <ConsoleDataCard
+                <ServiceCard
                     v-for="service in filteredServices"
                     :key="service.uuid"
-                    class="flex flex-col"
-                >
-                    <!-- Cover Image -->
-                    <div class="relative -mx-4 -mt-4 mb-4 h-32 overflow-hidden rounded-t-xl">
-                        <img
-                            v-if="service.cover?.thumbnail_url"
-                            :src="service.cover.thumbnail_url"
-                            :alt="service.name"
-                            class="w-full h-full object-cover"
-                        />
-                        <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center"
-                            :style="{ background: getPlaceholderImage(service) }"
-                        >
-                            <i class="pi pi-image text-3xl text-white/60" />
-                        </div>
-                        <!-- Status Badge -->
-                        <div class="absolute top-3 right-3">
-                            <Tag
-                                :value="service.is_active ? 'Active' : 'Inactive'"
-                                :severity="service.is_active ? 'success' : 'warn'"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Content -->
-                    <div class="flex-1 flex flex-col">
-                        <div class="flex items-start justify-between mb-2">
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-semibold text-[#0D1F1B] m-0 mb-1 truncate">
-                                    {{ service.name }}
-                                </h3>
-                                <Tag
-                                    v-if="service.category"
-                                    :value="service.category.name"
-                                    severity="secondary"
-                                    class="!text-xs"
-                                />
-                            </div>
-                            <div class="text-right shrink-0 ml-3">
-                                <p class="font-bold text-[#106B4F] m-0 text-lg">
-                                    {{ service.price_display }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <p v-if="service.description" class="text-sm text-gray-500 m-0 mb-3 line-clamp-2">
-                            {{ service.description }}
-                        </p>
-
-                        <div class="flex items-center gap-4 text-sm text-gray-600 mt-auto">
-                            <div class="flex items-center gap-1.5">
-                                <i class="pi pi-clock text-xs text-gray-400" />
-                                <span>{{ service.duration_display }}</span>
-                            </div>
-                            <div v-if="service.total_bookings !== undefined" class="flex items-center gap-1.5">
-                                <i class="pi pi-calendar text-xs text-gray-400" />
-                                <span>{{ service.total_bookings }} bookings</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <template #footer>
-                        <div class="flex items-center gap-2">
-                            <AppLink :href="provider.services.edit.url(service.uuid)" class="flex-1">
-                                <Button
-                                    label="Edit"
-                                    icon="pi pi-pencil"
-                                    size="small"
-                                    severity="secondary"
-                                    outlined
-                                    class="w-full"
-                                />
-                            </AppLink>
-                            <Button
-                                :icon="service.is_active ? 'pi pi-pause' : 'pi pi-play'"
-                                size="small"
-                                :severity="service.is_active ? 'warn' : 'success'"
-                                outlined
-                                v-tooltip="service.is_active ? 'Deactivate' : 'Activate'"
-                                @click="toggleActive(service)"
-                            />
-                            <Button
-                                icon="pi pi-trash"
-                                size="small"
-                                severity="danger"
-                                outlined
-                                v-tooltip="'Delete'"
-                                @click="deleteService(service)"
-                            />
-                        </div>
-                    </template>
-                </ConsoleDataCard>
+                    :service="service"
+                    :edit-url="provider.services.edit.url(service.uuid)"
+                    @toggle-active="toggleActive"
+                    @delete="deleteService"
+                />
             </div>
         </div>
     </ConsoleLayout>

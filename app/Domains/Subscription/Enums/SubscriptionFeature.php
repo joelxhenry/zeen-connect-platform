@@ -91,7 +91,7 @@ enum SubscriptionFeature: string
             self::DIGITAL_STOREFRONT,
             self::EMAIL_NOTIFICATIONS,
             self::CLIENT_DATABASE,
-            self::BOOKING_LINK => SubscriptionTier::FREE,
+            self::BOOKING_LINK => SubscriptionTier::STARTER,
 
             // Premium features
             self::TEAM_MEMBERS,

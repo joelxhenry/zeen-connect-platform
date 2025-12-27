@@ -25,13 +25,19 @@ class SubscriptionController extends Controller
         $tier = $provider->getTier();
         $subscription = $provider->subscription;
 
+        $zeenFeeRate = $this->subscriptionService->getZeenFeeRate($provider);
+        $gatewayFeeRate = $this->subscriptionService->getGatewayFeeRate();
+
         return Inertia::render('Provider/Subscription/Index', [
             'currentTier' => [
                 'value' => $tier->value,
                 'label' => $tier->label(),
                 'color' => $tier->color(),
                 'deposit_percentage' => $this->subscriptionService->getEffectiveDepositPercentage($provider),
-                'platform_fee_rate' => $this->subscriptionService->getPlatformFeeRate($provider) * 100,
+                'zeen_fee_rate' => $zeenFeeRate,
+                'gateway_fee_rate' => $gatewayFeeRate,
+                'total_fee_rate' => $zeenFeeRate + $gatewayFeeRate,
+                'platform_fee_rate' => $zeenFeeRate + $gatewayFeeRate, // Legacy alias
                 'team_description' => $this->subscriptionService->getTeamMemberLimitDescription($tier),
             ],
             'features' => $this->formatFeaturesForTier($tier),
@@ -72,18 +78,26 @@ class SubscriptionController extends Controller
     protected function getAllTiersComparison(): array
     {
         $tiers = [];
+        $gatewayFeeRate = $this->subscriptionService->getGatewayFeeRate();
 
         foreach (SubscriptionTier::cases() as $tier) {
             $tierFeatures = $tier->features();
+            $zeenFeeRate = $tier->zeenFeeRate();
+            $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
+            $teamSlots = $tier->teamSlots();
 
             $tiers[] = [
                 'value' => $tier->value,
                 'label' => $tier->label(),
                 'color' => $tier->color(),
-                'monthly_price' => $this->subscriptionService->getTierMonthlyPrice($tier),
-                'monthly_price_display' => $this->formatPrice($this->subscriptionService->getTierMonthlyPrice($tier)),
+                'monthly_price' => $tier->monthlyPrice(),
+                'monthly_price_display' => $this->formatPrice($tier->monthlyPrice()),
                 'deposit_percentage' => $tier->depositPercentage(),
-                'platform_fee_rate' => $tier->platformFeeRate() * 100,
+                'zeen_fee_rate' => $zeenFeeRate,
+                'gateway_fee_rate' => $gatewayFeeRate,
+                'total_fee_rate' => $totalFeeRate,
+                'platform_fee_rate' => $totalFeeRate, // Legacy alias
+                'team_slots' => $teamSlots === PHP_INT_MAX ? 'unlimited' : $teamSlots,
                 'team_description' => $this->subscriptionService->getTeamMemberLimitDescription($tier),
                 'features' => array_map(function (SubscriptionFeature $feature) use ($tierFeatures) {
                     return [

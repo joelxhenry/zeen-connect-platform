@@ -111,18 +111,22 @@ class CreateBookingAction
             'end_time' => $endTime,
             'status' => $initialStatus,
             'service_price' => $fees['service_price'],
-            'platform_fee' => $fees['platform_fee_rate'],
-            'total_amount' => $fees['service_price'],
+            'platform_fee' => $fees['total_fee_rate'], // Legacy field (percentage)
+            'total_amount' => $fees['client_pays'], // What client pays (includes convenience fee if applicable)
             'client_notes' => $notes,
             // Guest fields
             'guest_email' => $guestEmail,
             'guest_name' => $guestName,
             'guest_phone' => $guestPhone,
-            // Fee tracking
+            // Fee tracking (legacy)
             'deposit_amount' => $fees['deposit_amount'],
             'deposit_paid' => false,
             'platform_fee_amount' => $fees['platform_fee'],
-            'processing_fee_amount' => $fees['processing_fee'],
+            // New separated fee structure
+            'zeen_fee' => $fees['zeen_fee'],
+            'gateway_fee' => $fees['gateway_fee'],
+            'convenience_fee' => $fees['convenience_fee'],
+            'fee_payer' => $fees['fee_payer'],
             // Set confirmed_at if auto-confirmed
             'confirmed_at' => $initialStatus === BookingStatus::CONFIRMED ? now() : null,
         ]);

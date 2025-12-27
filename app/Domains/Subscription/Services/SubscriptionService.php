@@ -8,6 +8,154 @@ use App\Domains\Subscription\Enums\SubscriptionTier;
 
 class SubscriptionService
 {
+    // =========================================================================
+    // Fee Rate Methods
+    // =========================================================================
+
+    /**
+     * Get the gateway fee rate (percentage).
+     * This is a single admin-configured rate for all tiers.
+     */
+    public function getGatewayFeeRate(): float
+    {
+        return (float) SystemSetting::get('gateway_fee_rate', 4.0);
+    }
+
+    /**
+     * Get the Zeen platform fee rate for a provider based on their tier (percentage).
+     */
+    public function getZeenFeeRate(Provider $provider): float
+    {
+        return $provider->getTier()->zeenFeeRate();
+    }
+
+    /**
+     * Get the total fee rate for a provider (Zeen + Gateway).
+     */
+    public function getTotalFeeRate(Provider $provider): float
+    {
+        return $this->getZeenFeeRate($provider) + $this->getGatewayFeeRate();
+    }
+
+    /**
+     * Get the platform fee rate for a provider based on their tier.
+     * @deprecated Use getZeenFeeRate() instead. Returns decimal for backwards compatibility.
+     */
+    public function getPlatformFeeRate(Provider $provider): float
+    {
+        return $this->getZeenFeeRate($provider) / 100;
+    }
+
+    // =========================================================================
+    // Fee Calculation Methods
+    // =========================================================================
+
+    /**
+     * Calculate all fees for a booking based on provider tier and service price.
+     * Returns separated Zeen fee and Gateway fee.
+     */
+    public function calculateFees(Provider $provider, float $servicePrice): array
+    {
+        $tier = $provider->getTier();
+        $feePayer = $provider->fee_payer ?? 'provider';
+
+        // Get fee rates as percentages
+        $zeenFeeRate = $this->getZeenFeeRate($provider);
+        $gatewayFeeRate = $this->getGatewayFeeRate();
+        $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
+
+        // Calculate individual fees
+        $zeenFee = round($servicePrice * ($zeenFeeRate / 100), 2);
+        $gatewayFee = round($servicePrice * ($gatewayFeeRate / 100), 2);
+        $totalFees = $zeenFee + $gatewayFee;
+
+        // Calculate amounts based on who pays the fees
+        if ($feePayer === 'client') {
+            // Client pays: add fees on top as "convenience fee"
+            $convenienceFee = $totalFees;
+            $clientPays = $servicePrice + $convenienceFee;
+            $providerReceives = $servicePrice;
+        } else {
+            // Provider pays: deduct fees from their payout
+            $convenienceFee = 0.0;
+            $clientPays = $servicePrice;
+            $providerReceives = $servicePrice - $totalFees;
+        }
+
+        // Deposit calculation (backwards compatibility)
+        $depositPercentage = $this->getEffectiveDepositPercentage($provider);
+        $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
+
+        // Legacy platform_fee for backwards compatibility (same as zeen_fee + gateway_fee)
+        $platformFee = $totalFees;
+
+        return [
+            'tier' => $tier->value,
+            'tier_label' => $tier->label(),
+            'service_price' => $servicePrice,
+
+            // New separated fee structure
+            'zeen_fee' => $zeenFee,
+            'zeen_fee_rate' => $zeenFeeRate,
+            'gateway_fee' => $gatewayFee,
+            'gateway_fee_rate' => $gatewayFeeRate,
+            'total_fees' => $totalFees,
+            'total_fee_rate' => $totalFeeRate,
+            'convenience_fee' => $convenienceFee,
+            'fee_payer' => $feePayer,
+            'client_pays' => $clientPays,
+            'provider_receives' => $providerReceives,
+
+            // Legacy fields for backwards compatibility
+            'platform_fee' => $platformFee,
+            'platform_fee_rate' => $totalFeeRate,
+            'deposit_amount' => $depositAmount,
+            'deposit_percentage' => $depositPercentage,
+            'provider_payout' => $providerReceives,
+            'requires_deposit' => $depositAmount > 0,
+            'has_platform_fee' => $totalFees > 0,
+        ];
+    }
+
+    /**
+     * Calculate the payment amount based on payment type.
+     */
+    public function calculatePaymentAmount(
+        Provider $provider,
+        float $servicePrice,
+        string $paymentType = 'full'
+    ): array {
+        $fees = $this->calculateFees($provider, $servicePrice);
+
+        $baseAmount = match ($paymentType) {
+            'deposit' => $fees['deposit_amount'],
+            'balance' => $servicePrice - $fees['deposit_amount'],
+            default => $servicePrice,
+        };
+
+        // For client-pays fees, calculate the fee portion for this payment
+        $convenienceFee = 0.0;
+        if ($fees['fee_payer'] === 'client' && $paymentType === 'full') {
+            $convenienceFee = $fees['convenience_fee'];
+        } elseif ($fees['fee_payer'] === 'client' && $paymentType === 'deposit') {
+            // Proportional convenience fee for deposit
+            $depositRatio = $fees['deposit_amount'] / $servicePrice;
+            $convenienceFee = round($fees['convenience_fee'] * $depositRatio, 2);
+        }
+
+        return [
+            'amount' => $baseAmount,
+            'convenience_fee' => $convenienceFee,
+            'total_to_charge' => $baseAmount + $convenienceFee,
+            'payment_type' => $paymentType,
+            ...$fees,
+        ];
+    }
+
+    // =========================================================================
+    // Deposit Methods
+    // =========================================================================
+
     /**
      * Get the effective deposit percentage for a provider based on their tier.
      */
@@ -35,96 +183,6 @@ class SubscriptionService
         }
 
         return max((float) $providerSetting, $minimum);
-    }
-
-    /**
-     * Get the platform fee rate for a provider based on their tier.
-     */
-    public function getPlatformFeeRate(Provider $provider): float
-    {
-        $tier = $provider->getTier();
-
-        return match ($tier) {
-            SubscriptionTier::STARTER => (float) SystemSetting::get('free_tier_platform_fee_rate', 10) / 100,
-            SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_platform_fee_rate', 2) / 100,
-            SubscriptionTier::ENTERPRISE => 0.0,
-        };
-    }
-
-    /**
-     * Calculate all fees for a booking based on provider tier and service price.
-     */
-    public function calculateFees(Provider $provider, float $servicePrice): array
-    {
-        $tier = $provider->getTier();
-        $depositPercentage = $this->getEffectiveDepositPercentage($provider);
-        $platformFeeRate = $this->getPlatformFeeRate($provider);
-
-        $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
-        $platformFee = round($servicePrice * $platformFeeRate, 2);
-
-        // For enterprise, calculate processing fee from settings
-        $processingFee = 0.0;
-        if ($tier === SubscriptionTier::ENTERPRISE) {
-            $processingFeeRate = (float) SystemSetting::get('enterprise_processing_fee_rate', 2.9) / 100;
-            $processingFeeFlat = (float) SystemSetting::get('enterprise_processing_fee_flat', 50);
-            $processingFee = round($servicePrice * $processingFeeRate + $processingFeeFlat, 2);
-        }
-
-        $providerPayout = $servicePrice - $platformFee;
-
-        // If enterprise and provider pays processing fee, deduct it from payout
-        if ($tier === SubscriptionTier::ENTERPRISE && $provider->processing_fee_payer === 'provider') {
-            $providerPayout -= $processingFee;
-        }
-
-        return [
-            'tier' => $tier->value,
-            'tier_label' => $tier->label(),
-            'service_price' => $servicePrice,
-            'deposit_amount' => $depositAmount,
-            'deposit_percentage' => $depositPercentage,
-            'platform_fee' => $platformFee,
-            'platform_fee_rate' => $platformFeeRate * 100,
-            'processing_fee' => $processingFee,
-            'processing_fee_payer' => $tier === SubscriptionTier::ENTERPRISE
-                ? $provider->processing_fee_payer
-                : null,
-            'provider_payout' => $providerPayout,
-            'requires_deposit' => $depositAmount > 0,
-            'has_platform_fee' => $platformFee > 0,
-        ];
-    }
-
-    /**
-     * Calculate the payment amount based on payment type.
-     */
-    public function calculatePaymentAmount(
-        Provider $provider,
-        float $servicePrice,
-        string $paymentType = 'full'
-    ): array {
-        $fees = $this->calculateFees($provider, $servicePrice);
-
-        $amount = match ($paymentType) {
-            'deposit' => $fees['deposit_amount'],
-            'balance' => $servicePrice - $fees['deposit_amount'],
-            default => $servicePrice,
-        };
-
-        // For enterprise tier with client-paid processing fee, add to payment amount
-        $clientProcessingFee = 0.0;
-        if ($fees['processing_fee_payer'] === 'client') {
-            $clientProcessingFee = $fees['processing_fee'];
-        }
-
-        return [
-            'amount' => $amount,
-            'client_processing_fee' => $clientProcessingFee,
-            'total_to_charge' => $amount + $clientProcessingFee,
-            'payment_type' => $paymentType,
-            ...$fees,
-        ];
     }
 
     /**
@@ -182,11 +240,7 @@ class SubscriptionService
      */
     public function getTierMonthlyPrice(SubscriptionTier $tier): float
     {
-        return match ($tier) {
-            SubscriptionTier::STARTER => 0.0,
-            SubscriptionTier::PREMIUM => (float) SystemSetting::get('premium_tier_monthly_price', 3500),
-            SubscriptionTier::ENTERPRISE => (float) SystemSetting::get('enterprise_tier_monthly_price', 20000),
-        };
+        return $tier->monthlyPrice();
     }
 
     // =========================================================================
@@ -308,22 +362,60 @@ class SubscriptionService
     public function getTierRestrictions(Provider $provider): array
     {
         $tier = $provider->getTier();
-        $platformFeeRate = $this->getPlatformFeeRate($provider) * 100;
+        $zeenFeeRate = $this->getZeenFeeRate($provider);
+        $gatewayFeeRate = $this->getGatewayFeeRate();
+        $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
         $minDepositPercentage = $this->getMinimumDepositPercentage($provider);
         $minServicePrice = $this->getMinimumServicePrice($provider);
+        $teamSlots = $tier->teamSlots();
 
         return [
             'tier' => $tier->value,
             'tier_label' => $tier->label(),
-            'platform_fee_rate' => $platformFeeRate,
+
+            // Fee rates
+            'zeen_fee_rate' => $zeenFeeRate,
+            'gateway_fee_rate' => $gatewayFeeRate,
+            'total_fee_rate' => $totalFeeRate,
+            'platform_fee_rate' => $totalFeeRate, // Legacy alias
+
+            // Team slots
+            'team_slots' => $teamSlots === PHP_INT_MAX ? 'unlimited' : $teamSlots,
+
+            // Monthly price
+            'monthly_price' => $tier->monthlyPrice(),
+
+            // Service restrictions
             'minimum_service_price' => $minServicePrice,
             'minimum_service_price_display' => $this->formatCurrency($minServicePrice),
             'minimum_deposit_percentage' => $minDepositPercentage,
+
+            // Capabilities
             'can_disable_deposit' => $tier === SubscriptionTier::ENTERPRISE,
             'can_customize_deposit' => $tier !== SubscriptionTier::STARTER,
-            'deposit_help_text' => $this->getDepositHelpText($tier, $minDepositPercentage, $platformFeeRate),
+            'can_pass_fees_to_client' => true, // All tiers can now do this
+
+            // Help text
+            'deposit_help_text' => $this->getDepositHelpText($tier, $minDepositPercentage, $totalFeeRate),
             'price_help_text' => $this->getPriceHelpText($tier, $minServicePrice),
+            'fee_help_text' => $this->getFeeHelpText($tier, $zeenFeeRate, $gatewayFeeRate),
         ];
+    }
+
+    /**
+     * Get help text explaining fee structure for a tier.
+     */
+    private function getFeeHelpText(SubscriptionTier $tier, float $zeenFee, float $gatewayFee): string
+    {
+        $totalFee = $zeenFee + $gatewayFee;
+
+        return sprintf(
+            '%s tier: %.1f%% Zeen fee + %.1f%% gateway fee = %.1f%% total per transaction.',
+            $tier->label(),
+            $zeenFee,
+            $gatewayFee,
+            $totalFee
+        );
     }
 
     /**

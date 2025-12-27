@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Button from 'primevue/button';
-import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
 
 interface Service {
     id: number;
@@ -37,9 +36,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const getBookingUrl = (serviceId: number) => {
-    return ProviderSiteBookingController.create({ provider: props.provider.slug, service: serviceId }).url;
-};
+// Use relative path since we're already on the provider's subdomain
+const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 </script>
 
 <template>

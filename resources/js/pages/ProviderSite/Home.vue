@@ -2,8 +2,6 @@
 import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
-import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
-import ProviderSiteController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteController';
 
 // Provider components
 import ProviderHero from '@/components/provider/ProviderHero.vue';
@@ -117,7 +115,10 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const bookingUrl = ProviderSiteBookingController.create({ provider: props.provider.slug }).url;
+// Use relative paths since we're already on the provider's subdomain
+const bookingUrl = '/book';
+const servicesUrl = '/services';
+const reviewsUrl = '/reviews';
 
 const stats = {
     bookings: props.provider.total_bookings,
@@ -126,9 +127,7 @@ const stats = {
     servicesCount: props.provider.services_count,
 };
 
-const getServiceBookingUrl = (serviceId: number) => {
-    return ProviderSiteBookingController.create({ provider: props.provider.slug }).url;
-};
+const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 </script>
 
 <template>
@@ -165,8 +164,7 @@ const getServiceBookingUrl = (serviceId: number) => {
                 <div class="section-container">
                     <div class="section-header">
                         <h2>Services</h2>
-                        <AppLink :href="ProviderSiteController.services({ provider: provider.slug }).url"
-                            class="view-all">
+                        <AppLink :href="servicesUrl" class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
                         </AppLink>
                     </div>
@@ -200,8 +198,7 @@ const getServiceBookingUrl = (serviceId: number) => {
                                     reviews)</span>
                             </div>
                         </div>
-                        <AppLink :href="ProviderSiteController.reviews({ provider: provider.slug }).url"
-                            class="view-all">
+                        <AppLink :href="reviewsUrl" class="view-all">
                             View All <i class="pi pi-arrow-right"></i>
                         </AppLink>
                     </div>

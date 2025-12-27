@@ -35,10 +35,31 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Gateways
+    |--------------------------------------------------------------------------
+    */
+
     'powertranz' => [
         'id' => env('POWERTRANZ_ID'),
         'password' => env('POWERTRANZ_PASSWORD'),
         'test_mode' => env('POWERTRANZ_TEST_MODE', true),
+    ],
+
+    'wipay' => [
+        'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID'),
+        'api_key' => env('WIPAY_API_KEY'),
+        'developer_id' => env('WIPAY_DEVELOPER_ID'),
+        'secret_key' => env('WIPAY_SECRET_KEY'),
+        'test_mode' => env('WIPAY_TEST_MODE', true),
+    ],
+
+    'fygaro' => [
+        'merchant_id' => env('FYGARO_MERCHANT_ID'),
+        'api_key' => env('FYGARO_API_KEY'),
+        'secret_key' => env('FYGARO_SECRET_KEY'),
+        'test_mode' => env('FYGARO_TEST_MODE', true),
     ],
 
 ];

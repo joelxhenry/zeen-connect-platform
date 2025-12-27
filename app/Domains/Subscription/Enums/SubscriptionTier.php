@@ -4,14 +4,14 @@ namespace App\Domains\Subscription\Enums;
 
 enum SubscriptionTier: string
 {
-    case FREE = 'free';
+    case STARTER = 'starter';
     case PREMIUM = 'premium';
     case ENTERPRISE = 'enterprise';
 
     public function label(): string
     {
         return match ($this) {
-            self::FREE => 'Free',
+            self::STARTER => 'Starter',
             self::PREMIUM => 'Premium',
             self::ENTERPRISE => 'Enterprise',
         };
@@ -20,7 +20,7 @@ enum SubscriptionTier: string
     public function color(): string
     {
         return match ($this) {
-            self::FREE => 'secondary',
+            self::STARTER => 'secondary',
             self::PREMIUM => 'info',
             self::ENTERPRISE => 'success',
         };
@@ -29,7 +29,7 @@ enum SubscriptionTier: string
     public function depositPercentage(): float
     {
         return match ($this) {
-            self::FREE => 20.0,
+            self::STARTER => 20.0,
             self::PREMIUM => 15.0, // Minimum, provider can set higher
             self::ENTERPRISE => 0.0,
         };
@@ -38,9 +38,9 @@ enum SubscriptionTier: string
     public function platformFeeRate(): float
     {
         return match ($this) {
-            self::FREE => 0.10,      // 10%
-            self::PREMIUM => 0.02,   // 2%
-            self::ENTERPRISE => 0.0, // 0%
+            self::STARTER => 0.05,    // 5%
+            self::PREMIUM => 0.03,    // 3%
+            self::ENTERPRISE => 0.0,  // 0%
         };
     }
 
@@ -59,7 +59,7 @@ enum SubscriptionTier: string
      */
     public function supportsTeam(): bool
     {
-        return $this !== self::FREE;
+        return $this !== self::STARTER;
     }
 
     /**
@@ -69,7 +69,7 @@ enum SubscriptionTier: string
     public function teamMemberLimit(): ?int
     {
         return match ($this) {
-            self::FREE => 0,
+            self::STARTER => 0,
             self::PREMIUM => 3,       // Soft limit with extra charges
             self::ENTERPRISE => null, // Unlimited
         };
@@ -82,7 +82,7 @@ enum SubscriptionTier: string
     public function freeTeamMemberSlots(): int
     {
         return match ($this) {
-            self::FREE => 0,
+            self::STARTER => 0,
             self::PREMIUM => 3,
             self::ENTERPRISE => PHP_INT_MAX,
         };
@@ -104,14 +104,14 @@ enum SubscriptionTier: string
     public function features(): array
     {
         return match ($this) {
-            self::FREE => [
+            self::STARTER => [
                 SubscriptionFeature::DIGITAL_STOREFRONT,
                 SubscriptionFeature::EMAIL_NOTIFICATIONS,
                 SubscriptionFeature::CLIENT_DATABASE,
                 SubscriptionFeature::BOOKING_LINK,
             ],
             self::PREMIUM => [
-                ...self::FREE->features(),
+                ...self::STARTER->features(),
                 SubscriptionFeature::TEAM_MEMBERS,
                 SubscriptionFeature::WHATSAPP_NOTIFICATIONS,
                 SubscriptionFeature::PRIORITY_LISTING,

@@ -3,6 +3,7 @@
 namespace App\Domains\Payment\Actions;
 
 use App\Domains\Booking\Models\Booking;
+use App\Domains\Payment\Enums\GatewayType;
 use App\Domains\Payment\Models\Payment;
 
 class CreatePaymentAction
@@ -17,7 +18,9 @@ class CreatePaymentAction
         float $platformFee = 0.0,
         float $providerAmount = 0.0,
         float $processingFee = 0.0,
-        ?string $processingFeePayer = null
+        ?string $processingFeePayer = null,
+        ?string $gatewayType = null,
+        ?string $gatewayProvider = null
     ): Payment {
         return Payment::create([
             'booking_id' => $booking->id,
@@ -30,6 +33,8 @@ class CreatePaymentAction
             'payment_type' => $paymentType,
             'processing_fee' => $processingFee,
             'processing_fee_payer' => $processingFeePayer,
+            'gateway_type' => $gatewayType ?? GatewayType::ESCROW->value,
+            'gateway_provider' => $gatewayProvider,
         ]);
     }
 }

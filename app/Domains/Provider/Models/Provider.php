@@ -4,6 +4,10 @@ namespace App\Domains\Provider\Models;
 
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
+use App\Domains\Payment\Models\LedgerEntry;
+use App\Domains\Payment\Models\ProviderGatewayConfig;
+use App\Domains\Payment\Models\ScheduledPayout;
+use App\Domains\Payment\Services\LedgerService;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
@@ -201,15 +205,23 @@ class Provider extends Model
      */
     public function getTier(): SubscriptionTier
     {
-        return $this->subscription?->tier ?? SubscriptionTier::FREE;
+        return $this->subscription?->tier ?? SubscriptionTier::STARTER;
     }
 
     /**
-     * Check if provider is on free tier.
+     * Check if provider is on starter tier.
+     */
+    public function isStarterTier(): bool
+    {
+        return $this->getTier() === SubscriptionTier::STARTER;
+    }
+
+    /**
+     * @deprecated Use isStarterTier() instead
      */
     public function isFreeTier(): bool
     {
-        return $this->getTier() === SubscriptionTier::FREE;
+        return $this->isStarterTier();
     }
 
     /**
@@ -522,5 +534,75 @@ class Provider extends Model
     public function userHasPermission(User $user, string $permission): bool
     {
         return in_array($permission, $this->getPermissionsFor($user), true);
+    }
+
+    // =========================================================================
+    // Gateway & Payment Methods
+    // =========================================================================
+
+    /**
+     * Get all gateway configurations for this provider.
+     */
+    public function gatewayConfigs(): HasMany
+    {
+        return $this->hasMany(ProviderGatewayConfig::class);
+    }
+
+    /**
+     * Get the active and verified gateway configuration.
+     */
+    public function activeGatewayConfig(): HasOne
+    {
+        return $this->hasOne(ProviderGatewayConfig::class)
+            ->where('is_active', true)
+            ->whereNotNull('verified_at');
+    }
+
+    /**
+     * Get all ledger entries for this provider.
+     */
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
+
+    /**
+     * Get all scheduled payouts for this provider.
+     */
+    public function scheduledPayouts(): HasMany
+    {
+        return $this->hasMany(ScheduledPayout::class);
+    }
+
+    /**
+     * Get the provider's virtual balance (total credits - debits).
+     */
+    public function getVirtualBalance(): float
+    {
+        return app(LedgerService::class)->getProviderBalance($this->id);
+    }
+
+    /**
+     * Get the provider's available balance (excludes held funds).
+     */
+    public function getAvailableBalance(): float
+    {
+        return app(LedgerService::class)->getAvailableBalance($this->id);
+    }
+
+    /**
+     * Check if the provider has a linked and verified payment gateway.
+     */
+    public function hasLinkedGateway(): bool
+    {
+        return $this->activeGatewayConfig()->exists();
+    }
+
+    /**
+     * Get the provider's preferred gateway type.
+     */
+    public function getPreferredGatewayType(): ?string
+    {
+        return $this->activeGatewayConfig?->gateway?->type;
     }
 }

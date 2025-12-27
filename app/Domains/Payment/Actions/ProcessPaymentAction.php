@@ -4,8 +4,12 @@ namespace App\Domains\Payment\Actions;
 
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Booking\Models\Booking;
+use App\Domains\Payment\Contracts\EscrowGatewayInterface;
+use App\Domains\Payment\DTOs\PaymentResult;
+use App\Domains\Payment\Enums\GatewayType;
 use App\Domains\Payment\Models\Payment;
-use App\Domains\Payment\Services\PowerTranzGateway;
+use App\Domains\Payment\Services\LedgerService;
+use App\Domains\Payment\Services\PaymentManager;
 use App\Mail\BookingConfirmed;
 use App\Mail\PaymentReceived;
 use Illuminate\Support\Facades\DB;
@@ -14,37 +18,64 @@ use Illuminate\Support\Facades\Mail;
 class ProcessPaymentAction
 {
     public function __construct(
-        private PowerTranzGateway $gateway
+        private PaymentManager $paymentManager,
+        private LedgerService $ledgerService
     ) {}
 
     /**
-     * Initialize a payment for 3DS processing.
+     * Initialize a payment for processing.
      */
     public function initialize(Payment $payment, string $returnUrl, string $cancelUrl): array
     {
-        return $this->gateway->initializePayment($payment, $returnUrl, $cancelUrl);
+        $result = $this->paymentManager->initializePayment(
+            $payment->booking,
+            $payment,
+            $returnUrl,
+            $cancelUrl
+        );
+
+        if ($result->success) {
+            return [
+                'success' => true,
+                'redirect_url' => $result->redirectUrl,
+                'spi_token' => $result->spiToken,
+                'order_id' => $result->orderId,
+            ];
+        }
+
+        return [
+            'success' => false,
+            'error' => $result->error,
+        ];
     }
 
     /**
-     * Complete a payment after 3DS verification.
+     * Complete a payment after gateway callback.
      */
     public function complete(Payment $payment, string $spiToken): array
     {
-        $result = $this->gateway->verifyPayment($spiToken);
+        $result = $this->paymentManager->completePayment($payment, [
+            'spi_token' => $spiToken,
+        ]);
 
-        if ($result['success']) {
+        if ($result->success) {
             return DB::transaction(function () use ($payment, $result) {
-                // Mark payment as completed
-                $payment->markAsCompleted(
-                    $result['transaction_id'],
-                    $result['raw_response'] ?? null
-                );
+                // Update card details if available
+                if ($result->cardDetails) {
+                    $payment->update([
+                        'card_last_four' => $result->cardDetails['last_four'] ?? null,
+                        'card_brand' => $result->cardDetails['brand'] ?? null,
+                    ]);
+                }
 
-                // Update card details
-                $payment->update([
-                    'card_last_four' => $result['card_last_four'],
-                    'card_brand' => $result['card_brand'],
-                ]);
+                // For escrow payments, record to ledger
+                if ($payment->gateway_type === GatewayType::ESCROW->value) {
+                    $gateway = $this->paymentManager->resolveGateway($payment->booking->provider);
+                    if ($gateway instanceof EscrowGatewayInterface) {
+                        $ledgerEntry = $gateway->recordToLedger($payment);
+                        $payment->update(['ledger_entry_id' => $ledgerEntry->id]);
+                    }
+                }
 
                 // Load booking with relationships
                 $payment->load(['booking.service', 'booking.provider.user', 'client']);
@@ -81,15 +112,9 @@ class ProcessPaymentAction
             });
         }
 
-        $payment->markAsFailed(
-            $result['error'] ?? 'Payment verification failed',
-            $result['response_code'] ?? null,
-            $result['raw_response'] ?? null
-        );
-
         return [
             'success' => false,
-            'error' => $result['error'] ?? 'Payment verification failed',
+            'error' => $result->error ?? 'Payment verification failed',
         ];
     }
 
@@ -133,15 +158,22 @@ class ProcessPaymentAction
             ];
         }
 
-        $result = $this->gateway->refund($payment, $amount);
+        $gateway = $this->paymentManager->resolveGateway($payment->booking->provider);
+        $result = $gateway->refund($payment, $amount);
 
-        if ($result['success']) {
+        if ($result->success) {
             // Update payment refund status
             $payment->update([
                 'is_refunded' => true,
                 'refund_reason' => $reason ?? 'Refunded',
-                'refund_transaction_id' => $result['refund_transaction_id'] ?? null,
+                'refund_transaction_id' => $result->refundId ?? null,
             ]);
+
+            // For escrow payments, debit the ledger
+            if ($payment->gateway_type === GatewayType::ESCROW->value && $payment->ledger_entry_id) {
+                $refundAmount = $amount ?? $payment->provider_amount;
+                $this->ledgerService->debitForRefund($payment, $refundAmount);
+            }
 
             // Cancel the booking if full refund
             if ($amount === null || $amount >= $payment->amount) {
@@ -151,8 +183,16 @@ class ProcessPaymentAction
                     'cancellation_reason' => $reason ?? 'Payment refunded',
                 ]);
             }
+
+            return [
+                'success' => true,
+                'refund_id' => $result->refundId,
+            ];
         }
 
-        return $result;
+        return [
+            'success' => false,
+            'error' => $result->error ?? 'Refund failed',
+        ];
     }
 }

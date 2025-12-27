@@ -6,6 +6,7 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Actions\CreatePaymentAction;
 use App\Domains\Payment\Actions\ProcessPaymentAction;
 use App\Domains\Payment\Models\Payment;
+use App\Domains\Payment\Services\PaymentManager;
 use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -16,7 +17,8 @@ use Inertia\Response;
 class PaymentController extends Controller
 {
     public function __construct(
-        protected SubscriptionService $subscriptionService
+        protected SubscriptionService $subscriptionService,
+        protected PaymentManager $paymentManager
     ) {}
 
     /**
@@ -54,6 +56,9 @@ class PaymentController extends Controller
             $paymentType
         );
 
+        // Determine gateway type for provider
+        $gatewayType = $this->paymentManager->determineGatewayType($booking->provider);
+
         return Inertia::render('Payment/Checkout', [
             'booking' => [
                 'uuid' => $booking->uuid,
@@ -86,6 +91,7 @@ class PaymentController extends Controller
                 'processing_fee_payer' => $paymentInfo['processing_fee_payer'],
                 'tier' => $paymentInfo['tier'],
                 'tier_label' => $paymentInfo['tier_label'],
+                'gateway_type' => $gatewayType->value,
             ],
             'isAuthenticated' => (bool) $request->user(),
         ]);
@@ -146,7 +152,11 @@ class PaymentController extends Controller
             $paymentType
         );
 
-        // Create payment record with tier-based amounts
+        // Determine gateway type and provider
+        $gatewayType = $this->paymentManager->determineGatewayType($booking->provider);
+        $gateway = $this->paymentManager->resolveGateway($booking->provider);
+
+        // Create payment record with tier-based amounts and gateway info
         $payment = $createPayment->execute(
             booking: $booking,
             amount: $paymentInfo['total_to_charge'],
@@ -154,7 +164,9 @@ class PaymentController extends Controller
             platformFee: $paymentInfo['platform_fee'],
             providerAmount: $paymentInfo['provider_payout'],
             processingFee: $paymentInfo['processing_fee'],
-            processingFeePayer: $paymentInfo['processing_fee_payer']
+            processingFeePayer: $paymentInfo['processing_fee_payer'],
+            gatewayType: $gatewayType->value,
+            gatewayProvider: $gateway->getProvider()
         );
 
         // Initialize payment with gateway

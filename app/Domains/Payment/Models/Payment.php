@@ -26,27 +26,41 @@ class Payment extends Model
         'platform_fee',
         'provider_amount',
         'currency',
+        'payment_type',
+        'processing_fee',
+        'processing_fee_payer',
         'gateway',
+        'gateway_type',
+        'gateway_provider',
         'gateway_transaction_id',
         'gateway_order_id',
         'gateway_response_code',
         'gateway_response',
+        'split_transaction_id',
+        'split_details',
+        'ledger_entry_id',
         'status',
         'failure_reason',
         'card_last_four',
         'card_brand',
         'paid_at',
         'refunded_at',
+        'is_refunded',
+        'refund_reason',
+        'refund_transaction_id',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'platform_fee' => 'decimal:2',
         'provider_amount' => 'decimal:2',
+        'processing_fee' => 'decimal:2',
         'status' => PaymentStatus::class,
         'gateway_response' => 'array',
+        'split_details' => 'array',
         'paid_at' => 'datetime',
         'refunded_at' => 'datetime',
+        'is_refunded' => 'boolean',
     ];
 
     protected static function boot(): void
@@ -84,6 +98,11 @@ class Payment extends Model
     public function payouts(): BelongsToMany
     {
         return $this->belongsToMany(Payout::class);
+    }
+
+    public function ledgerEntry(): BelongsTo
+    {
+        return $this->belongsTo(LedgerEntry::class);
     }
 
     /*

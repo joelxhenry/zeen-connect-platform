@@ -32,6 +32,20 @@ Route::get('/{paymentUuid}/cancel', [PaymentController::class, 'cancel'])->name(
 |
 */
 
+// Generic gateway webhook handler
+Route::post('/webhooks/{gateway}', [WebhookController::class, 'handle'])
+    ->name('webhooks.gateway')
+    ->withoutMiddleware(['web']);
+
+// Gateway-specific webhook routes (aliases for clarity)
 Route::post('/webhooks/powertranz', [WebhookController::class, 'handlePowerTranz'])
     ->name('webhooks.powertranz')
+    ->withoutMiddleware(['web']);
+
+Route::post('/webhooks/wipay', [WebhookController::class, 'handleWiPay'])
+    ->name('webhooks.wipay')
+    ->withoutMiddleware(['web']);
+
+Route::post('/webhooks/fygaro', [WebhookController::class, 'handleFygaro'])
+    ->name('webhooks.fygaro')
     ->withoutMiddleware(['web']);

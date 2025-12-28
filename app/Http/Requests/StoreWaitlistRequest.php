@@ -14,17 +14,20 @@ class StoreWaitlistRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:waitlist_subscribers,email'],
-            'name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'],
         ];
     }
 
     public function messages(): array
     {
         return [
+            'name.required' => 'Please enter your name.',
             'email.required' => 'Please enter your email address.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email is already on the waitlist!',
+            'phone.required' => 'Please enter your phone number.',
         ];
     }
 }

@@ -182,4 +182,41 @@ enum SubscriptionTier: string
             'icon' => $feature->icon(),
         ], SubscriptionFeature::all());
     }
+
+    // =========================================================================
+    // Founding Member Methods
+    // =========================================================================
+
+    /**
+     * Get the founding member monthly price for this tier (JMD).
+     * This is the locked-in price for founding members.
+     */
+    public function foundingMonthlyPrice(): float
+    {
+        return match ($this) {
+            self::STARTER => 0,
+            self::PREMIUM => 3400,
+            self::ENTERPRISE => 12000,
+        };
+    }
+
+    /**
+     * Get the number of months Zeen fees are waived for founding members.
+     */
+    public function foundingFeeWaiverMonths(): int
+    {
+        return match ($this) {
+            self::STARTER => 0,
+            self::PREMIUM => 3,
+            self::ENTERPRISE => 6,
+        };
+    }
+
+    /**
+     * Check if this tier is eligible for founding member status.
+     */
+    public function isFoundingEligible(): bool
+    {
+        return $this !== self::STARTER;
+    }
 }

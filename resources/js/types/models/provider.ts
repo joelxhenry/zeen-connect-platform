@@ -5,6 +5,7 @@ export type ProviderStatus = 'pending' | 'active' | 'suspended' | 'inactive';
 export type DepositType = 'none' | 'fixed' | 'percentage';
 export type CancellationPolicy = 'flexible' | 'moderate' | 'strict';
 export type FeePayer = 'client' | 'provider' | 'split';
+export type FoundingTier = 'premium' | 'enterprise';
 
 // Simple provider for list views
 export interface ProviderSimple {
@@ -15,6 +16,8 @@ export interface ProviderSimple {
     tagline: string | null;
     status: ProviderStatus;
     is_featured: boolean;
+    is_founding_member: boolean;
+    founding_tier: FoundingTier | null;
     rating_avg: number;
     rating_count: number;
     rating_display: string;

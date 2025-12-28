@@ -99,6 +99,8 @@ class ProviderResource extends JsonResource
             'social_links' => $this->social_links,
             'status' => $this->status,
             'is_featured' => (bool) $this->is_featured,
+            'is_founding_member' => $this->isFoundingMember(),
+            'founding_tier' => $this->getFoundingSubscriptionTier()?->value,
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
             'rating_display' => $this->rating_display,
@@ -247,6 +249,9 @@ class ProviderResource extends JsonResource
             'advance_booking_days' => $this->advance_booking_days,
             'min_booking_notice_hours' => $this->min_booking_notice_hours,
             'fee_payer' => $this->fee_payer,
+            'founding_member_at' => $this->founding_member_at?->format('M d, Y'),
+            'founding_fee_waiver_ends_at' => $this->getFoundingFeeWaiverEndsAt()?->format('M d, Y'),
+            'has_founding_fee_waiver' => $this->hasFoundingFeeWaiver(),
         ];
     }
 

@@ -23,9 +23,19 @@ class SubscriptionService
 
     /**
      * Get the Zeen platform fee rate for a provider based on their tier (percentage).
+     * Founding members with an active fee waiver get 0% Zeen fee.
+     *
+     * Note: Fee waiver persists across tier upgrades. A Growth Founder who
+     * upgrades to Enterprise still benefits from their original waiver period.
      */
     public function getZeenFeeRate(Provider $provider): float
     {
+        // Founding members with active fee waiver get 0% Zeen fee
+        // This applies regardless of their current subscription tier
+        if ($provider->hasFoundingFeeWaiver()) {
+            return 0.0;
+        }
+
         return $provider->getTier()->zeenFeeRate();
     }
 
@@ -253,6 +263,31 @@ class SubscriptionService
         return $tier->monthlyPrice();
     }
 
+    /**
+     * Get the effective monthly price for a provider.
+     * Uses founding member locked price if applicable.
+     *
+     * Note: When a founding member upgrades their tier, their locked price
+     * only applies to the tier they originally joined at. If they upgrade
+     * to a higher tier, they pay the regular price for that tier.
+     */
+    public function getEffectiveMonthlyPrice(Provider $provider): float
+    {
+        // Founding members with locked price pay their locked rate
+        // This only applies if they're still on the tier they joined as
+        $foundingTier = $provider->getFoundingSubscriptionTier();
+        if ($foundingTier !== null) {
+            $currentTier = $provider->getTier();
+
+            // Only apply locked price if still on the original founding tier
+            if ($currentTier === $foundingTier) {
+                return $provider->getFoundingLockedPrice();
+            }
+        }
+
+        return $provider->getTier()->monthlyPrice();
+    }
+
     // =========================================================================
     // Team Member Fee Methods
     // =========================================================================
@@ -379,6 +414,9 @@ class SubscriptionService
         $minServicePrice = $this->getMinimumServicePrice($provider);
         $teamSlots = $tier->teamSlots();
 
+        // Determine monthly price (use locked price for founding members)
+        $monthlyPrice = $this->getEffectiveMonthlyPrice($provider);
+
         return [
             'tier' => $tier->value,
             'tier_label' => $tier->label(),
@@ -393,7 +431,7 @@ class SubscriptionService
             'team_slots' => $teamSlots === PHP_INT_MAX ? 'unlimited' : $teamSlots,
 
             // Monthly price
-            'monthly_price' => $tier->monthlyPrice(),
+            'monthly_price' => $monthlyPrice,
 
             // Service restrictions
             'minimum_service_price' => $minServicePrice,
@@ -405,19 +443,37 @@ class SubscriptionService
             'can_customize_deposit' => $tier !== SubscriptionTier::STARTER,
             'can_pass_fees_to_client' => true, // All tiers can now do this
 
+            // Founding member info
+            'is_founding_member' => $provider->isFoundingMember(),
+            'has_founding_fee_waiver' => $provider->hasFoundingFeeWaiver(),
+            'founding_tier' => $provider->getFoundingSubscriptionTier()?->value,
+            'founding_fee_waiver_ends_at' => $provider->getFoundingFeeWaiverEndsAt()?->toDateString(),
+
             // Help text
             'deposit_help_text' => $this->getDepositHelpText($tier, $minDepositPercentage, $totalFeeRate),
             'price_help_text' => $this->getPriceHelpText($tier, $minServicePrice),
-            'fee_help_text' => $this->getFeeHelpText($tier, $zeenFeeRate, $gatewayFeeRate),
+            'fee_help_text' => $this->getFeeHelpText($provider, $tier, $zeenFeeRate, $gatewayFeeRate),
         ];
     }
 
     /**
      * Get help text explaining fee structure for a tier.
      */
-    private function getFeeHelpText(SubscriptionTier $tier, float $zeenFee, float $gatewayFee): string
+    private function getFeeHelpText(Provider $provider, SubscriptionTier $tier, float $zeenFee, float $gatewayFee): string
     {
         $totalFee = $zeenFee + $gatewayFee;
+
+        // Founding members with active waiver
+        if ($provider->hasFoundingFeeWaiver()) {
+            $waiverEnds = $provider->getFoundingFeeWaiverEndsAt()->format('M j, Y');
+
+            return sprintf(
+                'Founding member: 0%% Zeen fee (waived until %s) + %.1f%% gateway fee = %.1f%% total per transaction.',
+                $waiverEnds,
+                $gatewayFee,
+                $totalFee
+            );
+        }
 
         return sprintf(
             '%s tier: %.1f%% Zeen fee + %.1f%% gateway fee = %.1f%% total per transaction.',

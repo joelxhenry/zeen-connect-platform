@@ -9,6 +9,7 @@ class WaitlistSubscriber extends Model
     protected $fillable = [
         'email',
         'name',
+        'phone',
         'source',
         'is_founding_member',
         'subscribed_at',

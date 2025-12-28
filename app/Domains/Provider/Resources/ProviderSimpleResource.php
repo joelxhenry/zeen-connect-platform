@@ -26,6 +26,8 @@ class ProviderSimpleResource extends JsonResource
             'tagline' => $this->tagline,
             'status' => $this->status,
             'is_featured' => (bool) $this->is_featured,
+            'is_founding_member' => $this->isFoundingMember(),
+            'founding_tier' => $this->getFoundingSubscriptionTier()?->value,
             'rating_avg' => (float) $this->rating_avg,
             'rating_count' => (int) $this->rating_count,
             'rating_display' => $this->rating_display,

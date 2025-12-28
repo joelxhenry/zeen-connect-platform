@@ -5,52 +5,58 @@ import register from '@/routes/register';
 
 const plans = [
     {
-        name: 'Free',
+        name: 'Starter',
         price: '0',
         period: '/mo',
-        description: 'Perfect for getting started and testing the platform',
-        platformFee: '8%',
+        description: 'Perfect for solo providers getting started',
+        zeenFee: '3%',
+        transactionFee: '+ Transaction Fee',
+        teamSlots: '1 user',
         features: [
             'Online booking page',
             'Basic client management',
             'Email notifications',
             'Calendar sync',
-            'Compulsory deposit collection',
-            '$500 JMD minimum deposit',
+            'Deposit collection',
+            'Basic analytics',
         ],
-        cta: 'Get Started',
+        cta: 'Get Started Free',
         ctaLink: register.provider.url(),
         highlighted: false,
     },
     {
-        name: 'Premium',
-        price: '3,500',
+        name: 'Growth',
+        price: '4,000',
         period: '/mo',
-        description: 'For growing businesses that need more features',
-        platformFee: '4%',
+        description: 'For growing businesses ready to scale',
+        zeenFee: '1.5%',
+        transactionFee: '+ Transaction Fee',
+        teamSlots: 'Up to 5 users',
         features: [
-            'Everything in Free',
+            'Everything in Starter',
             'Custom branding & colors',
-            '3 team members included',
-            'Additional members $900/mo each',
+            '5 team members included',
             'Priority support',
             'Advanced analytics',
             'No-show protection',
+            'Custom booking rules',
         ],
-        cta: 'Start Free Trial',
-        ctaLink: register.provider.url({ query: { plan: 'premium' } }),
+        cta: 'Start 14-Day Trial',
+        ctaLink: register.provider.url({ query: { plan: 'growth' } }),
         highlighted: true,
-        badge: 'Most Popular',
+        badge: 'Best Value',
+        foundingOffer: true,
     },
     {
         name: 'Enterprise',
-        price: '20,000',
+        price: '15,000',
         period: '/mo',
-        description: 'For large teams with custom requirements',
-        platformFee: '0%',
-        feeNote: 'Transaction fees only',
+        description: 'For high-volume businesses & multi-location teams',
+        zeenFee: '0.5%',
+        transactionFee: '+ Transaction Fee',
+        teamSlots: 'Unlimited users',
         features: [
-            'Everything in Premium',
+            'Everything in Growth',
             'Unlimited team members',
             'Custom templates',
             'API access',
@@ -66,20 +72,28 @@ const plans = [
 
 const faqs = [
     {
-        question: 'What are transaction fees?',
-        answer: 'Transaction fees are charged by our payment processor for each card payment. These fees are separate from our platform fees and typically range from 2.5-3.5% depending on the card type.',
+        question: 'What is the Transaction Fee?',
+        answer: 'The Transaction Fee is charged by payment processors for every card payment. The exact rate depends on which payment gateway you connect. This fee goes directly to them, not Zeen. We separate it so you can see exactly where your money goes.',
+    },
+    {
+        question: 'Why separate Zeen Fee from Transaction Fee?',
+        answer: 'We believe in transparency. Many platforms hide fees in a single percentage. By separating them, you know exactly what Zeen charges versus what the payment processor charges. Transaction fees vary by gateway and are a pass-through cost we don\'t profit from.',
+    },
+    {
+        question: 'Can I pass fees to my clients?',
+        answer: 'Yes! You can enable a "Convenience Fee" option that adds a small percentage to the client\'s checkout. This way, your business receives the full booking amount while clients cover the processing costs.',
     },
     {
         question: 'Can I change plans later?',
-        answer: 'Yes! You can upgrade or downgrade your plan at any time. When upgrading, you\'ll get immediate access to new features. When downgrading, changes take effect at the start of your next billing cycle.',
+        answer: 'Yes! You can upgrade or downgrade your plan at any time. When upgrading, you get immediate access to new features. When downgrading, changes take effect at the start of your next billing cycle.',
     },
     {
-        question: 'What is the minimum deposit requirement?',
-        answer: 'On the Free tier, a minimum $500 JMD deposit is required for all bookings. This protects providers from no-shows and ensures clients are committed to their appointments.',
+        question: 'How do team members work?',
+        answer: 'Starter includes 1 user (you). Growth includes up to 5 users with their own logins, calendars, and booking management. Enterprise offers unlimited users for large teams or multi-location businesses.',
     },
     {
-        question: 'How does team member pricing work?',
-        answer: 'On Premium, 3 team members are included free. Additional team members beyond the first 3 cost $900 JMD each per month. Each team member gets their own login, calendar, and can manage their own bookings.',
+        question: 'What is the Founding Member offer?',
+        answer: 'Early adopters who sign up for the Growth plan get lifetime price lock at $3,400/mo, waived Zeen fees for 3 months (you only pay transaction fees), and personal onboarding assistance.',
     },
 ];
 </script>
@@ -91,7 +105,7 @@ const faqs = [
         <div class="pricing-page">
             <!-- Hero -->
             <section class="pricing-hero">
-                <span class="hero-badge">Simple Pricing</span>
+                <span class="hero-badge">Transparent Pricing</span>
                 <h1>Choose the plan that fits your business</h1>
                 <p>Start free and scale as you grow. All plans include core booking features.</p>
             </section>
@@ -118,10 +132,19 @@ const faqs = [
                             <span class="period">JMD{{ plan.period }}</span>
                         </div>
 
-                        <div class="platform-fee">
-                            <span class="fee-value">{{ plan.platformFee }}</span>
-                            <span class="fee-label">platform fee</span>
-                            <span v-if="plan.feeNote" class="fee-note">{{ plan.feeNote }}</span>
+                        <div class="fee-breakdown">
+                            <div class="fee-row">
+                                <span class="fee-value">{{ plan.zeenFee }}</span>
+                                <span class="fee-label">Zeen Fee</span>
+                            </div>
+                            <div class="fee-row transaction">
+                                <span class="fee-value">{{ plan.transactionFee }}</span>
+                            </div>
+                        </div>
+
+                        <div class="team-slots">
+                            <i class="pi pi-users"></i>
+                            {{ plan.teamSlots }}
                         </div>
 
                         <AppLink :href="plan.ctaLink" class="card-cta" :class="{ primary: plan.highlighted }">
@@ -141,7 +164,7 @@ const faqs = [
             <!-- FAQ Section -->
             <section class="faq-section">
                 <h2>Frequently Asked Questions</h2>
-                <div class="faq-grid">
+                <div class="faq-list">
                     <div v-for="faq in faqs" :key="faq.question" class="faq-item">
                         <h4>{{ faq.question }}</h4>
                         <p>{{ faq.answer }}</p>
@@ -152,7 +175,7 @@ const faqs = [
             <!-- CTA Section -->
             <section class="cta-section">
                 <h2>Ready to grow your business?</h2>
-                <p>Join thousands of service providers in Jamaica using Zeen.</p>
+                <p>Join service providers across Jamaica using Zeen to manage their bookings.</p>
                 <AppLink :href="register.provider.url()" class="cta-button">
                     Get Started for Free
                     <i class="pi pi-arrow-right"></i>
@@ -170,7 +193,7 @@ const faqs = [
 /* Hero Section */
 .pricing-hero {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 4rem 2rem 2rem;
     background: linear-gradient(165deg, #f8faf9 0%, #e8f5f0 50%, #f0f4f8 100%);
 }
 
@@ -205,7 +228,7 @@ const faqs = [
 /* Pricing Cards */
 .pricing-cards {
     padding: 0 2rem 5rem;
-    margin-top: -2rem;
+    margin-top: 2rem;
 }
 
 .cards-container {
@@ -263,7 +286,7 @@ const faqs = [
     display: flex;
     align-items: baseline;
     gap: 0.25rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .currency {
@@ -284,29 +307,53 @@ const faqs = [
     color: #6b7280;
 }
 
-.platform-fee {
+/* Fee Breakdown */
+.fee-breakdown {
+    background: #f8faf9;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fee-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
 }
 
-.fee-value {
-    font-size: 1.125rem;
+.fee-row .fee-value {
+    font-size: 1.25rem;
     font-weight: 700;
     color: #106B4F;
 }
 
-.fee-label {
+.fee-row .fee-label {
     font-size: 0.875rem;
     color: #6b7280;
 }
 
-.fee-note {
-    font-size: 0.75rem;
-    color: #9ca3af;
-    width: 100%;
+.fee-row.transaction .fee-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+/* Team Slots */
+.team-slots {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f3f4f6;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4b5563;
+    margin-bottom: 1.25rem;
+}
+
+.team-slots i {
+    color: #106B4F;
 }
 
 .card-cta {
@@ -381,7 +428,7 @@ const faqs = [
     margin-bottom: 2.5rem;
 }
 
-.faq-grid {
+.faq-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
@@ -461,7 +508,7 @@ const faqs = [
 
 @media (max-width: 768px) {
     .pricing-hero {
-        padding: 2rem 1rem;
+        padding: 2rem 1rem 1rem;
     }
 
     .pricing-hero h1 {
@@ -472,12 +519,12 @@ const faqs = [
         padding: 0 1rem 3rem;
     }
 
-    .faq-grid {
-        grid-template-columns: 1fr;
-    }
-
     .faq-section {
         padding: 3rem 1rem;
+    }
+
+    .faq-list {
+        grid-template-columns: 1fr;
     }
 
     .cta-section {

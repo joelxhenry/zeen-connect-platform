@@ -49,6 +49,8 @@ class Provider extends Model
         'min_booking_notice_hours',
         'fee_payer',
         'deposit_percentage',
+        'is_founding_member',
+        'founding_member_at',
     ];
 
     protected function casts(): array
@@ -64,6 +66,8 @@ class Provider extends Model
             'advance_booking_days' => 'integer',
             'min_booking_notice_hours' => 'integer',
             'deposit_percentage' => 'decimal:2',
+            'is_founding_member' => 'boolean',
+            'founding_member_at' => 'datetime',
         ];
     }
 
@@ -604,5 +608,112 @@ class Provider extends Model
     public function getPreferredGatewayType(): ?string
     {
         return $this->activeGatewayConfig?->gateway?->type;
+    }
+
+    // =========================================================================
+    // Founding Member Methods
+    // =========================================================================
+    //
+    // Founding member status is independent of current subscription tier.
+    // When a founding member upgrades their tier, they RETAIN:
+    // - Their founding member status
+    // - Their fee waiver (until it expires, derived from founding_member_at)
+    // - Their locked price (derived from their tier at founding_member_at)
+    //
+    // This ensures early adopters keep their benefits even as they grow.
+    // =========================================================================
+
+    /**
+     * Check if the provider is a founding member.
+     * This status persists across tier upgrades.
+     */
+    public function isFoundingMember(): bool
+    {
+        return $this->is_founding_member === true;
+    }
+
+    /**
+     * Get the subscription tier the provider had when marked as founding member.
+     * This is derived from their subscription history at founding_member_at.
+     */
+    public function getFoundingSubscriptionTier(): ?SubscriptionTier
+    {
+        if (! $this->isFoundingMember() || ! $this->founding_member_at) {
+            return null;
+        }
+
+        // Find the subscription that was active at founding_member_at
+        $subscription = $this->subscriptions()
+            ->where('started_at', '<=', $this->founding_member_at)
+            ->orderByDesc('started_at')
+            ->first();
+
+        // Default to STARTER if no subscription found (shouldn't happen for founders)
+        $tier = $subscription?->tier ?? SubscriptionTier::STARTER;
+
+        // Only Premium and Enterprise are founding-eligible
+        if (! $tier->isFoundingEligible()) {
+            return null;
+        }
+
+        return $tier;
+    }
+
+    /**
+     * Get the date when the founding fee waiver ends.
+     * Derived from founding_member_at + tier waiver months.
+     */
+    public function getFoundingFeeWaiverEndsAt(): ?\Carbon\Carbon
+    {
+        if (! $this->isFoundingMember() || ! $this->founding_member_at) {
+            return null;
+        }
+
+        $tier = $this->getFoundingSubscriptionTier();
+        if (! $tier) {
+            return null;
+        }
+
+        $waiverMonths = $tier->foundingFeeWaiverMonths();
+
+        return $this->founding_member_at->copy()->addMonths($waiverMonths);
+    }
+
+    /**
+     * Check if the founding member has an active fee waiver.
+     * Derived from founding_member_at + tier waiver period.
+     */
+    public function hasFoundingFeeWaiver(): bool
+    {
+        $waiverEndsAt = $this->getFoundingFeeWaiverEndsAt();
+
+        return $waiverEndsAt !== null && $waiverEndsAt->isFuture();
+    }
+
+    /**
+     * Get the locked subscription price for founding members.
+     * Derived from their tier at founding_member_at.
+     */
+    public function getFoundingLockedPrice(): ?float
+    {
+        $tier = $this->getFoundingSubscriptionTier();
+
+        return $tier?->foundingMonthlyPrice();
+    }
+
+    /**
+     * Check if this is a growth (Premium) founding member.
+     */
+    public function isGrowthFounder(): bool
+    {
+        return $this->getFoundingSubscriptionTier() === SubscriptionTier::PREMIUM;
+    }
+
+    /**
+     * Check if this is an enterprise founding member.
+     */
+    public function isEnterpriseFounder(): bool
+    {
+        return $this->getFoundingSubscriptionTier() === SubscriptionTier::ENTERPRISE;
     }
 }

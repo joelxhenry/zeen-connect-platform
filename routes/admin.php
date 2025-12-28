@@ -51,6 +51,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::put('/{uuid}/status', [ProviderController::class, 'updateStatus'])->name('status');
         Route::post('/{uuid}/toggle-featured', [ProviderController::class, 'toggleFeatured'])->name('toggle-featured');
         Route::put('/{uuid}/commission', [ProviderController::class, 'updateCommission'])->name('commission');
+        Route::post('/{uuid}/founding-member', [ProviderController::class, 'markAsFoundingMember'])->name('founding-member');
+        Route::delete('/{uuid}/founding-member', [ProviderController::class, 'removeFoundingMember'])->name('remove-founding-member');
     });
 
     // Booking management

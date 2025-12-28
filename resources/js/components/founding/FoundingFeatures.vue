@@ -4,107 +4,53 @@
             <span class="section-label">Platform Features</span>
             <h2>Everything you need to succeed</h2>
 
-            <div class="bento-grid">
-                <!-- Large Feature - Online Booking -->
-                <div class="bento-card bento-large">
-                    <div class="bento-image">
-                        <img
-                            src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=500&fit=crop"
-                            alt="Online Booking"
-                        />
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-calendar"></i>
                     </div>
-                    <div class="bento-content">
-                        <div class="bento-icon">
-                            <i class="pi pi-calendar"></i>
-                        </div>
-                        <h3>24/7 Online Booking</h3>
-                        <p>Clients book while you sleep. Your calendar stays organized automatically.</p>
-                    </div>
+                    <h3>24/7 Online Booking</h3>
+                    <p>Clients book while you sleep. Your calendar stays organized automatically.</p>
                 </div>
 
-                <!-- Stacked Features -->
-                <div class="bento-stack">
-                    <div class="bento-card bento-small">
-                        <div class="bento-image">
-                            <img
-                                src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=200&fit=crop"
-                                alt="Secure Payments"
-                            />
-                        </div>
-                        <div class="bento-content">
-                            <div class="bento-icon">
-                                <i class="pi pi-credit-card"></i>
-                            </div>
-                            <h3>Secure Payments</h3>
-                            <p>Accept cards with instant deposits.</p>
-                        </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-credit-card"></i>
                     </div>
-
-                    <div class="bento-card bento-small">
-                        <div class="bento-image">
-                            <img
-                                src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=200&fit=crop"
-                                alt="Your Brand"
-                            />
-                        </div>
-                        <div class="bento-content">
-                            <div class="bento-icon">
-                                <i class="pi pi-palette"></i>
-                            </div>
-                            <h3>Your Own Brand</h3>
-                            <p>Custom site with your style.</p>
-                        </div>
-                    </div>
+                    <h3>Secure Payments</h3>
+                    <p>Accept cards with instant deposits to your account.</p>
                 </div>
 
-                <!-- Medium Feature - Client Management -->
-                <div class="bento-card bento-medium">
-                    <div class="bento-image">
-                        <img
-                            src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=300&fit=crop"
-                            alt="Client Management"
-                        />
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-palette"></i>
                     </div>
-                    <div class="bento-content">
-                        <div class="bento-icon">
-                            <i class="pi pi-users"></i>
-                        </div>
-                        <h3>Client Management</h3>
-                        <p>Track history, preferences, and build lasting relationships with your clients.</p>
-                    </div>
+                    <h3>Your Own Brand</h3>
+                    <p>Custom booking page with your colors and style.</p>
                 </div>
 
-                <!-- Bottom Row -->
-                <div class="bento-card bento-bottom">
-                    <div class="bento-image">
-                        <img
-                            src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=250&fit=crop"
-                            alt="Smart Reminders"
-                        />
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-users"></i>
                     </div>
-                    <div class="bento-content">
-                        <div class="bento-icon">
-                            <i class="pi pi-bell"></i>
-                        </div>
-                        <h3>Smart Reminders</h3>
-                        <p>Automated SMS & email reminders reduce no-shows.</p>
-                    </div>
+                    <h3>Client Management</h3>
+                    <p>Track history and build lasting relationships.</p>
                 </div>
 
-                <div class="bento-card bento-bottom">
-                    <div class="bento-image">
-                        <img
-                            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop"
-                            alt="Business Insights"
-                        />
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-bell"></i>
                     </div>
-                    <div class="bento-content">
-                        <div class="bento-icon">
-                            <i class="pi pi-chart-line"></i>
-                        </div>
-                        <h3>Business Insights</h3>
-                        <p>Track your growth with easy analytics.</p>
+                    <h3>Smart Reminders</h3>
+                    <p>Automated SMS & email reminders reduce no-shows.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="pi pi-users"></i>
                     </div>
+                    <h3>Team Management</h3>
+                    <p>Add team members with their own calendars and bookings.</p>
                 </div>
             </div>
         </div>
@@ -113,12 +59,12 @@
 
 <style scoped>
 .features {
-    padding: 5rem 2rem;
+    padding: 4rem 2rem;
     background: #f8faf9;
 }
 
 .features-container {
-    max-width: 1100px;
+    max-width: 900px;
     margin: 0 auto;
     text-align: center;
 }
@@ -134,104 +80,34 @@
 }
 
 .features-container h2 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: #0D1F1B;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 
-.bento-grid {
+.features-grid {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    grid-template-rows: auto auto auto;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
 }
 
-.bento-card {
+.feature-card {
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 20px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.bento-card:hover {
-    border-color: #106B4F30;
-    box-shadow: 0 12px 40px rgba(16, 107, 79, 0.1);
-    transform: translateY(-4px);
-}
-
-.bento-large {
-    grid-row: span 2;
-}
-
-.bento-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.bento-small {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.bento-small .bento-image {
-    height: 120px;
-}
-
-.bento-medium {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-}
-
-.bento-medium .bento-image {
-    height: 100%;
-    min-height: 180px;
-}
-
-.bento-medium .bento-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.bento-bottom {
-    display: flex;
-    flex-direction: column;
-}
-
-.bento-bottom .bento-image {
-    height: 140px;
-}
-
-.bento-image {
-    overflow: hidden;
-}
-
-.bento-large .bento-image {
-    height: 260px;
-}
-
-.bento-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.bento-card:hover .bento-image img {
-    transform: scale(1.05);
-}
-
-.bento-content {
-    padding: 1.25rem;
+    border-radius: 16px;
+    padding: 1.5rem;
     text-align: left;
+    transition: all 0.2s ease;
 }
 
-.bento-icon {
+.feature-card:hover {
+    border-color: #106B4F30;
+    box-shadow: 0 8px 24px rgba(16, 107, 79, 0.08);
+    transform: translateY(-2px);
+}
+
+.feature-icon {
     width: 40px;
     height: 40px;
     background: linear-gradient(135deg, #106B4F15, #1ABC9C15);
@@ -244,68 +120,37 @@
     margin-bottom: 0.75rem;
 }
 
-.bento-card h3 {
-    font-size: 1rem;
+.feature-card h3 {
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #0D1F1B;
     margin-bottom: 0.375rem;
 }
 
-.bento-card p {
-    font-size: 0.875rem;
+.feature-card p {
+    font-size: 0.8125rem;
     color: #6b7280;
     line-height: 1.5;
     margin: 0;
 }
 
-@media (max-width: 1024px) {
-    .bento-grid {
-        grid-template-columns: 1fr 1fr;
+@media (max-width: 768px) {
+    .features {
+        padding: 3rem 1rem;
     }
 
-    .bento-large {
-        grid-row: auto;
-        grid-column: span 2;
+    .features-container h2 {
+        font-size: 1.5rem;
     }
 
-    .bento-stack {
-        grid-column: span 2;
-        flex-direction: row;
-    }
-
-    .bento-small .bento-image {
-        height: 100px;
-    }
-
-    .bento-medium {
-        grid-template-columns: 1fr;
-    }
-
-    .bento-medium .bento-image {
-        height: 160px;
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 640px) {
-    .features { padding: 3rem 1rem; }
-    .features-container h2 { font-size: 1.5rem; }
-
-    .bento-grid {
+@media (max-width: 480px) {
+    .features-grid {
         grid-template-columns: 1fr;
-    }
-
-    .bento-large,
-    .bento-medium {
-        grid-column: auto;
-    }
-
-    .bento-stack {
-        grid-column: auto;
-        flex-direction: column;
-    }
-
-    .bento-bottom {
-        display: flex;
     }
 }
 </style>

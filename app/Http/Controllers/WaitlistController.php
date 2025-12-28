@@ -16,8 +16,9 @@ class WaitlistController extends Controller
     public function store(StoreWaitlistRequest $request)
     {
         WaitlistSubscriber::create([
-            'email' => $request->email,
             'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
             'source' => 'founding-members',
             'is_founding_member' => true,
         ]);

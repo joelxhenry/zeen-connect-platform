@@ -1,26 +1,59 @@
 <script setup lang="ts">
-const perks = [
+const emit = defineEmits<{
+    (e: 'join'): void;
+}>();
+
+const tiers = [
     {
-        icon: 'pi-verified',
-        title: 'Founding Member Badge',
-        description: 'Exclusive badge displayed on your profile forever.',
+        name: 'Growth Founders',
+        badge: 'growth',
+        perks: [
+            {
+                icon: 'pi-lock',
+                title: 'Lifetime Price Lock',
+                description: 'Pay $3,400/mo forever, even as we add new features.',
+            },
+            {
+                icon: 'pi-percentage',
+                title: 'Waived Zeen Fees',
+                description: '0% Zeen fee for your first 3 months.',
+            },
+            {
+                icon: 'pi-user',
+                title: 'VIP Onboarding',
+                description: 'Personal setup assistance for your first 10 services.',
+            },
+        ],
+        cta: 'Join as Growth Founder',
     },
     {
-        icon: 'pi-lock',
-        title: '15% Price Lock',
-        description: 'Lock in 15% off all subscription plans for life.',
-    },
-    {
-        icon: 'pi-star',
-        title: 'Priority Support',
-        description: 'Jump to the front of the queue for help.',
-    },
-    {
-        icon: 'pi-bolt',
-        title: 'Early Access',
-        description: 'Be first to try new features before anyone else.',
+        name: 'Enterprise Founders',
+        badge: 'enterprise',
+        perks: [
+            {
+                icon: 'pi-lock',
+                title: 'Lifetime Price Lock',
+                description: 'Pay $12,000/mo forever, locked in as a founding partner.',
+            },
+            {
+                icon: 'pi-percentage',
+                title: 'Waived Zeen Fees',
+                description: '0% Zeen fee for your first 6 months.',
+            },
+            {
+                icon: 'pi-star',
+                title: 'Priority Feature Requests',
+                description: 'Direct input on our product roadmap and early access to new features.',
+            },
+        ],
+        cta: 'Join as Enterprise Founder',
+        isEnterprise: true,
     },
 ];
+
+const scrollToForm = () => {
+    emit('join');
+};
 </script>
 
 <template>
@@ -28,14 +61,33 @@ const perks = [
         <div class="perks-container">
             <span class="section-label">Exclusive Perks</span>
             <h2>What founding members get</h2>
+            <p class="section-subtitle">Early adopters get exclusive benefits that last forever.</p>
 
-            <div class="perks-grid">
-                <div v-for="perk in perks" :key="perk.title" class="perk-card">
-                    <div class="perk-icon">
-                        <i :class="['pi', perk.icon]"></i>
+            <div class="tiers-grid">
+                <div v-for="tier in tiers" :key="tier.name" class="tier-card">
+                    <h3>{{ tier.name }}</h3>
+
+                    <div class="perks-list">
+                        <div v-for="perk in tier.perks" :key="perk.title" class="perk-item">
+                            <div class="perk-icon">
+                                <i :class="['pi', perk.icon]"></i>
+                            </div>
+                            <div class="perk-content">
+                                <h4>{{ perk.title }}</h4>
+                                <p>{{ perk.description }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <h3>{{ perk.title }}</h3>
-                    <p>{{ perk.description }}</p>
+
+                    <button
+                        type="button"
+                        class="tier-cta"
+                        :class="{ enterprise: tier.isEnterprise }"
+                        @click="scrollToForm"
+                    >
+                        {{ tier.cta }}
+                        <i class="pi pi-arrow-up"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -45,7 +97,7 @@ const perks = [
 <style scoped>
 .perks {
     padding: 5rem 2rem;
-    background: white;
+    background: linear-gradient(135deg, #0D1F1B, #1a3d35);
 }
 
 .perks-container {
@@ -67,67 +119,127 @@ const perks = [
 .perks h2 {
     font-size: 2rem;
     font-weight: 700;
-    color: #0D1F1B;
+    color: white;
+    margin-bottom: 0.75rem;
+}
+
+.section-subtitle {
+    font-size: 1.0625rem;
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 2.5rem;
 }
 
-.perks-grid {
+.tiers-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
 }
 
-.perk-card {
-    background: #f8faf9;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    padding: 1.5rem;
+.tier-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: left;
+}
+
+.tier-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1ABC9C;
+    margin-bottom: 1.5rem;
     text-align: center;
-    transition: all 0.25s;
 }
 
-.perk-card:hover {
-    border-color: #106B4F30;
-    box-shadow: 0 8px 24px rgba(16, 107, 79, 0.08);
-    transform: translateY(-2px);
+.perks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.perk-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
 }
 
 .perk-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #106B4F15, #1ABC9C15);
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    background: rgba(26, 188, 156, 0.15);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem;
-    color: #106B4F;
-    font-size: 1.25rem;
-}
-
-.perk-card h3 {
+    flex-shrink: 0;
+    color: #1ABC9C;
     font-size: 1rem;
-    font-weight: 600;
-    color: #0D1F1B;
-    margin-bottom: 0.5rem;
 }
 
-.perk-card p {
-    font-size: 0.875rem;
-    color: #6b7280;
+.perk-content h4 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.perk-content p {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.6);
     line-height: 1.5;
     margin: 0;
 }
 
-@media (max-width: 1024px) {
-    .perks-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.tier-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    background: #1ABC9C;
+    color: #0D1F1B;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-@media (max-width: 640px) {
-    .perks { padding: 3rem 1rem; }
-    .perks h2 { font-size: 1.5rem; }
-    .perks-grid { grid-template-columns: 1fr; }
+.tier-cta:hover {
+    background: #16a085;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(26, 188, 156, 0.3);
+}
+
+.tier-cta.enterprise {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tier-cta.enterprise:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+    .perks {
+        padding: 3rem 1rem;
+    }
+
+    .perks h2 {
+        font-size: 1.5rem;
+    }
+
+    .tiers-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .tier-card {
+        padding: 1.5rem;
+    }
 }
 </style>

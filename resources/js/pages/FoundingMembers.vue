@@ -39,7 +39,7 @@ const scrollToTop = () => {
             <FoundingHero />
             <FoundingVision />
             <FoundingFeatures />
-            <FoundingPerks />
+            <FoundingPerks @join="scrollToTop" />
             <FoundingPioneers @join="scrollToTop" />
             <FoundingCta />
         </main>

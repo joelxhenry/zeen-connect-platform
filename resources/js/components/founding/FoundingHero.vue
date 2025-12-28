@@ -8,8 +8,9 @@ const page = usePage();
 const success = computed(() => (page.props as { flash?: { success?: string } }).flash?.success);
 
 const form = useForm({
-    email: '',
     name: '',
+    email: '',
+    phone: '',
 });
 
 const submit = () => {
@@ -31,13 +32,13 @@ const submit = () => {
                 </span>
 
                 <h1>
-                    Get <span class="highlight">15% off</span><br />
+                    Lock in <span class="highlight">exclusive perks</span><br />
                     forever.
                 </h1>
 
                 <p class="subtitle">
-                    Join as a founding member and lock in exclusive lifetime
-                    savings on Jamaica's premier service booking platform.
+                    Join as a founding member and get lifetime price lock, waived
+                    fees, and VIP benefits on Jamaica's premier service booking platform.
                 </p>
 
                 <!-- Success State -->
@@ -55,6 +56,7 @@ const submit = () => {
                             placeholder="Jane Doe"
                             :class="{ 'p-invalid': form.errors.name }"
                         />
+                        <small v-if="form.errors.name" class="error">{{ form.errors.name }}</small>
                     </div>
                     <div class="input-wrapper">
                         <label>Email address</label>
@@ -66,8 +68,18 @@ const submit = () => {
                         />
                         <small v-if="form.errors.email" class="error">{{ form.errors.email }}</small>
                     </div>
+                    <div class="input-wrapper">
+                        <label>Phone number</label>
+                        <InputText
+                            v-model="form.phone"
+                            type="tel"
+                            placeholder="876-555-1234"
+                            :class="{ 'p-invalid': form.errors.phone }"
+                        />
+                        <small v-if="form.errors.phone" class="error">{{ form.errors.phone }}</small>
+                    </div>
                     <Button type="submit" :loading="form.processing" class="submit-btn">
-                        Get Started
+                        Join the Waitlist
                     </Button>
                 </form>
 

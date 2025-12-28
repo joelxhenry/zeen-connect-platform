@@ -5,6 +5,7 @@ namespace App\Domains\Admin\Controllers;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Resources\ProviderResource;
 use App\Domains\Provider\Resources\ProviderSimpleResource;
+use App\Domains\Subscription\Enums\SubscriptionTier;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -156,5 +157,46 @@ class ProviderController extends Controller
         $provider->update(['commission_rate' => $request->commission_rate]);
 
         return back()->with('success', 'Commission rate updated successfully.');
+    }
+
+    /**
+     * Mark a provider as a founding member.
+     * Uses their current subscription tier to determine perks.
+     */
+    public function markAsFoundingMember(string $uuid): RedirectResponse
+    {
+        $provider = Provider::where('uuid', $uuid)->firstOrFail();
+
+        $tier = $provider->getTier();
+
+        // Only Premium and Enterprise tiers are eligible
+        if (! $tier->isFoundingEligible()) {
+            return back()->with('error', 'Provider must be on Premium or Enterprise tier to become a founding member.');
+        }
+
+        $provider->update([
+            'is_founding_member' => true,
+            'founding_member_at' => now(),
+        ]);
+
+        $waiverEndsAt = $provider->getFoundingFeeWaiverEndsAt();
+        $tierLabel = $tier === SubscriptionTier::ENTERPRISE ? 'Enterprise' : 'Growth';
+
+        return back()->with('success', "Provider marked as {$tierLabel} founding member. Fee waiver ends {$waiverEndsAt->format('M j, Y')}.");
+    }
+
+    /**
+     * Remove founding member status from a provider.
+     */
+    public function removeFoundingMember(string $uuid): RedirectResponse
+    {
+        $provider = Provider::where('uuid', $uuid)->firstOrFail();
+
+        $provider->update([
+            'is_founding_member' => false,
+            'founding_member_at' => null,
+        ]);
+
+        return back()->with('success', 'Founding member status removed.');
     }
 }

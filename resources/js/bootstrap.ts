@@ -5,13 +5,9 @@ axios.defaults.withCredentials = true;
 axios.defaults.withXSRFToken = true;
 
 // Set the XSRF token header name to match Laravel's expectation
+// Axios will automatically read the XSRF-TOKEN cookie and send it as X-XSRF-TOKEN
+// This is the preferred method as it stays fresh across Inertia navigations
 axios.defaults.xsrfCookieName = 'XSRF-TOKEN';
 axios.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
-
-// Add CSRF token from meta tag as fallback
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-if (csrfToken) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-}
 
 export default axios;

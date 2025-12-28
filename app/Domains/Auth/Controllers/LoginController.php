@@ -101,12 +101,15 @@ class LoginController extends Controller
 
     /**
      * Handle logout request.
+     * Uses Inertia::location() for cross-domain redirect to main site.
      */
-    public function destroy(): RedirectResponse
+    public function destroy(Request $request): SymfonyResponse
     {
         $this->logoutAction->execute();
 
-        return redirect()->route('home');
+        $url = $this->buildDomainUrl($request, config('app.domain'));
+
+        return Inertia::location($url);
     }
 
     /**

@@ -14,8 +14,6 @@ defineProps<{
 const page = usePage();
 const user = (page.props.auth as { user?: User } | undefined)?.user;
 
-
-console.log('PublicLayout user:', user);
 </script>
 
 <template>

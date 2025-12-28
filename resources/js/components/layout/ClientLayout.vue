@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import type { User } from '@/types/models';
 import Avatar from 'primevue/avatar';
-import Button from 'primevue/button';
 import Menu from 'primevue/menu';
+import client from '@/routes/client';
+import { logout } from '@/routes';
+import { resolveUrl } from '@/utils/url';
 
 defineProps<{
     title?: string;
@@ -32,28 +34,17 @@ const getInitials = (name: string) => {
 };
 
 const navItems = [
-    { label: 'Home', route: '/dashboard', icon: 'pi pi-home' },
-    { label: 'Bookings', route: '/dashboard/bookings', icon: 'pi pi-calendar' },
-    { label: 'Favorites', route: '/dashboard/favorites', icon: 'pi pi-heart' },
+    { label: 'Home', route: client.dashboard().url, icon: 'pi pi-home' },
+    { label: 'Bookings', route: client.bookings.index().url, icon: 'pi pi-calendar' },
+    { label: 'Favorites', route: client.favorites.index().url, icon: 'pi pi-heart' },
 ];
 
 const userMenu = ref();
 const userMenuItems = ref([
-    { label: 'My Profile', icon: 'pi pi-user', command: () => window.location.href = '/dashboard/profile' },
-    { label: 'Settings', icon: 'pi pi-cog', command: () => window.location.href = '/dashboard/settings' },
+    { label: 'My Profile', icon: 'pi pi-user', command: () => router.get(resolveUrl(client.profile.edit().url)) },
+    { label: 'Settings', icon: 'pi pi-cog', command: () => null },
     { separator: true },
-    { label: 'Sign Out', icon: 'pi pi-sign-out', command: () => {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/logout';
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '_token';
-        csrfInput.value = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '';
-        form.appendChild(csrfInput);
-        document.body.appendChild(form);
-        form.submit();
-    }},
+    { label: 'Sign Out', icon: 'pi pi-sign-out', command: () => router.post(resolveUrl(logout().url)) },
 ]);
 
 const toggleUserMenu = (event: Event) => {
@@ -64,6 +55,7 @@ const mobileMenuOpen = ref(false);
 </script>
 
 <template>
+
     <Head :title="title ? `${title} | Zeen` : 'Zeen'" />
 
     <div class="client-layout">
@@ -77,50 +69,24 @@ const mobileMenuOpen = ref(false);
 
                 <!-- Desktop Navigation -->
                 <nav class="desktop-nav">
-                    <AppLink
-                        v-for="item in navItems"
-                        :key="item.route"
-                        :href="item.route"
-                        class="nav-item"
-                        :class="{ 'nav-item--active': isActive(item.route) }"
-                    >
+                    <AppLink v-for="item in navItems" :key="item.route" :href="item.route" class="nav-item"
+                        :class="{ 'nav-item--active': isActive(item.route) }">
                         {{ item.label }}
                     </AppLink>
                 </nav>
 
                 <!-- Right Side -->
                 <div class="header-actions">
-                    <AppLink href="/explore" class="explore-btn">
-                        <Button label="Find Services" icon="pi pi-search" text class="!text-[#106B4F] !font-medium" />
-                    </AppLink>
-
                     <!-- User Menu -->
-                    <button
-                        v-if="user"
-                        @click="toggleUserMenu"
-                        class="user-btn"
-                        aria-haspopup="true"
-                    >
-                        <Avatar
-                            v-if="user.avatar"
-                            :image="user.avatar"
-                            shape="circle"
-                            class="!w-9 !h-9"
-                        />
-                        <Avatar
-                            v-else
-                            :label="getInitials(user.name || '')"
-                            shape="circle"
-                            class="!w-9 !h-9 !bg-[#106B4F] !text-white !text-sm"
-                        />
+                    <button v-if="user" @click="toggleUserMenu" class="user-btn" aria-haspopup="true">
+                        <Avatar v-if="user.avatar" :image="user.avatar" shape="circle" class="!w-9 !h-9" />
+                        <Avatar v-else :label="getInitials(user.name || '')" shape="circle"
+                            class="!w-9 !h-9 !bg-[#106B4F] !text-white !text-sm" />
                     </button>
                     <Menu ref="userMenu" :model="userMenuItems" :popup="true" class="user-dropdown" />
 
                     <!-- Mobile Menu Toggle -->
-                    <button
-                        @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="mobile-menu-btn"
-                    >
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="mobile-menu-btn">
                         <i :class="mobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'" class="text-lg"></i>
                     </button>
                 </div>
@@ -128,20 +94,10 @@ const mobileMenuOpen = ref(false);
 
             <!-- Mobile Navigation -->
             <nav v-if="mobileMenuOpen" class="mobile-nav">
-                <AppLink
-                    v-for="item in navItems"
-                    :key="item.route"
-                    :href="item.route"
-                    class="mobile-nav-item"
-                    :class="{ 'mobile-nav-item--active': isActive(item.route) }"
-                    @click="mobileMenuOpen = false"
-                >
+                <AppLink v-for="item in navItems" :key="item.route" :href="item.route" class="mobile-nav-item"
+                    :class="{ 'mobile-nav-item--active': isActive(item.route) }" @click="mobileMenuOpen = false">
                     <i :class="item.icon"></i>
                     {{ item.label }}
-                </AppLink>
-                <AppLink href="/explore" class="mobile-nav-item" @click="mobileMenuOpen = false">
-                    <i class="pi pi-search"></i>
-                    Find Services
                 </AppLink>
             </nav>
         </header>

@@ -45,12 +45,25 @@ interface UseApiReturn<T> {
 
 /**
  * Get CSRF token from cookies
+ * The XSRF-TOKEN cookie is URL-encoded, so we need to decode it
  */
 function getCsrfToken(): string {
-    return document.cookie
+    const cookie = document.cookie
         .split('; ')
-        .find(row => row.startsWith('XSRF-TOKEN='))
-        ?.split('=')[1]?.replace(/%3D/g, '=') || '';
+        .find(row => row.startsWith('XSRF-TOKEN='));
+
+    if (!cookie) return '';
+
+    const value = cookie.split('=')[1];
+    if (!value) return '';
+
+    // URL decode the cookie value (handles %3D, %2B, %2F, etc.)
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        // If decoding fails, return the raw value
+        return value;
+    }
 }
 
 /**

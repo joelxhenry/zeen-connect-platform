@@ -7,6 +7,7 @@ import InstallPrompt from '@/components/console/InstallPrompt.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
 import Avatar from 'primevue/avatar';
 import Menu from 'primevue/menu';
+import { resolveUrl } from '@/utils/url';
 
 defineProps<{
     title?: string;
@@ -46,18 +47,18 @@ const profileMenuItems = ref([
     {
         label: 'Profile Settings',
         icon: 'pi pi-user',
-        command: () => router.get(provider.profile.edit.url()),
+        command: () => router.get(resolveUrl(provider.profile.edit.url())),
     },
     {
         label: 'Account Settings',
         icon: 'pi pi-cog',
-        command: () => router.get(provider.settings.edit.url()),
+        command: () => router.get(resolveUrl(provider.settings.edit.url())),
     },
     { separator: true },
     {
         label: 'Logout',
         icon: 'pi pi-sign-out',
-        command: () => router.post(logout.url()),
+        command: () => router.post(resolveUrl(logout.url())),
     },
 ]);
 
@@ -88,16 +89,13 @@ const isActiveRoute = (route: string) => {
 </script>
 
 <template>
+
     <Head :title="title" />
     <FlashMessages />
 
     <div class="console-layout">
         <!-- Mobile Overlay -->
-        <div
-            v-if="sidebarOpen"
-            class="sidebar-overlay"
-            @click="closeSidebar"
-        ></div>
+        <div v-if="sidebarOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 
         <!-- Sidebar -->
         <aside class="sidebar" :class="{ open: sidebarOpen }">
@@ -109,14 +107,8 @@ const isActiveRoute = (route: string) => {
             </div>
 
             <nav class="sidebar-nav">
-                <AppLink
-                    v-for="item in navItems"
-                    :key="item.route"
-                    :href="item.route"
-                    class="nav-item"
-                    :class="{ active: isActiveRoute(item.route) }"
-                    @click="closeSidebar"
-                >
+                <AppLink v-for="item in navItems" :key="item.route" :href="item.route" class="nav-item"
+                    :class="{ active: isActiveRoute(item.route) }" @click="closeSidebar">
                     <i :class="item.icon"></i>
                     <span>{{ item.label }}</span>
                 </AppLink>
@@ -146,12 +138,8 @@ const isActiveRoute = (route: string) => {
                 <div class="header-right">
                     <div class="profile-section">
                         <button class="profile-btn" @click="toggleProfileMenu">
-                            <Avatar
-                                :image="user?.avatar"
-                                :label="user?.name?.charAt(0).toUpperCase()"
-                                shape="circle"
-                                class="profile-avatar"
-                            />
+                            <Avatar :image="user?.avatar" :label="user?.name?.charAt(0).toUpperCase()" shape="circle"
+                                class="profile-avatar" />
                             <div class="profile-info">
                                 <span class="profile-name">{{ user?.name }}</span>
                                 <span class="profile-business">{{ providerData?.business_name }}</span>

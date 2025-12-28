@@ -10,11 +10,11 @@ return [
     | This option controls the default payment gateway that will be used when
     | a provider has not configured their own gateway credentials.
     |
-    | Supported: "powertranz", "wipay", "fygaro"
+    | Supported: "wipay"
     |
     */
 
-    'default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'powertranz'),
+    'default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'wipay'),
 
     /*
     |--------------------------------------------------------------------------
@@ -48,6 +48,9 @@ return [
 
         // Minimum amount required to trigger a payout (in JMD)
         'minimum_amount' => env('PAYOUT_MINIMUM_AMOUNT', 1000),
+
+        // Automatically disburse payouts via WiPay API (requires API credentials)
+        'auto_disburse' => env('PAYOUT_AUTO_DISBURSE', false),
     ],
 
     /*

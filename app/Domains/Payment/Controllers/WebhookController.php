@@ -7,10 +7,7 @@ use App\Domains\Payment\Contracts\EscrowGatewayInterface;
 use App\Domains\Payment\Contracts\PaymentGatewayInterface;
 use App\Domains\Payment\Enums\GatewayProvider;
 use App\Domains\Payment\Enums\GatewayType;
-use App\Domains\Payment\Gateways\DirectSplit\FygaroDirectSplitGateway;
 use App\Domains\Payment\Gateways\DirectSplit\WiPayDirectSplitGateway;
-use App\Domains\Payment\Gateways\Escrow\FygaroEscrowGateway;
-use App\Domains\Payment\Gateways\Escrow\PowerTranzEscrowGateway;
 use App\Domains\Payment\Gateways\Escrow\WiPayEscrowGateway;
 use App\Domains\Payment\Services\LedgerService;
 use App\Http\Controllers\Controller;
@@ -42,7 +39,7 @@ class WebhookController extends Controller
             'headers' => $request->headers->all(),
         ]);
 
-        $gatewayInstance = $this->resolveGatewayForWebhook($gatewayProvider, $request);
+        $gatewayInstance = $this->resolveGatewayForWebhook($request);
 
         if (! $gatewayInstance) {
             return response()->json(['error' => 'Gateway not configured'], 400);
@@ -74,14 +71,6 @@ class WebhookController extends Controller
     }
 
     /**
-     * Handle PowerTranz webhook notifications.
-     */
-    public function handlePowerTranz(Request $request): JsonResponse
-    {
-        return $this->handle($request, GatewayProvider::POWERTRANZ->value);
-    }
-
-    /**
      * Handle WiPay webhook notifications.
      */
     public function handleWiPay(Request $request): JsonResponse
@@ -90,30 +79,17 @@ class WebhookController extends Controller
     }
 
     /**
-     * Handle Fygaro webhook notifications.
-     */
-    public function handleFygaro(Request $request): JsonResponse
-    {
-        return $this->handle($request, GatewayProvider::FYGARO->value);
-    }
-
-    /**
      * Resolve the gateway instance for webhook handling.
+     * Only WiPay is supported now.
      */
-    protected function resolveGatewayForWebhook(GatewayProvider $provider, Request $request): ?PaymentGatewayInterface
+    protected function resolveGatewayForWebhook(Request $request): ?PaymentGatewayInterface
     {
         // Determine if this is a split or escrow payment from the payload
         $isSplit = $this->isSplitPaymentWebhook($request);
 
-        return match ($provider) {
-            GatewayProvider::POWERTRANZ => app(PowerTranzEscrowGateway::class),
-            GatewayProvider::WIPAY => $isSplit
-                ? app(WiPayDirectSplitGateway::class)
-                : app(WiPayEscrowGateway::class),
-            GatewayProvider::FYGARO => $isSplit
-                ? app(FygaroDirectSplitGateway::class)
-                : app(FygaroEscrowGateway::class),
-        };
+        return $isSplit
+            ? app(WiPayDirectSplitGateway::class)
+            : app(WiPayEscrowGateway::class);
     }
 
     /**
@@ -129,13 +105,8 @@ class WebhookController extends Controller
             return true;
         }
 
-        // Fygaro split indicator
-        if (isset($payload['splits']) && is_array($payload['splits'])) {
-            return true;
-        }
-
         // Check the payment record for gateway type
-        $orderId = $payload['order_id'] ?? $payload['OrderIdentifier'] ?? null;
+        $orderId = $payload['order_id'] ?? null;
         if ($orderId) {
             $payment = \App\Domains\Payment\Models\Payment::where('gateway_order_id', $orderId)
                 ->orWhere('uuid', $orderId)

@@ -34,21 +34,16 @@ const props = defineProps<Props>();
 // v-model bindings
 const useProviderDefaults = defineModel<boolean>('useProviderDefaults', { required: true });
 const requiresApproval = defineModel<boolean>('requiresApproval', { required: true });
-const depositType = defineModel<'none' | 'fixed' | 'percentage'>('depositType', { required: true });
+const depositType = defineModel<'none' | 'percentage'>('depositType', { required: true });
 const depositAmount = defineModel<number | null>('depositAmount', { required: true });
 const cancellationPolicy = defineModel<'flexible' | 'moderate' | 'strict'>('cancellationPolicy', { required: true });
 const advanceBookingDays = defineModel<number>('advanceBookingDays', { required: true });
 const minBookingNoticeHours = defineModel<number>('minBookingNoticeHours', { required: true });
 
-const showDepositAmount = computed(() =>
-    depositType.value === 'fixed' || depositType.value === 'percentage'
-);
+const showDepositAmount = computed(() => depositType.value === 'percentage');
 
 const getDepositDisplay = () => {
     if (props.providerDefaults.deposit_type === 'none') return 'None';
-    if (props.providerDefaults.deposit_type === 'fixed') {
-        return `$${props.providerDefaults.deposit_amount?.toFixed(2)}`;
-    }
     return `${props.providerDefaults.deposit_amount}%`;
 };
 
@@ -164,25 +159,24 @@ watch(depositType, (newType) => {
                         <small v-else-if="!depositTypeValidation.valid" class="text-red-500">{{ depositTypeValidation.message }}</small>
                     </div>
 
-                    <!-- Deposit Amount (conditional) -->
+                    <!-- Deposit Percentage (shown when deposit type is percentage) -->
                     <div v-if="showDepositAmount">
                         <label for="deposit_amount" class="block text-sm font-medium text-gray-700 mb-1">
-                            {{ depositType === 'percentage' ? 'Deposit Percentage' : 'Deposit Amount (JMD)' }}
+                            Deposit Percentage
                         </label>
                         <InputNumber
                             id="deposit_amount"
                             v-model="depositAmount"
-                            :mode="depositType === 'percentage' ? 'decimal' : 'currency'"
-                            :currency="depositType === 'fixed' ? 'JMD' : undefined"
-                            :suffix="depositType === 'percentage' ? '%' : undefined"
-                            :min="depositType === 'percentage' ? minDepositPercentage : 0"
-                            :max="depositType === 'percentage' ? 100 : undefined"
+                            mode="decimal"
+                            suffix="%"
+                            :min="minDepositPercentage"
+                            :max="100"
                             class="w-full"
                             :class="{ 'p-invalid': errors?.deposit_amount || !depositAmountValidation.valid }"
                         />
                         <small v-if="errors?.deposit_amount" class="text-red-500">{{ errors.deposit_amount }}</small>
                         <small v-else-if="!depositAmountValidation.valid" class="text-red-500">{{ depositAmountValidation.message }}</small>
-                        <small v-else-if="depositType === 'percentage'" class="text-gray-500">
+                        <small v-else class="text-gray-500">
                             Minimum {{ minDepositPercentage }}% required to cover platform fees
                         </small>
                     </div>

@@ -197,6 +197,7 @@ class BookingResource extends JsonResource
             'slug' => $this->provider->slug,
             'avatar' => $this->provider->user?->avatar,
             'address' => $this->provider->address,
+            'domain' => $this->provider->domain,
         ];
     }
 

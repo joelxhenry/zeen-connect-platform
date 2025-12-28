@@ -4,6 +4,7 @@ namespace App\Domains\Subscription\Services;
 
 use App\Domains\Admin\Models\SystemSetting;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
 
 class SubscriptionService
@@ -67,8 +68,12 @@ class SubscriptionService
      * Fee calculation logic:
      * - Zeen fee: percentage of full service price (platform fee)
      * - Gateway fee: percentage of the amount being charged (deposit or full)
+     *
+     * @param  Provider  $provider  The service provider
+     * @param  float  $servicePrice  The service price
+     * @param  Service|null  $service  Optional service for deposit settings
      */
-    public function calculateFees(Provider $provider, float $servicePrice): array
+    public function calculateFees(Provider $provider, float $servicePrice, ?Service $service = null): array
     {
         $tier = $provider->getTier();
         $feePayer = $provider->fee_payer ?? 'provider';
@@ -77,9 +82,10 @@ class SubscriptionService
         $zeenFeeRate = $this->getZeenFeeRate($provider);
         $gatewayFeeRate = $this->getGatewayFeeRate();
 
-        // Calculate deposit first (needed for gateway fee calculation)
-        $depositPercentage = $this->getEffectiveDepositPercentage($provider);
-        $depositAmount = round($servicePrice * $depositPercentage / 100, 2);
+        // Calculate deposit based on service settings or provider tier
+        $depositData = $this->calculateDepositAmount($provider, $servicePrice, $service);
+        $depositAmount = $depositData['amount'];
+        $depositPercentage = $depositData['percentage'];
         $requiresDeposit = $depositAmount > 0;
 
         // Zeen fee is always based on full service price
@@ -203,6 +209,76 @@ class SubscriptionService
         }
 
         return max((float) $providerSetting, $minimum);
+    }
+
+    /**
+     * Calculate the deposit amount based on service settings or provider tier.
+     * Uses the service's effective booking settings when available.
+     *
+     * Important: Tier restrictions always apply. If a tier requires deposits,
+     * the deposit cannot be disabled even if the provider/service settings say 'none'.
+     *
+     * @return array{amount: float, percentage: float}
+     */
+    public function calculateDepositAmount(Provider $provider, float $servicePrice, ?Service $service = null): array
+    {
+        // If no service provided, use tier-based percentage
+        if ($service === null) {
+            $percentage = $this->getEffectiveDepositPercentage($provider);
+
+            return [
+                'amount' => round($servicePrice * $percentage / 100, 2),
+                'percentage' => $percentage,
+            ];
+        }
+
+        // Get tier restrictions to know if deposit can be disabled
+        $tier = $provider->getTier();
+        $canDisableDeposit = $tier === SubscriptionTier::ENTERPRISE;
+        $minPercentage = $this->getMinimumDepositPercentage($provider);
+
+        // Get the service's effective booking settings (uses provider defaults if enabled)
+        $settings = $service->getEffectiveBookingSettings();
+        $depositType = $settings['deposit_type'] ?? 'none';
+        $depositAmount = $settings['deposit_amount'] ?? null;
+
+        // If deposit is set to 'none' but tier doesn't allow disabling deposits,
+        // fall back to tier-based minimum deposit percentage
+        if ($depositType === 'none') {
+            if ($canDisableDeposit) {
+                return [
+                    'amount' => 0.0,
+                    'percentage' => 0.0,
+                ];
+            }
+
+            // Tier requires deposit - use tier-based percentage
+            $percentage = $this->getEffectiveDepositPercentage($provider);
+
+            return [
+                'amount' => round($servicePrice * $percentage / 100, 2),
+                'percentage' => $percentage,
+            ];
+        }
+
+        // Percentage-based deposit (only type supported now)
+        if ($depositType === 'percentage' && $depositAmount !== null) {
+            // Ensure minimum deposit percentage is respected
+            $effectivePercentage = max((float) $depositAmount, $minPercentage);
+
+            return [
+                'amount' => round($servicePrice * $effectivePercentage / 100, 2),
+                'percentage' => $effectivePercentage,
+            ];
+        }
+
+        // Fallback to tier-based percentage
+        $percentage = $this->getEffectiveDepositPercentage($provider);
+
+        return [
+            'amount' => round($servicePrice * $percentage / 100, 2),
+            'percentage' => $percentage,
+        ];
     }
 
     /**

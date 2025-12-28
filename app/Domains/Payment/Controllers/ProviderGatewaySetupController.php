@@ -28,16 +28,30 @@ class ProviderGatewaySetupController extends Controller
             ->map(fn ($config) => $this->formatGatewayConfig($config));
 
         // Get available gateways that the provider hasn't configured
+        // Only WiPay is supported - filter to ensure only WiPay is returned
         $configuredSlugs = $configuredGateways->pluck('slug')->toArray();
         $availableGateways = Gateway::active()
+            ->where('slug', 'wipay') // Only WiPay is supported
             ->whereNotIn('slug', $configuredSlugs)
             ->get()
             ->map(fn ($gateway) => $this->formatAvailableGateway($gateway));
+
+        // Get provider's banking info
+        $bankingInfo = [
+            'bank_name' => $provider->bank_name,
+            'bank_account_number' => $provider->bank_account_number ? '****'.substr($provider->bank_account_number, -4) : null,
+            'bank_account_holder_name' => $provider->bank_account_holder_name,
+            'bank_branch_code' => $provider->bank_branch_code,
+            'bank_account_type' => $provider->bank_account_type,
+            'is_verified' => $provider->banking_info_verified,
+            'has_banking_info' => $provider->hasBankingInfo(),
+        ];
 
         return Inertia::render('Provider/Payments/Setup/Index', [
             'hasGatewayConfigured' => $configuredGateways->isNotEmpty(),
             'configuredGateways' => $configuredGateways,
             'availableGateways' => $availableGateways,
+            'bankingInfo' => $bankingInfo,
         ]);
     }
 
@@ -49,12 +63,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel || !$gatewayModel->is_active) {
+        if (! $gatewayModel || ! $gatewayModel->is_active) {
             abort(404, 'Gateway not available');
         }
 
@@ -67,7 +81,7 @@ class ProviderGatewaySetupController extends Controller
             return redirect()->route('provider.payments.setup.edit', $gateway);
         }
 
-        return Inertia::render("Provider/Payments/Setup/{$this->getGatewayViewName($gatewayProvider)}", [
+        return Inertia::render('Provider/Payments/Setup/WiPay', [
             'gateway' => $this->formatAvailableGateway($gatewayModel),
             'config' => null,
             'isEdit' => false,
@@ -82,12 +96,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel) {
+        if (! $gatewayModel) {
             abort(404, 'Gateway not found');
         }
 
@@ -95,7 +109,7 @@ class ProviderGatewaySetupController extends Controller
             ->where('gateway_id', $gatewayModel->id)
             ->firstOrFail();
 
-        return Inertia::render("Provider/Payments/Setup/{$this->getGatewayViewName($gatewayProvider)}", [
+        return Inertia::render('Provider/Payments/Setup/WiPay', [
             'gateway' => $this->formatAvailableGateway($gatewayModel),
             'config' => $this->formatGatewayConfig($config),
             'isEdit' => true,
@@ -110,12 +124,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel || !$gatewayModel->is_active) {
+        if (! $gatewayModel || ! $gatewayModel->is_active) {
             abort(404, 'Gateway not available');
         }
 
@@ -128,7 +142,7 @@ class ProviderGatewaySetupController extends Controller
             return back()->withErrors(['gateway' => 'This gateway is already configured']);
         }
 
-        $validated = $this->validateCredentials($request, $gatewayProvider);
+        $validated = $this->validateCredentials($request);
 
         // Determine if this should be primary (first gateway for provider)
         $hasExistingGateway = ProviderGatewayConfig::forProvider($provider->id)->exists();
@@ -139,13 +153,13 @@ class ProviderGatewaySetupController extends Controller
             'credentials' => $validated['credentials'],
             'merchant_account_id' => $validated['merchant_account_id'] ?? null,
             'is_active' => false, // Active after verification
-            'is_primary' => !$hasExistingGateway,
+            'is_primary' => ! $hasExistingGateway,
             'verification_status' => 'pending',
         ]);
 
         return redirect()
             ->route('provider.payments.setup.index')
-            ->with('success', "{$gatewayProvider->label()} credentials saved. Please verify your account to start receiving payments.");
+            ->with('success', 'WiPay credentials saved. Please verify your account to start receiving payments.');
     }
 
     /**
@@ -156,12 +170,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel) {
+        if (! $gatewayModel) {
             abort(404, 'Gateway not found');
         }
 
@@ -169,7 +183,7 @@ class ProviderGatewaySetupController extends Controller
             ->where('gateway_id', $gatewayModel->id)
             ->firstOrFail();
 
-        $validated = $this->validateCredentials($request, $gatewayProvider);
+        $validated = $this->validateCredentials($request);
 
         $config->update([
             'credentials' => $validated['credentials'],
@@ -181,7 +195,7 @@ class ProviderGatewaySetupController extends Controller
 
         return redirect()
             ->route('provider.payments.setup.index')
-            ->with('success', "{$gatewayProvider->label()} credentials updated. Please verify your account again.");
+            ->with('success', 'WiPay credentials updated. Please verify your account again.');
     }
 
     /**
@@ -192,12 +206,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel) {
+        if (! $gatewayModel) {
             abort(404, 'Gateway not found');
         }
 
@@ -219,7 +233,7 @@ class ProviderGatewaySetupController extends Controller
 
         return redirect()
             ->route('provider.payments.setup.index')
-            ->with('success', "{$gatewayProvider->label()} configuration removed.");
+            ->with('success', 'WiPay configuration removed.');
     }
 
     /**
@@ -230,12 +244,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel) {
+        if (! $gatewayModel) {
             abort(404, 'Gateway not found');
         }
 
@@ -246,14 +260,14 @@ class ProviderGatewaySetupController extends Controller
         // TODO: Implement actual gateway-specific verification
         // For now, we'll simulate verification
         // In production, this would call the gateway API to verify credentials
-        $verified = $this->verifyGatewayCredentials($config, $gatewayProvider);
+        $verified = $this->verifyGatewayCredentials($config);
 
         if ($verified) {
             $config->markAsVerified();
 
             return redirect()
                 ->route('provider.payments.setup.index')
-                ->with('success', "{$gatewayProvider->label()} account verified successfully!");
+                ->with('success', 'WiPay account verified successfully!');
         }
 
         $config->markAsFailed();
@@ -271,12 +285,12 @@ class ProviderGatewaySetupController extends Controller
         $provider = $request->user()->provider;
         $gatewayProvider = GatewayProvider::tryFrom($gateway);
 
-        if (!$gatewayProvider) {
+        if (! $gatewayProvider) {
             abort(404, 'Gateway not found');
         }
 
         $gatewayModel = Gateway::findBySlug($gateway);
-        if (!$gatewayModel) {
+        if (! $gatewayModel) {
             abort(404, 'Gateway not found');
         }
 
@@ -289,7 +303,7 @@ class ProviderGatewaySetupController extends Controller
 
         return redirect()
             ->route('provider.payments.setup.index')
-            ->with('success', "{$gatewayProvider->label()} is now your primary payment gateway.");
+            ->with('success', 'WiPay is now your primary payment gateway.');
     }
 
     /**
@@ -303,7 +317,7 @@ class ProviderGatewaySetupController extends Controller
             'id' => $config->id,
             'slug' => $gateway->slug,
             'name' => $gateway->name,
-            'icon' => $this->getGatewayIcon($gateway->slug),
+            'icon' => 'pi pi-credit-card',
             'is_verified' => $config->isVerified(),
             'is_pending' => $config->isPending(),
             'is_failed' => $config->isFailed(),
@@ -327,8 +341,8 @@ class ProviderGatewaySetupController extends Controller
         return [
             'slug' => $gateway->slug,
             'name' => $gateway->name,
-            'icon' => $this->getGatewayIcon($gateway->slug),
-            'description' => $this->getGatewayDescription($gateway->slug),
+            'icon' => 'pi pi-credit-card',
+            'description' => 'Caribbean payment gateway with split payment support. Receive funds directly to your WiPay account.',
             'supports_split' => $gateway->supports_split,
             'supports_escrow' => $gateway->supports_escrow,
             'features' => $this->getGatewayFeatures($gateway),
@@ -336,107 +350,38 @@ class ProviderGatewaySetupController extends Controller
     }
 
     /**
-     * Validate credentials based on gateway type.
+     * Validate WiPay credentials.
      */
-    private function validateCredentials(Request $request, GatewayProvider $gateway): array
+    private function validateCredentials(Request $request): array
     {
-        $rules = match ($gateway) {
-            GatewayProvider::WIPAY => [
-                'account_number' => 'required|string|max:255',
-                'api_key' => 'required|string|max:255',
-                'environment' => ['required', Rule::in(['sandbox', 'production'])],
-            ],
-            GatewayProvider::FYGARO => [
-                'merchant_id' => 'required|string|max:255',
-                'api_key' => 'required|string|max:255',
-                'secret_key' => 'required|string|max:255',
-                'environment' => ['required', Rule::in(['sandbox', 'production'])],
-            ],
-            GatewayProvider::POWERTRANZ => [
-                'merchant_id' => 'required|string|max:255',
-                'password' => 'required|string|max:255',
-                'terminal_id' => 'required|string|max:255',
-                'environment' => ['required', Rule::in(['sandbox', 'production'])],
-            ],
-        };
+        $rules = [
+            'account_number' => 'required|string|max:255',
+            'api_key' => 'required|string|max:255',
+            'environment' => ['required', Rule::in(['sandbox', 'production'])],
+        ];
 
         $validated = $request->validate($rules);
 
-        // Structure credentials for storage
-        $credentials = match ($gateway) {
-            GatewayProvider::WIPAY => [
+        return [
+            'credentials' => [
                 'account_number' => $validated['account_number'],
                 'api_key' => $validated['api_key'],
                 'environment' => $validated['environment'],
             ],
-            GatewayProvider::FYGARO => [
-                'merchant_id' => $validated['merchant_id'],
-                'api_key' => $validated['api_key'],
-                'secret_key' => $validated['secret_key'],
-                'environment' => $validated['environment'],
-            ],
-            GatewayProvider::POWERTRANZ => [
-                'merchant_id' => $validated['merchant_id'],
-                'password' => $validated['password'],
-                'terminal_id' => $validated['terminal_id'],
-                'environment' => $validated['environment'],
-            ],
-        };
-
-        return [
-            'credentials' => $credentials,
-            'merchant_account_id' => $validated['merchant_id'] ?? $validated['account_number'] ?? null,
+            'merchant_account_id' => $validated['account_number'],
         ];
     }
 
     /**
      * Verify gateway credentials with the provider.
      */
-    private function verifyGatewayCredentials(ProviderGatewayConfig $config, GatewayProvider $gateway): bool
+    private function verifyGatewayCredentials(ProviderGatewayConfig $config): bool
     {
-        // TODO: Implement actual verification with each gateway
-        // This would call the respective gateway's API to verify credentials
+        // TODO: Implement actual verification with WiPay API
+        // This would call WiPay's API to verify the account credentials
 
         // For now, simulate successful verification for development
         return true;
-    }
-
-    /**
-     * Get the Vue component name for a gateway.
-     */
-    private function getGatewayViewName(GatewayProvider $gateway): string
-    {
-        return match ($gateway) {
-            GatewayProvider::WIPAY => 'WiPay',
-            GatewayProvider::FYGARO => 'Fygaro',
-            GatewayProvider::POWERTRANZ => 'PowerTranz',
-        };
-    }
-
-    /**
-     * Get gateway icon.
-     */
-    private function getGatewayIcon(string $slug): string
-    {
-        return match ($slug) {
-            'wipay' => 'pi pi-credit-card',
-            'fygaro' => 'pi pi-wallet',
-            'powertranz' => 'pi pi-money-bill',
-            default => 'pi pi-credit-card',
-        };
-    }
-
-    /**
-     * Get gateway description.
-     */
-    private function getGatewayDescription(string $slug): string
-    {
-        return match ($slug) {
-            'wipay' => 'Caribbean payment gateway with split payment support. Receive funds directly to your WiPay account.',
-            'fygaro' => 'Modern payment platform with flexible split payment options. Supports multiple Caribbean currencies.',
-            'powertranz' => 'Enterprise payment processing. Funds are collected by the platform and paid out on schedule.',
-            default => 'Payment gateway',
-        };
     }
 
     /**

@@ -46,7 +46,7 @@ const {
 const cover = ref<MediaItem | null>(props.service.cover || null);
 
 // URL for cover image upload (use UUID for route model binding)
-const uploadUrl = computed(() => media.service.upload({ service: props.service.uuid }).url);
+const uploadUrl = computed(() => resolveUrl(media.service.upload({ service: props.service.uuid }).url));
 
 const handleCoverUploaded = (media: MediaItem) => {
     toast.add({
@@ -68,18 +68,18 @@ const handleCoverError = (error: string) => {
 
 const form = useForm({
     name: props.service.name,
-    category_id: props.service.category_id,
+    category_id: props.service.category?.id ?? null,
     description: props.service.description || '',
     duration_minutes: props.service.duration_minutes,
     price: props.service.price,
     is_active: props.service.is_active,
-    use_provider_defaults: props.service.use_provider_defaults,
-    requires_approval: props.service.requires_approval ?? props.providerDefaults.requires_approval,
-    deposit_type: props.service.deposit_type ?? props.providerDefaults.deposit_type,
-    deposit_amount: props.service.deposit_amount ?? props.providerDefaults.deposit_amount,
-    cancellation_policy: props.service.cancellation_policy ?? props.providerDefaults.cancellation_policy,
-    advance_booking_days: props.service.advance_booking_days ?? props.providerDefaults.advance_booking_days,
-    min_booking_notice_hours: props.service.min_booking_notice_hours ?? props.providerDefaults.min_booking_notice_hours,
+    use_provider_defaults: props.service.booking_settings?.use_provider_defaults ?? true,
+    requires_approval: props.service.booking_settings?.requires_approval ?? props.providerDefaults.requires_approval,
+    deposit_type: props.service.booking_settings?.deposit_type ?? props.providerDefaults.deposit_type,
+    deposit_amount: props.service.booking_settings?.deposit_amount ?? props.providerDefaults.deposit_amount,
+    cancellation_policy: props.service.booking_settings?.cancellation_policy ?? props.providerDefaults.cancellation_policy,
+    advance_booking_days: props.service.booking_settings?.advance_booking_days ?? props.providerDefaults.advance_booking_days,
+    min_booking_notice_hours: props.service.booking_settings?.min_booking_notice_hours ?? props.providerDefaults.min_booking_notice_hours,
 });
 
 // Real-time validation for price

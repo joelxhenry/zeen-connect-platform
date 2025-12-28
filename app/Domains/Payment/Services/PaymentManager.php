@@ -12,6 +12,7 @@ use App\Domains\Payment\DTOs\SplitPaymentData;
 use App\Domains\Payment\Enums\GatewayType;
 use App\Domains\Payment\Models\Payment;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Services\SubscriptionService;
 
 class PaymentManager
@@ -130,10 +131,11 @@ class PaymentManager
 
     /**
      * Calculate fees for a booking/service.
+     * Uses service's deposit settings when provided.
      */
-    public function calculateFees(Provider $provider, float $servicePrice): array
+    public function calculateFees(Provider $provider, float $servicePrice, ?Service $service = null): array
     {
-        return $this->subscriptionService->calculateFees($provider, $servicePrice);
+        return $this->subscriptionService->calculateFees($provider, $servicePrice, $service);
     }
 
     /**

@@ -59,7 +59,7 @@ class ProviderSiteBookingController extends Controller
         // Calculate tier info for first service (will be recalculated when service is selected)
         $firstService = $provider->services->first();
         $tierInfo = $firstService
-            ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price)
+            ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price, $firstService)
             : null;
 
         return Inertia::render('ProviderSite/Book', [
@@ -115,7 +115,8 @@ class ProviderSiteBookingController extends Controller
     public function store(StoreBookingRequest $request, CreateBookingAction $action)
     {
         $provider = $this->getProvider();
-        $service = Service::findOrFail($request->service_id);
+        // Load service with provider to ensure getEffectiveBookingSettings() works correctly
+        $service = Service::with('provider')->findOrFail($request->service_id);
 
         // Verify service belongs to this provider
         if ($service->provider_id !== $provider->id) {

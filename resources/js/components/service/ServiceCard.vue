@@ -29,8 +29,8 @@ const placeholderBackground = computed(() => {
         <!-- Cover Image -->
         <div class="relative -mx-4 -mt-4 mb-4 h-32 overflow-hidden rounded-t-xl">
             <img
-                v-if="service.cover?.conversions?.thumbnail"
-                :src="service.cover.conversions.thumbnail"
+                v-if="service.cover?.thumbnail"
+                :src="service.cover.thumbnail"
                 :alt="service.name"
                 class="w-full h-full object-cover"
             />

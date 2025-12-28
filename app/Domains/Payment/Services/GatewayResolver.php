@@ -5,10 +5,7 @@ namespace App\Domains\Payment\Services;
 use App\Domains\Payment\Contracts\PaymentGatewayInterface;
 use App\Domains\Payment\Enums\GatewayProvider;
 use App\Domains\Payment\Enums\GatewayType;
-use App\Domains\Payment\Gateways\DirectSplit\FygaroDirectSplitGateway;
 use App\Domains\Payment\Gateways\DirectSplit\WiPayDirectSplitGateway;
-use App\Domains\Payment\Gateways\Escrow\FygaroEscrowGateway;
-use App\Domains\Payment\Gateways\Escrow\PowerTranzEscrowGateway;
 use App\Domains\Payment\Gateways\Escrow\WiPayEscrowGateway;
 use App\Domains\Payment\Models\ProviderGatewayConfig;
 use App\Domains\Provider\Models\Provider;
@@ -36,13 +33,12 @@ class GatewayResolver
         if ($providerConfig && $providerConfig->gateway->supports_split) {
             // Provider has linked account - use split gateway
             return $this->instantiateSplitGateway(
-                GatewayProvider::from($providerConfig->gateway->slug),
                 $providerConfig->getDecryptedCredentials()
             );
         }
 
-        // Default to escrow with platform's default gateway
-        return $this->instantiateEscrowGateway($this->getDefaultProvider());
+        // Default to escrow with WiPay
+        return $this->instantiateEscrowGateway();
     }
 
     /**
@@ -56,7 +52,7 @@ class GatewayResolver
             throw new InvalidArgumentException("Unknown gateway: {$gatewayName}");
         }
 
-        return $this->instantiateEscrowGateway($provider);
+        return $this->instantiateEscrowGateway();
     }
 
     /**
@@ -88,29 +84,17 @@ class GatewayResolver
     /**
      * Instantiate a split gateway with provider credentials.
      */
-    protected function instantiateSplitGateway(
-        GatewayProvider $provider,
-        array $credentials
-    ): PaymentGatewayInterface {
-        return match ($provider) {
-            GatewayProvider::WIPAY => new WiPayDirectSplitGateway($credentials),
-            GatewayProvider::FYGARO => new FygaroDirectSplitGateway($credentials),
-            default => throw new InvalidArgumentException(
-                "Gateway {$provider->value} does not support split payments"
-            ),
-        };
+    protected function instantiateSplitGateway(array $credentials): PaymentGatewayInterface
+    {
+        return new WiPayDirectSplitGateway($credentials);
     }
 
     /**
      * Instantiate an escrow gateway.
      */
-    protected function instantiateEscrowGateway(GatewayProvider $provider): PaymentGatewayInterface
+    protected function instantiateEscrowGateway(): PaymentGatewayInterface
     {
-        return match ($provider) {
-            GatewayProvider::WIPAY => new WiPayEscrowGateway($this->ledgerService),
-            GatewayProvider::FYGARO => new FygaroEscrowGateway($this->ledgerService),
-            GatewayProvider::POWERTRANZ => new PowerTranzEscrowGateway($this->ledgerService),
-        };
+        return new WiPayEscrowGateway($this->ledgerService);
     }
 
     /**
@@ -118,9 +102,7 @@ class GatewayResolver
      */
     protected function getDefaultProvider(): GatewayProvider
     {
-        $default = config('payment.default_gateway', 'powertranz');
-
-        return GatewayProvider::from($default);
+        return GatewayProvider::WIPAY;
     }
 
     /**

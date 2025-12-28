@@ -2,10 +2,12 @@
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'partially_refunded';
 export type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
 export type LedgerEntryType = 'credit' | 'debit' | 'hold' | 'release';
-export type GatewayProvider = 'wipay' | 'fygaro' | 'powertranz';
+export type GatewayProvider = 'wipay';
 export type GatewayMode = 'split' | 'escrow';
 export type PayoutSchedule = 'daily' | 'weekly' | 'monthly';
 export type VerificationStatus = 'pending' | 'verified' | 'failed';
+export type PayoutMethod = 'wipay_account' | 'wipay_bank' | 'manual_bank_transfer';
+export type BankAccountType = 'savings' | 'checking';
 
 // Payment Models
 export interface Payment {
@@ -43,7 +45,7 @@ export interface Payout {
     status: PayoutStatus;
     status_label: string;
     status_color: string;
-    payout_method?: string;
+    payout_method?: PayoutMethod;
     bank_account_display?: string;
     reference_number?: string;
     notes?: string;
@@ -63,6 +65,7 @@ export interface ScheduledPayout {
     status_color: string;
     scheduled_for: string;
     can_cancel: boolean;
+    payout_method?: PayoutMethod;
 }
 
 // Gateway Types
@@ -99,6 +102,26 @@ export interface GatewayFeature {
     icon: string;
     label: string;
     description: string;
+}
+
+// Banking Info Types (for escrow payouts)
+export interface BankingInfo {
+    bank_name: string | null;
+    bank_account_number: string | null;
+    bank_account_holder_name: string | null;
+    bank_branch_code: string | null;
+    bank_account_type: BankAccountType | null;
+    is_verified: boolean;
+    verified_at?: string;
+    has_banking_info: boolean;
+}
+
+export interface BankingInfoForm {
+    bank_name: string;
+    bank_account_number: string;
+    bank_account_holder_name: string;
+    bank_branch_code: string;
+    bank_account_type: BankAccountType;
 }
 
 // Wallet & Ledger Types
@@ -197,20 +220,6 @@ export interface WiPayCredentials {
     environment: 'sandbox' | 'production';
 }
 
-export interface FygaroCredentials {
-    merchant_id: string;
-    api_key: string;
-    secret_key: string;
-    environment: 'sandbox' | 'production';
-}
-
-export interface PowerTranzCredentials {
-    merchant_id: string;
-    password: string;
-    terminal_id: string;
-    environment: 'sandbox' | 'production';
-}
-
 // Page Props Types
 export interface PaymentsIndexProps {
     summary: EarningsSummary;
@@ -263,12 +272,19 @@ export interface GatewaySetupIndexProps {
     hasGatewayConfigured: boolean;
     configuredGateways: GatewayConfig[];
     availableGateways: GatewayOption[];
+    bankingInfo: BankingInfo;
 }
 
 export interface GatewaySetupFormProps {
     gateway: GatewayOption;
     config: GatewayConfig | null;
     isEdit: boolean;
+}
+
+export interface BankingInfoProps {
+    bankingInfo: BankingInfo;
+    hasWiPayAccount: boolean;
+    banks: Record<string, string>;
 }
 
 // Utility Types

@@ -3,6 +3,8 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import { computed } from 'vue';
+import { resolveUrl } from '@/utils/url';
+import { foundingMembers } from '@/routes';
 
 const page = usePage();
 const success = computed(() => (page.props as { flash?: { success?: string } }).flash?.success);
@@ -14,7 +16,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post('/founding-members', {
+    form.post(resolveUrl(foundingMembers().url), {
         preserveScroll: true,
         onSuccess: () => form.reset(),
     });
@@ -51,31 +53,20 @@ const submit = () => {
                 <form v-else @submit.prevent="submit" class="signup-form">
                     <div class="input-wrapper">
                         <label>Your name</label>
-                        <InputText
-                            v-model="form.name"
-                            placeholder="Jane Doe"
-                            :class="{ 'p-invalid': form.errors.name }"
-                        />
+                        <InputText v-model="form.name" placeholder="Jane Doe"
+                            :class="{ 'p-invalid': form.errors.name }" />
                         <small v-if="form.errors.name" class="error">{{ form.errors.name }}</small>
                     </div>
                     <div class="input-wrapper">
                         <label>Email address</label>
-                        <InputText
-                            v-model="form.email"
-                            type="email"
-                            placeholder="jane@email.com"
-                            :class="{ 'p-invalid': form.errors.email }"
-                        />
+                        <InputText v-model="form.email" type="email" placeholder="jane@email.com"
+                            :class="{ 'p-invalid': form.errors.email }" />
                         <small v-if="form.errors.email" class="error">{{ form.errors.email }}</small>
                     </div>
                     <div class="input-wrapper">
                         <label>Phone number</label>
-                        <InputText
-                            v-model="form.phone"
-                            type="tel"
-                            placeholder="876-555-1234"
-                            :class="{ 'p-invalid': form.errors.phone }"
-                        />
+                        <InputText v-model="form.phone" type="tel" placeholder="876-555-1234"
+                            :class="{ 'p-invalid': form.errors.phone }" />
                         <small v-if="form.errors.phone" class="error">{{ form.errors.phone }}</small>
                     </div>
                     <Button type="submit" :loading="form.processing" class="submit-btn">
@@ -94,27 +85,29 @@ const submit = () => {
 
             <!-- Right: Image -->
             <div class="hero-image">
-                <img
-                    src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=700&fit=crop"
-                    alt="Service provider at work"
-                    class="main-image"
-                />
+                <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=700&fit=crop"
+                    alt="Service provider at work" class="main-image" />
 
                 <!-- Floating images -->
                 <div class="floating-image float-1">
-                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&h=100&fit=crop" alt="" />
+                    <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=100&h=100&fit=crop"
+                        alt="" />
                 </div>
                 <div class="floating-image float-2">
-                    <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=100&h=100&fit=crop" alt="" />
+                    <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=100&h=100&fit=crop"
+                        alt="" />
                 </div>
                 <div class="floating-image float-3">
-                    <img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=100&h=100&fit=crop" alt="" />
+                    <img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=100&h=100&fit=crop"
+                        alt="" />
                 </div>
 
                 <!-- Curved lines SVG -->
                 <svg class="curved-lines" viewBox="0 0 300 400" fill="none">
-                    <path d="M50 50 Q150 100 100 200 T200 350" stroke="#9ca3af" stroke-width="1.5" fill="none" opacity="0.4"/>
-                    <path d="M100 30 Q200 80 150 180 T250 330" stroke="#9ca3af" stroke-width="1.5" fill="none" opacity="0.3"/>
+                    <path d="M50 50 Q150 100 100 200 T200 350" stroke="#9ca3af" stroke-width="1.5" fill="none"
+                        opacity="0.4" />
+                    <path d="M100 30 Q200 80 150 180 T250 330" stroke="#9ca3af" stroke-width="1.5" fill="none"
+                        opacity="0.3" />
                 </svg>
             </div>
         </div>
@@ -168,8 +161,15 @@ const submit = () => {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
 }
 
 .hero-content h1 {

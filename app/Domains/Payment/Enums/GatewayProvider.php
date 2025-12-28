@@ -5,30 +5,20 @@ namespace App\Domains\Payment\Enums;
 enum GatewayProvider: string
 {
     case WIPAY = 'wipay';
-    case FYGARO = 'fygaro';
-    case POWERTRANZ = 'powertranz';
 
     public function label(): string
     {
-        return match ($this) {
-            self::WIPAY => 'WiPay',
-            self::FYGARO => 'Fygaro',
-            self::POWERTRANZ => 'PowerTranz',
-        };
+        return 'WiPay';
     }
 
     public function supportsSplit(): bool
     {
-        return match ($this) {
-            self::WIPAY => true,
-            self::FYGARO => true,
-            self::POWERTRANZ => false,
-        };
+        return true;
     }
 
     public function supportsEscrow(): bool
     {
-        return true; // All providers support escrow
+        return true;
     }
 
     public function configKey(): string

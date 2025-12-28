@@ -19,8 +19,8 @@ import type { Provider, MediaItem, VideoEmbed } from '@/types/models';
 
 interface Props {
     provider: Provider & {
-        avatar?: MediaItem | null;
-        cover?: MediaItem | null;
+        avatar_media?: MediaItem | null;
+        cover_media?: MediaItem | null;
         gallery?: MediaItem[];
         videos?: VideoEmbed[];
     };
@@ -31,8 +31,8 @@ const toast = useToast();
 const page = usePage();
 
 // Media state - separate from form to handle uploads independently
-const avatar = ref<MediaItem | null>(props.provider.avatar || null);
-const coverPhoto = ref<MediaItem | null>(props.provider.cover || null);
+const avatar = ref<MediaItem | null>(props.provider.avatar_media || null);
+const coverPhoto = ref<MediaItem | null>(props.provider.cover_media || null);
 const gallery = ref<MediaItem[]>(props.provider.gallery || []);
 const videos = ref<VideoEmbed[]>(props.provider.videos || []);
 

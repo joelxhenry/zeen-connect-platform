@@ -25,15 +25,17 @@ export interface ServiceProvider {
 
 /**
  * Booking settings for a Service.
+ * Fields can be null when using provider defaults (values not set on the service itself).
+ * Only percentage deposits are supported (no fixed amounts).
  */
 export interface ServiceBookingSettings {
     use_provider_defaults: boolean;
-    requires_approval: boolean;
-    deposit_type: 'none' | 'fixed' | 'percentage';
+    requires_approval: boolean | null;
+    deposit_type: 'none' | 'percentage' | null;
     deposit_amount: number | null;
-    cancellation_policy: 'flexible' | 'moderate' | 'strict';
-    advance_booking_days: number;
-    min_booking_notice_hours: number;
+    cancellation_policy: 'flexible' | 'moderate' | 'strict' | null;
+    advance_booking_days: number | null;
+    min_booking_notice_hours: number | null;
 }
 
 /**
@@ -116,11 +118,11 @@ export interface ServiceListItem extends Pick<Service,
 
 /**
  * Service for edit forms.
- * Full service data with media.
+ * Full service data with media, category, and booking settings.
+ * Note: category_id is accessed via category?.id (nested object from resource)
  */
 export interface ServiceEditForm extends Service {
-    category_id: number | null;
-    provider_id: number;
+    category: ServiceCategory | null;
     cover: MediaItem | null;
     gallery: MediaItem[];
     videos: VideoEmbed[];

@@ -35,9 +35,9 @@ export interface ServiceStats {
     inactive: number;
 }
 
-// Deposit type option
+// Deposit type option (only percentage deposits supported, no fixed amounts)
 export interface DepositTypeOption {
-    value: 'none' | 'fixed' | 'percentage';
+    value: 'none' | 'percentage';
     label: string;
     disabled?: boolean;
 }

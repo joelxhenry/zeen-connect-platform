@@ -91,8 +91,8 @@ class CreateBookingAction
             throw new \Exception('This time slot is no longer available.');
         }
 
-        // Calculate tier-based fees
-        $fees = $this->subscriptionService->calculateFees($provider, (float) $service->price);
+        // Calculate fees using service's deposit settings
+        $fees = $this->subscriptionService->calculateFees($provider, (float) $service->price, $service);
 
         // Get effective booking settings
         $settings = $service->getEffectiveBookingSettings();

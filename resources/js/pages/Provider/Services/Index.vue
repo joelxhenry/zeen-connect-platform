@@ -43,7 +43,7 @@ const filteredServices = computed(() => {
 
     // Category filter
     if (selectedCategory.value !== null) {
-        result = result.filter(service => service.category_id === selectedCategory.value);
+        result = result.filter(service => service.category?.id === selectedCategory.value);
     }
 
     // Status filter

@@ -9,6 +9,8 @@ import FlashMessages from '@/components/error/FlashMessages.vue';
 import site from '@/routes/providersite';
 import { login } from '@/routes';
 import ProviderSiteBookingController from '@/actions/App/Http/Controllers/ProviderSite/ProviderSiteBookingController';
+import client from '@/routes/client';
+import { resolveUrl } from '@/utils/url';
 
 defineProps<{
     title?: string;
@@ -108,7 +110,7 @@ const getBookingUrl = () => {
 
                     <div class="auth-nav">
                         <template v-if="user">
-                            <AppLink :href="getBookingUrl()" class="nav-link text-sm">
+                            <AppLink :href="resolveUrl(client.bookings.index().url)" class="nav-link text-sm">
                                 My Bookings
                             </AppLink>
                         </template>

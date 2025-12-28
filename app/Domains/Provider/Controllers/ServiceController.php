@@ -29,7 +29,7 @@ class ServiceController extends Controller
     {
         $provider = Auth::user()->provider;
         $services = $provider->services()
-            ->with('category')
+            ->with(['category', 'media'])
             ->withCount(['bookings as total_bookings'])
             ->ordered()
             ->get();
@@ -45,9 +45,9 @@ class ServiceController extends Controller
         $categories = Category::active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Index', [
-            'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategory()->withCounts()->resolve()),
+            'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategory()->withMedia()->withCounts()->resolve()),
             'stats' => $stats,
-            'categories' => CategoryResource::collection($categories),
+            'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
@@ -59,7 +59,7 @@ class ServiceController extends Controller
         $categories = Category::active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Create', [
-            'categories' => CategoryResource::collection($categories),
+            'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
@@ -96,7 +96,7 @@ class ServiceController extends Controller
                 ->withMedia()
                 ->withBookingSettings()
                 ->resolve(),
-            'categories' => CategoryResource::collection($categories),
+            'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $provider->getBookingSettings(),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);

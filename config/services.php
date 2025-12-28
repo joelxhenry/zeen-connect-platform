@@ -37,29 +37,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Payment Gateways
+    | Payment Gateway - WiPay
     |--------------------------------------------------------------------------
+    |
+    | WiPay is the sole payment gateway. Supports both split payments
+    | (instant payouts to provider's WiPay account) and escrow mode
+    | (platform collects, then pays out to provider's bank account).
+    |
     */
 
-    'powertranz' => [
-        'id' => env('POWERTRANZ_ID'),
-        'password' => env('POWERTRANZ_PASSWORD'),
-        'test_mode' => env('POWERTRANZ_TEST_MODE', true),
-    ],
-
     'wipay' => [
+        // Platform credentials for collecting payments
         'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID'),
         'api_key' => env('WIPAY_API_KEY'),
         'developer_id' => env('WIPAY_DEVELOPER_ID'),
         'secret_key' => env('WIPAY_SECRET_KEY'),
-        'test_mode' => env('WIPAY_TEST_MODE', true),
-    ],
 
-    'fygaro' => [
-        'merchant_id' => env('FYGARO_MERCHANT_ID'),
-        'api_key' => env('FYGARO_API_KEY'),
-        'secret_key' => env('FYGARO_SECRET_KEY'),
-        'test_mode' => env('FYGARO_TEST_MODE', true),
+        // Environment settings
+        'test_mode' => env('WIPAY_TEST_MODE', true),
+
+        // API endpoints
+        'api_url' => env('WIPAY_API_URL', 'https://sandbox.wipaycaribbean.com/api'),
+        'disbursement_url' => env('WIPAY_DISBURSEMENT_URL', 'https://sandbox.wipaycaribbean.com/api/v1/disbursements'),
     ],
 
 ];

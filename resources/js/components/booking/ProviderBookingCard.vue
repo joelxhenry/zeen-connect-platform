@@ -3,7 +3,8 @@ import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import AppLink from '@/components/common/AppLink.vue';
-import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
+import provider from '@/routes/provider';
+import { resolveUrl } from '@/utils/url';
 import type { Booking } from '@/types/models/booking';
 
 interface Props {
@@ -100,7 +101,7 @@ const getInitials = (name: string) => {
                             class="!bg-[#106B4F] !border-[#106B4F]"
                             @click.stop="emit('confirm', booking)"
                         />
-                        <AppLink :href="ProviderBookingController.show({ uuid: booking.uuid }).url">
+                        <AppLink :href="resolveUrl(provider.bookings.show(booking.uuid).url)">
                             <Button
                                 label="View Details"
                                 icon="pi pi-arrow-right"

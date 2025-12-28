@@ -8,7 +8,8 @@ import {
 } from '@/components/console';
 import ProviderBookingCard from '@/components/booking/ProviderBookingCard.vue';
 import { useToast } from 'primevue/usetoast';
-import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
+import provider from '@/routes/provider';
+import { resolveUrl } from '@/utils/url';
 import type { Booking, BookingCounts, BookingStatusOption, PaginatedBookings } from '@/types/models/booking';
 
 interface Props {
@@ -31,11 +32,11 @@ const statusTabs = [
 ];
 
 const switchTab = (status: string) => {
-    router.get(ProviderBookingController.index().url, { status }, { preserveState: true });
+    router.get(resolveUrl(provider.bookings.index().url), { status }, { preserveState: true });
 };
 
 const confirmBooking = (booking: Booking) => {
-    router.post(ProviderBookingController.confirm({ uuid: booking.uuid }).url, {}, {
+    router.post(resolveUrl(provider.bookings.confirm(booking.uuid).url), {}, {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -122,7 +123,7 @@ const confirmBooking = (booking: Booking) => {
                         icon="pi pi-chevron-left"
                         :disabled="bookings.current_page === 1"
                         variant="ghost"
-                        @click="router.get(ProviderBookingController.index().url, { status: current_status, page: bookings.current_page - 1 })"
+                        @click="router.get(resolveUrl(provider.bookings.index().url), { status: current_status, page: bookings.current_page - 1 })"
                     />
                     <span class="flex items-center px-3 text-sm text-gray-500">
                         Page {{ bookings.current_page }} of {{ bookings.last_page }}
@@ -131,7 +132,7 @@ const confirmBooking = (booking: Booking) => {
                         icon="pi pi-chevron-right"
                         :disabled="bookings.current_page === bookings.last_page"
                         variant="ghost"
-                        @click="router.get(ProviderBookingController.index().url, { status: current_status, page: bookings.current_page + 1 })"
+                        @click="router.get(resolveUrl(provider.bookings.index().url), { status: current_status, page: bookings.current_page + 1 })"
                     />
                 </div>
             </div>

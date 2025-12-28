@@ -8,10 +8,13 @@ class UpdateProviderBookingSettingsAction
 {
     public function execute(Provider $provider, array $data): Provider
     {
+        $depositType = $data['deposit_type'];
+
         $updateData = [
             'requires_approval' => $data['requires_approval'],
-            'deposit_type' => $data['deposit_type'],
-            'deposit_amount' => $data['deposit_type'] !== 'none' ? $data['deposit_amount'] : null,
+            'deposit_type' => $depositType,
+            // Only store deposit_amount for percentage type (no fixed deposits supported)
+            'deposit_amount' => $depositType === 'percentage' ? $data['deposit_amount'] : null,
             'cancellation_policy' => $data['cancellation_policy'],
             'advance_booking_days' => $data['advance_booking_days'],
             'min_booking_notice_hours' => $data['min_booking_notice_hours'],

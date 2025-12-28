@@ -51,6 +51,14 @@ class Provider extends Model
         'deposit_percentage',
         'is_founding_member',
         'founding_member_at',
+        // Banking info for escrow payouts
+        'bank_name',
+        'bank_account_number',
+        'bank_account_holder_name',
+        'bank_branch_code',
+        'bank_account_type',
+        'banking_info_verified',
+        'banking_info_verified_at',
     ];
 
     protected function casts(): array
@@ -68,6 +76,8 @@ class Provider extends Model
             'deposit_percentage' => 'decimal:2',
             'is_founding_member' => 'boolean',
             'founding_member_at' => 'datetime',
+            'banking_info_verified' => 'boolean',
+            'banking_info_verified_at' => 'datetime',
         ];
     }
 
@@ -608,6 +618,45 @@ class Provider extends Model
     public function getPreferredGatewayType(): ?string
     {
         return $this->activeGatewayConfig?->gateway?->type;
+    }
+
+    // =========================================================================
+    // Banking Info Methods
+    // =========================================================================
+
+    /**
+     * Check if the provider has banking information configured.
+     */
+    public function hasBankingInfo(): bool
+    {
+        return ! empty($this->bank_account_number) && ! empty($this->bank_name);
+    }
+
+    /**
+     * Check if the provider has any payout method configured.
+     * Either WiPay account or banking info for escrow payouts.
+     */
+    public function hasPayoutMethod(): bool
+    {
+        return $this->hasLinkedGateway() || $this->hasBankingInfo();
+    }
+
+    /**
+     * Get the provider's payout method.
+     *
+     * @return string 'wipay_split', 'bank_transfer', or 'none'
+     */
+    public function getPayoutMethod(): string
+    {
+        if ($this->hasLinkedGateway()) {
+            return 'wipay_split';
+        }
+
+        if ($this->hasBankingInfo()) {
+            return 'bank_transfer';
+        }
+
+        return 'none';
     }
 
     // =========================================================================

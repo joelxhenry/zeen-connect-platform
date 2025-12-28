@@ -272,6 +272,9 @@ const isActiveRoute = (route: string) => {
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
 .provider-badge {

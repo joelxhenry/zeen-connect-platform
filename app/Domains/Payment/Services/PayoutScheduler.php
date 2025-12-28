@@ -5,7 +5,6 @@ namespace App\Domains\Payment\Services;
 use App\Domains\Payment\Enums\GatewayType;
 use App\Domains\Payment\Enums\LedgerEntryType;
 use App\Domains\Payment\Enums\ScheduledPayoutStatus;
-use App\Domains\Payment\Models\LedgerEntry;
 use App\Domains\Payment\Models\ScheduledPayout;
 use App\Domains\Provider\Models\Provider;
 use Illuminate\Support\Collection;
@@ -15,7 +14,8 @@ use Illuminate\Support\Facades\Log;
 class PayoutScheduler
 {
     public function __construct(
-        protected LedgerService $ledgerService
+        protected LedgerService $ledgerService,
+        protected WiPayDisbursementService $disbursementService
     ) {}
 
     /**
@@ -115,19 +115,39 @@ class PayoutScheduler
                 }
             }
 
+            $payoutMethod = $this->determinePayoutMethod($payout->provider);
+
+            // Handle WiPay disbursement if auto-disburse is enabled
+            if ($this->shouldAutoDisburse() && in_array($payoutMethod, ['wipay_account', 'wipay_bank'])) {
+                $result = $this->disbursementService->disburse($payout);
+
+                if (! $result['success']) {
+                    $payout->markAsFailed($result['error'] ?? 'Disbursement failed');
+
+                    return false;
+                }
+
+                // Update payout with disbursement details
+                $payout->update([
+                    'disbursement_id' => $result['disbursement_id'] ?? null,
+                    'disbursement_response' => $result['response'] ?? null,
+                ]);
+            }
+
             // Create a ledger entry for the payout (debit)
-            $ledgerEntry = $this->ledgerService->debitForPayout($payout->provider, $payout);
+            $this->ledgerService->debitForPayout($payout->provider, $payout);
 
             // Generate reference number
             $referenceNumber = $this->generateReferenceNumber();
 
-            // Mark as completed (actual bank transfer would be handled separately)
+            // Mark as completed
             $payout->markAsCompleted($referenceNumber);
 
             Log::info('Payout processed', [
                 'payout_id' => $payout->id,
                 'provider_id' => $payout->provider_id,
                 'amount' => $payout->amount,
+                'method' => $payoutMethod,
                 'reference' => $referenceNumber,
             ]);
 
@@ -201,12 +221,36 @@ class PayoutScheduler
     }
 
     /**
+     * Check if auto-disbursement is enabled.
+     */
+    protected function shouldAutoDisburse(): bool
+    {
+        return config('payment.payout_schedule.auto_disburse', false)
+            && $this->disbursementService->isAvailable();
+    }
+
+    /**
      * Determine the payout method for a provider.
      */
     protected function determinePayoutMethod(Provider $provider): string
     {
-        // Could be extended to support multiple payout methods (bank transfer, etc.)
-        return 'bank_transfer';
+        // Check if provider has verified WiPay account
+        $hasWiPayAccount = $provider->gatewayConfigs()
+            ->where('is_active', true)
+            ->where('verification_status', 'verified')
+            ->whereHas('gateway', fn ($q) => $q->where('slug', 'wipay'))
+            ->exists();
+
+        if ($hasWiPayAccount) {
+            return 'wipay_account';
+        }
+
+        // Check if provider has banking info
+        if ($provider->hasBankingInfo()) {
+            return 'wipay_bank';
+        }
+
+        return 'manual_bank_transfer';
     }
 
     /**
@@ -214,7 +258,7 @@ class PayoutScheduler
      */
     protected function generateReferenceNumber(): string
     {
-        return 'PAYOUT-' . now()->format('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(8));
+        return 'PAYOUT-'.now()->format('Ymd').'-'.strtoupper(\Illuminate\Support\Str::random(8));
     }
 
     /**

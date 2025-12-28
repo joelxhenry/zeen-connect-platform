@@ -173,7 +173,7 @@ const getStatusSeverity = (status: string): 'success' | 'warn' | 'danger' | 'inf
                 <div class="h-48 flex items-end justify-between gap-2">
                     <div v-for="month in monthly_earnings" :key="month.month" class="flex-1 flex flex-col items-center">
                         <div class="w-full bg-[#106B4F] rounded-t-md transition-all hover:bg-[#0D5A42]" :style="{
-                            height: `${Math.max(10, (month.total / Math.max(...monthly_earnings.map((m: { total: number }) => m.total))) * 100)}%`,
+                            height: `${Math.max(10, (month.total / Math.max(...monthly_earnings.map(m => m.total))) * 100)}%`,
                             minHeight: '10px',
                         }" v-tooltip="{ value: `${month.month_label}: ${month.total_display}`, showDelay: 100 }" />
                         <span class="text-xs text-gray-500 mt-2">

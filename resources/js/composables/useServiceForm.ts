@@ -11,6 +11,7 @@ import type {
 export function useServiceForm(tierRestrictions: TierRestrictions) {
     /**
      * Deposit type options filtered by tier capabilities.
+     * Only percentage deposits are supported (no fixed amounts).
      */
     const depositTypeOptions = computed((): DepositTypeOption[] => {
         const options: DepositTypeOption[] = [];
@@ -28,11 +29,6 @@ export function useServiceForm(tierRestrictions: TierRestrictions) {
                 disabled: true,
             });
         }
-
-        options.push({
-            value: 'fixed',
-            label: 'Fixed amount (JMD)',
-        });
 
         options.push({
             value: 'percentage',

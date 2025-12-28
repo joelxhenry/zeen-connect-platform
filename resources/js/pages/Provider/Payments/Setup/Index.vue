@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import {
@@ -84,6 +85,15 @@ const getVerificationSeverity = (status: string): 'success' | 'warn' | 'danger' 
             return 'secondary';
     }
 };
+
+// Banking info computed properties
+const hasBankingInfo = computed(() => props.bankingInfo?.has_banking_info ?? false);
+const isBankingVerified = computed(() => props.bankingInfo?.is_verified ?? false);
+
+// Check if provider has any payment method configured
+const hasAnyPaymentMethod = computed(() => {
+    return props.hasGatewayConfigured || hasBankingInfo.value;
+});
 </script>
 
 <template>
@@ -96,10 +106,10 @@ const getVerificationSeverity = (status: string): 'success' | 'warn' | 'danger' 
                 subtitle="Configure your payment gateways to receive payments from customers"
                 :back-href="provider.payments.index().url" />
 
-            <!-- No Gateway Alert -->
-            <ConsoleAlertBanner v-if="!hasGatewayConfigured" variant="warning" class="mb-6">
+            <!-- No Payment Method Alert -->
+            <ConsoleAlertBanner v-if="!hasAnyPaymentMethod" variant="warning" class="mb-6">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
-                    <span>You haven't set up a payment gateway yet. Choose one below to start receiving payments.</span>
+                    <span>You haven't set up a payment method yet. Choose one below to start receiving payments.</span>
                 </div>
             </ConsoleAlertBanner>
 
@@ -170,19 +180,79 @@ const getVerificationSeverity = (status: string): 'success' | 'warn' | 'danger' 
                 </div>
             </div>
 
-            <!-- Available Gateways -->
-            <div v-if="availableGateways.length > 0">
+            <!-- Banking Information -->
+            <div v-if="hasBankingInfo" class="mb-8">
+                <h2 class="text-lg font-semibold text-[#0D1F1B] mb-4">Banking Information</h2>
+                <ConsoleDataCard>
+                    <div class="flex items-start gap-4">
+                        <!-- Icon -->
+                        <div class="w-12 h-12 rounded-xl bg-[#106B4F]/10 flex items-center justify-center shrink-0">
+                            <i class="pi pi-building text-xl text-[#106B4F]" />
+                        </div>
+
+                        <!-- Info -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <h3 class="font-semibold text-[#0D1F1B] m-0">Bank Account</h3>
+                                <Tag
+                                    :value="isBankingVerified ? 'Verified' : 'Pending'"
+                                    :severity="isBankingVerified ? 'success' : 'warn'"
+                                    class="!text-xs"
+                                />
+                            </div>
+                            <p class="text-sm text-gray-500 m-0">
+                                Used for escrow payouts (scheduled deposits)
+                            </p>
+                            <p v-if="bankingInfo.bank_name" class="text-xs text-gray-400 m-0 mt-1">
+                                {{ bankingInfo.bank_name }} ****{{ bankingInfo.bank_account_number?.slice(-4) }}
+                            </p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <ConsoleButton
+                                icon="pi pi-pencil"
+                                size="small"
+                                variant="secondary"
+                                outlined
+                                :href="provider.payments.bankingInfo.edit().url"
+                                v-tooltip="'Edit'"
+                            />
+                        </div>
+                    </div>
+
+                    <template #footer>
+                        <div class="flex items-center gap-4 text-xs text-gray-400">
+                            <span v-if="bankingInfo.verified_at">
+                                <i class="pi pi-check mr-1" />
+                                Verified {{ bankingInfo.verified_at }}
+                            </span>
+                            <span v-else>
+                                <i class="pi pi-clock mr-1" />
+                                Verification pending
+                            </span>
+                        </div>
+                    </template>
+                </ConsoleDataCard>
+            </div>
+
+            <!-- Available Payment Options -->
+            <div>
                 <h2 class="text-lg font-semibold text-[#0D1F1B] mb-4">
-                    {{ hasGatewayConfigured ? 'Add Another Gateway' : 'Available Payment Gateways' }}
+                    {{ hasAnyPaymentMethod ? 'Payment Options' : 'Available Payment Options' }}
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <ConsoleFormCard v-for="gateway in availableGateways" :key="gateway.slug"
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- WiPay Gateway Option -->
+                    <ConsoleFormCard
+                        v-if="availableGateways.length > 0"
+                        v-for="gateway in availableGateways"
+                        :key="gateway.slug"
                         class="hover:shadow-md transition-shadow cursor-pointer"
-                        @click="router.visit(resolveUrl(provider.payments.setup.create({ gateway: gateway.slug }).url))">
+                        @click="router.visit(resolveUrl(provider.payments.setup.create({ gateway: gateway.slug }).url))"
+                    >
                         <div class="text-center">
                             <!-- Icon -->
-                            <div
-                                class="w-16 h-16 rounded-2xl bg-[#106B4F]/10 flex items-center justify-center mx-auto mb-4">
+                            <div class="w-16 h-16 rounded-2xl bg-[#106B4F]/10 flex items-center justify-center mx-auto mb-4">
                                 <i :class="[gateway.icon, 'text-3xl text-[#106B4F]']" />
                             </div>
 
@@ -192,22 +262,53 @@ const getVerificationSeverity = (status: string): 'success' | 'warn' | 'danger' 
 
                             <!-- Features -->
                             <div class="flex flex-wrap justify-center gap-2 mb-4">
-                                <Tag v-if="gateway.supports_split" value="Split Payments" severity="success"
-                                    class="!text-xs" />
-                                <Tag v-if="gateway.supports_escrow" value="Scheduled Payouts" severity="info"
-                                    class="!text-xs" />
+                                <Tag value="Split Payments" severity="success" class="!text-xs" />
+                                <Tag value="Instant Payouts" severity="info" class="!text-xs" />
                             </div>
 
                             <!-- Setup Button -->
-                            <ConsoleButton label="Set Up" icon="pi pi-arrow-right" icon-pos="right" class="w-full" />
+                            <ConsoleButton label="Set Up WiPay" icon="pi pi-arrow-right" icon-pos="right" class="w-full" />
+                        </div>
+                    </ConsoleFormCard>
+
+                    <!-- Banking Info Option -->
+                    <ConsoleFormCard
+                        v-if="!hasBankingInfo"
+                        class="hover:shadow-md transition-shadow cursor-pointer"
+                        @click="router.visit(resolveUrl(provider.payments.bankingInfo.edit().url))"
+                    >
+                        <div class="text-center">
+                            <!-- Icon -->
+                            <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                                <i class="pi pi-building text-3xl text-blue-600" />
+                            </div>
+
+                            <!-- Name & Description -->
+                            <h3 class="font-semibold text-[#0D1F1B] m-0 mb-2">Bank Account</h3>
+                            <p class="text-sm text-gray-500 m-0 mb-4">
+                                Add your banking information for escrow payouts
+                            </p>
+
+                            <!-- Features -->
+                            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                                <Tag value="Escrow Mode" severity="secondary" class="!text-xs" />
+                                <Tag value="Weekly Payouts" severity="info" class="!text-xs" />
+                            </div>
+
+                            <!-- Setup Button -->
+                            <ConsoleButton label="Add Banking Info" icon="pi pi-arrow-right" icon-pos="right" class="w-full" variant="secondary" />
                         </div>
                     </ConsoleFormCard>
                 </div>
             </div>
 
             <!-- All Configured -->
-            <ConsoleEmptyState v-if="availableGateways.length === 0 && hasGatewayConfigured" icon="pi pi-check-circle"
-                title="All gateways configured" description="You have set up all available payment gateways." />
+            <ConsoleEmptyState
+                v-if="availableGateways.length === 0 && hasGatewayConfigured && hasBankingInfo"
+                icon="pi pi-check-circle"
+                title="All payment options configured"
+                description="You have set up all available payment methods."
+            />
         </div>
     </ConsoleLayout>
 </template>

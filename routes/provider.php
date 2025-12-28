@@ -7,6 +7,7 @@ use App\Domains\Payment\Controllers\ProviderEarningsController;
 use App\Domains\Payment\Controllers\ProviderGatewaySetupController;
 use App\Domains\Payment\Controllers\ProviderRefundController;
 use App\Domains\Provider\Controllers\AvailabilityController;
+use App\Domains\Provider\Controllers\BankingInfoController;
 use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
@@ -83,7 +84,7 @@ Route::prefix('payments')->name('provider.payments.')->group(function () {
     Route::put('/payout/schedule', [ProviderEarningsController::class, 'updatePayoutSchedule'])->name('payout.schedule');
     Route::post('/payout/{uuid}/cancel', [ProviderEarningsController::class, 'cancelPayout'])->name('payout.cancel');
 
-    // Gateway Setup
+    // Gateway Setup (WiPay)
     Route::prefix('setup')->name('setup.')->group(function () {
         Route::get('/', [ProviderGatewaySetupController::class, 'index'])->name('index');
         Route::get('/{gateway}', [ProviderGatewaySetupController::class, 'create'])->name('create');
@@ -93,6 +94,13 @@ Route::prefix('payments')->name('provider.payments.')->group(function () {
         Route::delete('/{gateway}', [ProviderGatewaySetupController::class, 'destroy'])->name('destroy');
         Route::post('/{gateway}/verify', [ProviderGatewaySetupController::class, 'verify'])->name('verify');
         Route::post('/{gateway}/primary', [ProviderGatewaySetupController::class, 'makePrimary'])->name('primary');
+    });
+
+    // Banking Info (for escrow payouts)
+    Route::prefix('banking-info')->name('banking-info.')->group(function () {
+        Route::get('/', [BankingInfoController::class, 'edit'])->name('edit');
+        Route::put('/', [BankingInfoController::class, 'update'])->name('update');
+        Route::delete('/', [BankingInfoController::class, 'destroy'])->name('destroy');
     });
 
     // Refunds

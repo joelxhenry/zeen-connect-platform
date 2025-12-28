@@ -27,7 +27,7 @@ class StoreServiceRequest extends FormRequest
             // Booking settings
             'use_provider_defaults' => ['boolean'],
             'requires_approval' => ['nullable', 'boolean'],
-            'deposit_type' => ['nullable', 'in:none,fixed,percentage'],
+            'deposit_type' => ['nullable', 'in:none,percentage'],
             'deposit_amount' => ['nullable', 'numeric', 'min:0'],
             'cancellation_policy' => ['nullable', 'in:flexible,moderate,strict'],
             'advance_booking_days' => ['nullable', 'integer', 'min:1', 'max:365'],

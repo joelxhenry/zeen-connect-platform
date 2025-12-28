@@ -34,9 +34,8 @@ class ClientBookingController extends Controller
 
         $query = Booking::forClient($user->id)
             ->with([
-                'provider:id,uuid,business_name,slug',
-                'provider.user:id,avatar',
-                'service:id,uuid,name,duration_minutes,price',
+                'provider',
+                'service',
             ]);
 
         if ($status === 'upcoming') {
@@ -51,7 +50,7 @@ class ClientBookingController extends Controller
 
         // Transform using BookingResource
         $bookings->getCollection()->transform(
-            fn ($booking) => (new BookingResource($booking))
+            fn($booking) => (new BookingResource($booking))
                 ->withClient(false)
                 ->withProvider()
                 ->resolve()
@@ -72,7 +71,7 @@ class ClientBookingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar',
-                'services' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
+                'services' => fn($q) => $q->where('is_active', true)->orderBy('sort_order'),
                 'services.category:id,name,icon',
                 'subscription',
             ])
@@ -83,10 +82,14 @@ class ClientBookingController extends Controller
         $endDate = now()->addDays(30)->format('Y-m-d');
         $availableDates = $this->availabilityService->getAvailableDates($provider, $startDate, $endDate);
 
+        // Set provider relationship on each service to avoid lazy loading
+        // when getEffectiveBookingSettings() accesses $this->provider
+        $provider->services->each(fn($service) => $service->setRelation('provider', $provider));
+
         // Calculate tier info for first service (will be recalculated when service is selected)
         $firstService = $provider->services->first();
         $tierInfo = $firstService
-            ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price)
+            ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price, $firstService)
             : null;
 
         return Inertia::render('Booking/Create', [
@@ -98,7 +101,7 @@ class ClientBookingController extends Controller
                 'tier' => $tierInfo['tier'] ?? 'free',
                 'tier_label' => $tierInfo['tier_label'] ?? 'Free',
             ],
-            'services' => $provider->services->map(fn ($service) => [
+            'services' => $provider->services->map(fn($service) => [
                 'id' => $service->id,
                 'name' => $service->name,
                 'description' => $service->description,
@@ -111,8 +114,8 @@ class ClientBookingController extends Controller
                     'name' => $service->category->name,
                     'icon' => $service->category->icon,
                 ],
-                // Pre-calculate fees for each service
-                'fees' => $this->subscriptionService->calculateFees($provider, (float) $service->price),
+                // Pre-calculate fees for each service (uses service's deposit settings)
+                'fees' => $this->subscriptionService->calculateFees($provider, (float) $service->price, $service),
             ]),
             'availableDates' => $availableDates,
             'preselectedService' => $request->service ? (int) $request->service : null,
@@ -150,7 +153,8 @@ class ClientBookingController extends Controller
     public function store(StoreBookingRequest $request, CreateBookingAction $action): RedirectResponse
     {
         $provider = Provider::findOrFail($request->provider_id);
-        $service = Service::findOrFail($request->service_id);
+        // Load service with provider to ensure getEffectiveBookingSettings() works correctly
+        $service = Service::with('provider')->findOrFail($request->service_id);
 
         try {
             // Handle guest vs authenticated booking

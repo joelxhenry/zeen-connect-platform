@@ -200,6 +200,7 @@ class ServiceResource extends JsonResource
 
     /**
      * Format fee calculations.
+     * Uses the service's effective deposit settings.
      */
     protected function formatFees(): ?array
     {
@@ -208,35 +209,25 @@ class ServiceResource extends JsonResource
         }
 
         $subscriptionService = app(SubscriptionService::class);
-        $fees = $subscriptionService->calculateFees($this->provider, (float) $this->price);
 
-        // Add deposit info from effective settings
-        $depositPercentage = $subscriptionService->getEffectiveDepositPercentage($this->provider);
-        $depositAmount = round((float) $this->price * $depositPercentage / 100, 2);
-        $requiresDeposit = $depositAmount > 0;
-
-        return array_merge($fees, [
-            'deposit_amount' => $depositAmount,
-            'deposit_percentage' => $depositPercentage,
-            'requires_deposit' => $requiresDeposit,
-        ]);
+        // Calculate fees using this service's deposit settings
+        return $subscriptionService->calculateFees($this->provider, (float) $this->price, $this->resource);
     }
 
     /**
      * Format booking settings.
+     * Returns the service's own stored values (not effective/computed values).
      */
     protected function formatBookingSettings(): array
     {
-        $settings = $this->getEffectiveBookingSettings();
-
         return [
             'use_provider_defaults' => (bool) $this->use_provider_defaults,
-            'requires_approval' => (bool) $settings['requires_approval'],
-            'deposit_type' => $settings['deposit_type'],
-            'deposit_amount' => $settings['deposit_amount'] ? (float) $settings['deposit_amount'] : null,
-            'cancellation_policy' => $settings['cancellation_policy'],
-            'advance_booking_days' => (int) $settings['advance_booking_days'],
-            'min_booking_notice_hours' => (int) $settings['min_booking_notice_hours'],
+            'requires_approval' => $this->requires_approval !== null ? (bool) $this->requires_approval : null,
+            'deposit_type' => $this->deposit_type,
+            'deposit_amount' => $this->deposit_amount !== null ? (float) $this->deposit_amount : null,
+            'cancellation_policy' => $this->cancellation_policy,
+            'advance_booking_days' => $this->advance_booking_days !== null ? (int) $this->advance_booking_days : null,
+            'min_booking_notice_hours' => $this->min_booking_notice_hours !== null ? (int) $this->min_booking_notice_hours : null,
         ];
     }
 

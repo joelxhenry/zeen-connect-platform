@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import {
@@ -20,7 +20,7 @@ import { resolveUrl } from '@/utils/url';
 
 interface BookingSettings {
     requires_approval: boolean;
-    deposit_type: 'none' | 'fixed' | 'percentage';
+    deposit_type: 'none' | 'percentage';
     deposit_amount: number | null;
     cancellation_policy: 'flexible' | 'moderate' | 'strict';
     advance_booking_days: number;
@@ -35,6 +35,10 @@ interface TierRestrictions {
     total_fee_rate: number;
     team_slots: number | 'unlimited';
     monthly_price: number;
+    minimum_deposit_percentage: number;
+    can_disable_deposit: boolean;
+    can_customize_deposit: boolean;
+    deposit_help_text: string;
 }
 
 interface Props {
@@ -46,21 +50,35 @@ interface Props {
 const props = defineProps<Props>();
 const toast = useToast();
 
+// Initialize deposit amount with minimum if needed
+const initialDepositAmount = props.bookingSettings.deposit_amount !== null
+    ? Math.max(props.bookingSettings.deposit_amount, props.tierRestrictions.minimum_deposit_percentage)
+    : props.tierRestrictions.minimum_deposit_percentage;
+
 const form = useForm({
     requires_approval: props.bookingSettings.requires_approval,
     deposit_type: props.bookingSettings.deposit_type,
-    deposit_amount: props.bookingSettings.deposit_amount,
+    deposit_amount: initialDepositAmount,
     cancellation_policy: props.bookingSettings.cancellation_policy,
     advance_booking_days: props.bookingSettings.advance_booking_days,
     min_booking_notice_hours: props.bookingSettings.min_booking_notice_hours,
     fee_payer: props.feePayer,
 });
 
-const depositTypeOptions = [
-    { label: 'No deposit required', value: 'none' },
-    { label: 'Fixed amount', value: 'fixed' },
-    { label: 'Percentage of total', value: 'percentage' },
-];
+// Build deposit type options based on tier restrictions
+const depositTypeOptions = computed(() => {
+    const options: Array<{ label: string; value: string; disabled?: boolean }> = [];
+
+    if (props.tierRestrictions.can_disable_deposit) {
+        options.push({ label: 'No deposit required', value: 'none' });
+    } else {
+        options.push({ label: 'No deposit required', value: 'none', disabled: true });
+    }
+
+    options.push({ label: 'Percentage of total', value: 'percentage' });
+
+    return options;
+});
 
 const cancellationPolicyOptions = [
     { label: 'Flexible - Full refund 24h before', value: 'flexible' },
@@ -68,9 +86,17 @@ const cancellationPolicyOptions = [
     { label: 'Strict - 50% refund up to 1 week before', value: 'strict' },
 ];
 
-const showDepositAmount = computed(() =>
-    form.deposit_type === 'fixed' || form.deposit_type === 'percentage'
-);
+const showDepositAmount = computed(() => form.deposit_type === 'percentage');
+
+// Ensure deposit amount meets minimum when switching to percentage
+watch(() => form.deposit_type, (newType) => {
+    if (newType === 'percentage') {
+        const min = props.tierRestrictions.minimum_deposit_percentage;
+        if (form.deposit_amount === null || form.deposit_amount < min) {
+            form.deposit_amount = min;
+        }
+    }
+});
 
 const submit = () => {
     form.put(resolveUrl(provider.settings.booking().url), {
@@ -134,25 +160,30 @@ const submit = () => {
                                     Deposit Requirement
                                 </label>
                                 <Select id="deposit_type" v-model="form.deposit_type" :options="depositTypeOptions"
-                                    optionLabel="label" optionValue="value" class="w-full" />
+                                    optionLabel="label" optionValue="value" optionDisabled="disabled" class="w-full"
+                                    :class="{ 'p-invalid': form.errors.deposit_type }" />
                                 <small class="text-xs text-gray-500 mt-1 block">
-                                    Require clients to pay a deposit when booking
+                                    {{ tierRestrictions.deposit_help_text }}
+                                </small>
+                                <small v-if="form.errors.deposit_type" class="text-red-500 block mt-1">
+                                    {{ form.errors.deposit_type }}
                                 </small>
                             </div>
 
-                            <!-- Deposit Amount (conditional) -->
+                            <!-- Deposit Percentage (conditional) -->
                             <div v-if="showDepositAmount">
                                 <label for="deposit_amount" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ form.deposit_type === 'percentage' ? 'Deposit Percentage' : `Deposit Amount
-                                    (JMD)` }}
+                                    Deposit Percentage
                                 </label>
                                 <InputNumber id="deposit_amount" v-model="form.deposit_amount"
-                                    :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
-                                    :currency="form.deposit_type === 'fixed' ? 'JMD' : undefined"
-                                    :suffix="form.deposit_type === 'percentage' ? '%' : undefined" :min="0"
-                                    :max="form.deposit_type === 'percentage' ? 100 : undefined" class="w-full"
+                                    mode="decimal" suffix="%"
+                                    :min="tierRestrictions.minimum_deposit_percentage"
+                                    :max="100" class="w-full"
                                     :class="{ 'p-invalid': form.errors.deposit_amount }" />
-                                <small v-if="form.errors.deposit_amount" class="text-red-500">
+                                <small class="text-xs text-gray-500 mt-1 block">
+                                    Minimum {{ tierRestrictions.minimum_deposit_percentage }}% required for your tier
+                                </small>
+                                <small v-if="form.errors.deposit_amount" class="text-red-500 block mt-1">
                                     {{ form.errors.deposit_amount }}
                                 </small>
                             </div>

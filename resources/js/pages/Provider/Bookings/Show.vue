@@ -14,7 +14,8 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
-import ProviderBookingController from '@/actions/App/Domains/Booking/Controllers/ProviderBookingController';
+import provider from '@/routes/provider';
+import { resolveUrl } from '@/utils/url';
 
 interface Props {
     booking: {
@@ -96,7 +97,7 @@ const getInitials = (name: string) => {
 };
 
 const confirmBooking = () => {
-    router.post(ProviderBookingController.confirm({ uuid: props.booking.uuid }).url, {}, {
+    router.post(resolveUrl(provider.bookings.confirm(props.booking.uuid).url), {}, {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -118,7 +119,7 @@ const confirmBooking = () => {
 };
 
 const completeBooking = () => {
-    router.post(ProviderBookingController.complete({ uuid: props.booking.uuid }).url, {}, {
+    router.post(resolveUrl(provider.bookings.complete(props.booking.uuid).url), {}, {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -140,7 +141,7 @@ const completeBooking = () => {
 };
 
 const markNoShow = () => {
-    router.post(ProviderBookingController.noShow({ uuid: props.booking.uuid }).url, {}, {
+    router.post(resolveUrl(provider.bookings.noShow(props.booking.uuid).url), {}, {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -162,7 +163,7 @@ const markNoShow = () => {
 };
 
 const submitCancel = () => {
-    cancelForm.post(ProviderBookingController.cancel({ uuid: props.booking.uuid }).url, {
+    cancelForm.post(resolveUrl(provider.bookings.cancel(props.booking.uuid).url), {
         preserveScroll: true,
         onSuccess: () => {
             showCancelDialog.value = false;
@@ -192,7 +193,7 @@ const submitCancel = () => {
             <ConsolePageHeader
                 :title="booking.service.name"
                 :subtitle="`${booking.formatted_date} at ${booking.formatted_time}`"
-                :back-href="ProviderBookingController.index().url"
+                :back-href="resolveUrl(provider.bookings.index().url)"
             >
                 <template #badge>
                     <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" />

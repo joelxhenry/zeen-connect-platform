@@ -15,11 +15,18 @@ interface Service {
     price: number;
 }
 
+interface TeamMember {
+    id: number;
+    name: string;
+    avatar?: string | null;
+}
+
 interface Props {
     service: Service | null;
     date: Date | null;
     slot: Slot | null;
     fees: BookingFees | null;
+    teamMember?: TeamMember | null;
     canSubmit: boolean;
     loading?: boolean;
 }
@@ -97,6 +104,12 @@ const dueNowAmount = computed(() => {
                     <span>{{ formatDate(date) }}</span>
                     <span class="booking-summary__separator">at</span>
                     <span>{{ formatSlotTime(slot) }}</span>
+                </div>
+
+                <!-- Team Member -->
+                <div v-if="teamMember" class="booking-summary__team-member">
+                    <i class="pi pi-user"></i>
+                    <span>with {{ teamMember.name }}</span>
                 </div>
 
                 <hr />
@@ -229,6 +242,18 @@ const dueNowAmount = computed(() => {
 
 .booking-summary__separator {
     color: #9ca3af;
+}
+
+.booking-summary__team-member {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.booking-summary__team-member i {
+    color: #106B4F;
 }
 
 .booking-summary__details hr {

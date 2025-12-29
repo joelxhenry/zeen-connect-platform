@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Development\TestProviderSeeder;
+use Database\Seeders\Development\TestServiceSeeder;
 use Database\Seeders\Development\TestUserSeeder;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +23,8 @@ class DevSeeder extends Seeder
 
         $this->call([
             TestUserSeeder::class,
+            TestProviderSeeder::class,
+            TestServiceSeeder::class,
         ]);
     }
 }

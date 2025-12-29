@@ -11,6 +11,8 @@ import type { ServiceForBooking } from '@/types/models/service';
 // Booking components
 import StepCard from '@/components/booking/StepCard.vue';
 import ServiceSelector from '@/components/booking/ServiceSelector.vue';
+import TeamMemberSelector from '@/components/booking/TeamMemberSelector.vue';
+import type { TeamMemberForBooking } from '@/components/booking/TeamMemberSelector.vue';
 import TimeSlotPicker from '@/components/booking/TimeSlotPicker.vue';
 import GuestInfoForm from '@/components/booking/GuestInfoForm.vue';
 import BookingSummary from '@/components/booking/BookingSummary.vue';
@@ -34,6 +36,7 @@ interface Props {
         email: string;
         phone?: string;
     } | null;
+    teamMembers: TeamMemberForBooking[];
 }
 
 
@@ -57,15 +60,20 @@ const preselectedServiceData = props.preselectedService
     : null;
 
 const selectedService = ref<ServiceForBooking | null>(preselectedServiceData);
+const selectedTeamMember = ref<TeamMemberForBooking | null>(null);
 const selectedDate = ref<Date | null>(null);
 const selectedSlot = ref<Slot | null>(null);
 const availableSlots = ref<Slot[]>([]);
 const loadingSlots = ref(false);
 
+// Check if we have team members to show
+const hasTeamMembers = computed(() => props.teamMembers && props.teamMembers.length > 0);
+
 // Form for submission
 const form = useForm({
     provider_id: props.provider.id,
     service_id: preselectedServiceData?.id ?? null,
+    team_member_id: null as number | null,
     date: '',
     start_time: '',
     notes: '',
@@ -124,9 +132,18 @@ const canSubmit = computed(() => {
 // Watchers
 watch(selectedService, (service) => {
     form.service_id = service?.id ?? null;
+    selectedTeamMember.value = null;
     selectedDate.value = null;
     selectedSlot.value = null;
     availableSlots.value = [];
+});
+
+watch(selectedTeamMember, (member) => {
+    form.team_member_id = member?.id ?? null;
+    // Refetch slots if date is already selected
+    if (selectedDate.value && selectedService.value) {
+        fetchSlots();
+    }
 });
 
 watch(selectedDate, async (date) => {
@@ -151,12 +168,17 @@ const fetchSlots = async () => {
     loadingSlots.value = true;
     try {
         // Use relative path since we're already on the provider's subdomain
-        const result = await api.get<SlotsResponse>('/book/slots', {
-            params: {
-                service_id: selectedService.value.id,
-                date: form.date,
-            },
-        });
+        const params: Record<string, unknown> = {
+            service_id: selectedService.value.id,
+            date: form.date,
+        };
+
+        // Include team member if selected
+        if (selectedTeamMember.value) {
+            params.team_member_id = selectedTeamMember.value.id;
+        }
+
+        const result = await api.get<SlotsResponse>('/book/slots', { params });
         availableSlots.value = result.slots || [];
         selectedSlot.value = null;
     } catch (e) {
@@ -215,9 +237,28 @@ const submit = () => {
                             <ServiceSelector v-model="selectedService" :services="services" />
                         </StepCard>
 
-                        <!-- Step 2: Select Date & Time -->
-                        <StepCard :step="2" title="Select Date & Time" :active="!!selectedService"
-                            :disabled="!selectedService">
+                        <!-- Step 1.5: Select Team Member (optional, only shown if team members exist) -->
+                        <StepCard
+                            v-if="hasTeamMembers"
+                            :step="2"
+                            title="Select Team Member"
+                            subtitle="(Optional)"
+                            :active="!!selectedService"
+                            :disabled="!selectedService"
+                        >
+                            <TeamMemberSelector
+                                v-model="selectedTeamMember"
+                                :team-members="teamMembers"
+                            />
+                        </StepCard>
+
+                        <!-- Step 2/3: Select Date & Time -->
+                        <StepCard
+                            :step="hasTeamMembers ? 3 : 2"
+                            title="Select Date & Time"
+                            :active="!!selectedService"
+                            :disabled="!selectedService"
+                        >
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Calendar -->
                                 <div>
@@ -234,8 +275,8 @@ const submit = () => {
                             </div>
                         </StepCard>
 
-                        <!-- Step 3: Your Information -->
-                        <StepCard :step="3" title="Your Information" :active="!!selectedSlot" :disabled="!selectedSlot">
+                        <!-- Step 3/4: Your Information -->
+                        <StepCard :step="hasTeamMembers ? 4 : 3" title="Your Information" :active="!!selectedSlot" :disabled="!selectedSlot">
                             <GuestInfoForm :isAuthenticated="isAuthenticated" :user="user" :guestName="form.guest_name"
                                 :guestEmail="form.guest_email" :guestPhone="form.guest_phone" :notes="form.notes"
                                 :errors="form.errors" @update:guestName="form.guest_name = $event"
@@ -246,8 +287,16 @@ const submit = () => {
 
                     <!-- Booking Summary Sidebar -->
                     <div class="lg:col-span-1">
-                        <BookingSummary :service="selectedService" :date="selectedDate" :slot="selectedSlot"
-                            :fees="currentFees" :canSubmit="canSubmit" :loading="form.processing" @submit="submit" />
+                        <BookingSummary
+                            :service="selectedService"
+                            :date="selectedDate"
+                            :slot="selectedSlot"
+                            :fees="currentFees"
+                            :team-member="selectedTeamMember"
+                            :canSubmit="canSubmit"
+                            :loading="form.processing"
+                            @submit="submit"
+                        />
                     </div>
                 </div>
             </div>

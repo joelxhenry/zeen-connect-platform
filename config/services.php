@@ -49,12 +49,15 @@ return [
     'wipay' => [
         // Platform credentials for collecting payments
         'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID', '1234567890'),
-        'api_key' => env('WIPAY_API_KEY','123'),
+        'api_key' => env('WIPAY_API_KEY', '123'),
         'developer_id' => env('WIPAY_DEVELOPER_ID'),
         'secret_key' => env('WIPAY_SECRET_KEY'),
 
         // Environment settings
         'test_mode' => env('WIPAY_TEST_MODE', true),
+
+        // Country code for WiPay API (JM = Jamaica, TT = Trinidad)
+        'country_code' => env('WIPAY_COUNTRY_CODE', 'JM'),
 
         // API endpoints
         'api_url' => env('WIPAY_API_URL', 'https://jm.wipayfinancial.com/plugins/payments/request'),

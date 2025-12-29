@@ -23,12 +23,15 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
 
     protected string $apiKey;
 
+    protected string $countryCode;
+
     public function __construct(?LedgerService $ledgerService = null)
     {
         parent::__construct();
         $this->ledgerService = $ledgerService ?? app(LedgerService::class);
         $this->accountNumber = config('services.wipay.platform_account_id', '');
         $this->apiKey = config('services.wipay.api_key', '');
+        $this->countryCode = config('services.wipay.country_code', 'JM');
     }
 
     public function getProvider(): string
@@ -48,17 +51,29 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
 
     protected function getBaseUrl(): string
     {
-        // return $this->testMode
-        //     ? 'https://sandbox.wipayfinancial.com/v1'
-        //     : 'https://api.wipayfinancial.com/v1';
         return config('services.wipay.api_url');
     }
 
+    /**
+     * Get default headers for form requests (required by AbstractGateway).
+     */
     protected function getHeaders(): array
     {
         return [
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ];
+    }
+
+    /**
+     * Get headers for JSON API requests (e.g., refunds).
+     */
+    protected function getJsonHeaders(): array
+    {
+        return [
+            'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer '.$this->apiKey,
+            'Authorization' => 'Bearer ' . $this->apiKey,
         ];
     }
 
@@ -77,32 +92,42 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
         string $returnUrl,
         string $cancelUrl
     ): PaymentResult {
-        $orderId = 'WP-'.strtoupper(Str::random(12));
+        $orderId = 'WP-' . strtoupper(Str::random(12));
 
         // Determine fee structure based on provider settings
         // 'customer_pay' = client pays fees, 'merchant_absorb' = provider pays fees
         $feeStructure = $payment->processing_fee_payer === 'client' ? 'customer_pay' : 'merchant_absorb';
 
-        try {
-            $response = Http::asForm()
-                ->post($this->baseUrl, [
-                    // Required parameters
-                    'account_number' => $this->testMode ? '1234567890' : $this->accountNumber,
-                    'country_code' => 'JM',
-                    'currency' => $payment->currency ?? 'JMD',
-                    'environment' => $this->testMode ? 'sandbox' : 'live',
-                    'fee_structure' => $feeStructure,
-                    'method' => 'credit_card',
-                    'order_id' => $orderId,
-                    'origin' => 'zeen_connect',
-                    'response_url' => $returnUrl,
-                    'total' => $this->formatAmount($payment->amount),
-                    // Optional parameters
-                    'avs' => 0,
-                    'data' => json_encode(['payment_uuid' => $payment->uuid]),
-                ]);
+        $requestData = [
+            'account_number' => $this->testMode ? '1234567890' : $this->accountNumber,
+            'country_code' => $this->countryCode,
+            'currency' => $payment->currency ?? 'JMD',
+            'environment' => $this->testMode ? 'sandbox' : 'live',
+            'fee_structure' => $feeStructure,
+            'method' => 'credit_card',
+            'order_id' => $orderId,
+            'origin' => 'zeen_connect',
+            'response_url' => $returnUrl,
+            'total' => number_format($payment->amount, 2, '.', ''),
+            'avs' => 0,
+            'data' => json_encode(['payment_uuid' => $payment->uuid]),
+        ];
 
-            if ($response->successful() && isset($response['url'])) {
+        $this->logHttpRequest('POST', $this->baseUrl, $requestData);
+        $startTime = microtime(true);
+
+        try {
+            // Use Laravel's Http facade directly for reliable form encoding
+            $response = Http::asForm()
+                ->accept('application/json')
+                ->post($this->baseUrl, $requestData);
+
+            $durationMs = (microtime(true) - $startTime) * 1000;
+            $this->logHttpResponse($response, 'POST', $this->baseUrl, $durationMs);
+
+            $data = $response->json();
+
+            if ($response->successful() && isset($data['url'])) {
                 $payment->update([
                     'gateway_order_id' => $orderId,
                     'gateway_provider' => $this->getProvider(),
@@ -115,19 +140,20 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
                 ]);
 
                 return PaymentResult::success(
-                    redirectUrl: $response['url'],
+                    redirectUrl: $data['url'],
                     orderId: $orderId,
-                    rawResponse: $response->json(),
+                    rawResponse: $data,
                 );
             }
 
             return PaymentResult::failure(
-                $response['message'] ?? 'Payment initialization failed',
+                $data['message'] ?? 'Payment initialization failed',
                 null,
-                $response->json()
+                $data
             );
         } catch (\Exception $e) {
-            $this->logError('Payment initialization error', ['error' => $e->getMessage()]);
+            $durationMs = (microtime(true) - $startTime) * 1000;
+            $this->logHttpError('POST', $this->baseUrl, $e, $durationMs);
 
             return PaymentResult::failure('Payment service unavailable');
         }
@@ -161,16 +187,26 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
     public function refund(Payment $payment, ?float $amount = null): RefundResult
     {
         $refundAmount = $amount ?? $payment->amount;
+        $refundUrl = rtrim($this->baseUrl, '/') . '/refund';
+
+        $requestData = [
+            'transaction_id' => $payment->gateway_transaction_id,
+            'amount' => $this->formatAmount($refundAmount),
+        ];
+
+        $this->logHttpRequest('POST', $refundUrl, $requestData, $this->getJsonHeaders());
+        $startTime = microtime(true);
 
         try {
-            $response = Http::withHeaders($this->getHeaders())
-                ->post("{$this->baseUrl}/refund", [
-                    'transaction_id' => $payment->gateway_transaction_id,
-                    'amount' => $this->formatAmount($refundAmount),
-                ]);
+            $response = Http::withHeaders($this->getJsonHeaders())
+                ->post($refundUrl, $requestData);
 
-            if ($response->successful() && ($response['status'] ?? '') === 'success') {
-                $refundId = $response['refund_id'] ?? null;
+            $durationMs = (microtime(true) - $startTime) * 1000;
+            $this->logHttpResponse($response, 'POST', $refundUrl, $durationMs);
+
+            $data = $response->json();
+            if ($response->successful() && ($data['status'] ?? '') === 'success') {
+                $refundId = $data['refund_id'] ?? null;
                 $payment->markAsRefunded();
 
                 if ($payment->ledger_entry_id) {
@@ -178,16 +214,17 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
                     $this->ledgerService->debitForRefund($payment, $providerRefundAmount);
                 }
 
-                return RefundResult::success($refundId, $refundAmount, $response->json());
+                return RefundResult::success($refundId, $refundAmount, $data);
             }
 
             return RefundResult::failure(
-                $response['message'] ?? 'Refund failed',
+                $data['message'] ?? 'Refund failed',
                 null,
-                $response->json()
+                $data
             );
         } catch (\Exception $e) {
-            $this->logError('Refund error', ['error' => $e->getMessage()]);
+            $durationMs = (microtime(true) - $startTime) * 1000;
+            $this->logHttpError('POST', $refundUrl, $e, $durationMs);
 
             return RefundResult::failure('Refund service unavailable');
         }

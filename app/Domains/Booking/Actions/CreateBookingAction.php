@@ -5,9 +5,9 @@ namespace App\Domains\Booking\Actions;
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Services\AvailabilityService;
+use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
-use App\Domains\Subscription\Services\SubscriptionService;
 use App\Mail\BookingCreated;
 use App\Models\User;
 use Carbon\Carbon;
@@ -18,7 +18,7 @@ class CreateBookingAction
 {
     public function __construct(
         protected AvailabilityService $availabilityService,
-        protected SubscriptionService $subscriptionService
+        protected FeeCalculator $feeCalculator
     ) {}
 
     /**
@@ -92,7 +92,7 @@ class CreateBookingAction
         }
 
         // Calculate fees using service's deposit settings
-        $fees = $this->subscriptionService->calculateFees($provider, (float) $service->price, $service);
+        $fees = $this->feeCalculator->calculateFees($provider, (float) $service->price, $service)->toArray();
 
         // Get effective booking settings
         $settings = $service->getEffectiveBookingSettings();

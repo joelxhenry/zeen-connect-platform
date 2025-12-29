@@ -47,6 +47,7 @@ readonly class RefundResult
             'refunded_amount' => $this->refundedAmount,
             'error' => $this->error,
             'error_code' => $this->errorCode,
+            'raw_response' => $this->rawResponse,
         ];
     }
 }

@@ -187,6 +187,11 @@ class HttpClient
      */
     public function post(string $url, array $data = []): HttpResponse
     {
+        // If asForm is configured, send as form data
+        if ($this->config->asForm) {
+            return $this->request('POST', $url, ['form' => $data]);
+        }
+
         return $this->request('POST', $url, ['json' => $data]);
     }
 
@@ -212,6 +217,26 @@ class HttpClient
     public function delete(string $url, array $data = []): HttpResponse
     {
         return $this->request('DELETE', $url, ['json' => $data]);
+    }
+
+    /**
+     * Send a POST request with form data (application/x-www-form-urlencoded).
+     */
+    public function postForm(string $url, array $data = []): HttpResponse
+    {
+        return $this->request('POST', $url, ['form' => $data]);
+    }
+
+    /**
+     * Set the request to use form encoding.
+     * Returns a clone configured for form requests.
+     */
+    public function asForm(): self
+    {
+        $clone = clone $this;
+        $clone->config = $this->config->merge(['asForm' => true]);
+
+        return $clone;
     }
 
     // =========================================================================
@@ -296,16 +321,33 @@ class HttpClient
      */
     protected function executeRequest(string $method, string $url, array $options): Response
     {
-        $pending = Http::withHeaders(array_merge(
-            $this->config->headers,
-            ['X-Correlation-ID' => $this->correlationId]
-        ))
+        // Check if form encoding is enabled (via asForm() method or postForm())
+        $isFormRequest = isset($options['form']) || $this->config->asForm;
+
+        // Build headers, excluding Content-Type for form requests (let asForm() handle it)
+        $headers = ['X-Correlation-ID' => $this->correlationId];
+        foreach ($this->config->headers as $key => $value) {
+            if ($isFormRequest && strtolower($key) === 'content-type') {
+                continue;
+            }
+            $headers[$key] = $value;
+        }
+
+        $pending = Http::withHeaders($headers)
             ->timeout($this->config->timeout)
             ->connectTimeout($this->config->connectTimeout);
 
+        // Use form encoding if configured
+        if ($isFormRequest) {
+            $pending = $pending->asForm();
+        }
+
+        // Get the data to send
+        $data = $options['form'] ?? $options['json'] ?? [];
+
         return match (strtoupper($method)) {
             'GET' => $pending->get($url, $options['query'] ?? []),
-            'POST' => $pending->post($url, $options['json'] ?? []),
+            'POST' => $pending->post($url, $data),
             'PUT' => $pending->put($url, $options['json'] ?? []),
             'PATCH' => $pending->patch($url, $options['json'] ?? []),
             'DELETE' => $pending->delete($url, $options['json'] ?? []),
@@ -369,7 +411,7 @@ class HttpClient
             'method' => $method,
             'url' => $url,
             'headers' => $this->redactSensitiveHeaders($this->config->headers),
-            'body' => $this->redactSensitiveData($options['json'] ?? $options['query'] ?? []),
+            'body' => $this->redactSensitiveData($options['form'] ?? $options['json'] ?? $options['query'] ?? []),
         ]);
     }
 

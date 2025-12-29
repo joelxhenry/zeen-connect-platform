@@ -4,8 +4,8 @@ namespace App\Domains\Service\Resources;
 
 use App\Domains\Media\Resources\MediaResource;
 use App\Domains\Media\Resources\VideoEmbedResource;
+use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Shared\Resources\Concerns\HasDisplayValues;
-use App\Domains\Subscription\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -208,10 +208,10 @@ class ServiceResource extends JsonResource
             return null;
         }
 
-        $subscriptionService = app(SubscriptionService::class);
+        $feeCalculator = app(FeeCalculator::class);
 
         // Calculate fees using this service's deposit settings
-        return $subscriptionService->calculateFees($this->provider, (float) $this->price, $this->resource);
+        return $feeCalculator->calculateFees($this->provider, (float) $this->price, $this->resource)->toArray();
     }
 
     /**

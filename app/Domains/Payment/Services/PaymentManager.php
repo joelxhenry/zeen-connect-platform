@@ -13,12 +13,11 @@ use App\Domains\Payment\Enums\GatewayType;
 use App\Domains\Payment\Models\Payment;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
-use App\Domains\Subscription\Services\SubscriptionService;
 
 class PaymentManager
 {
     public function __construct(
-        protected SubscriptionService $subscriptionService,
+        protected FeeCalculator $feeCalculator,
         protected GatewayResolver $gatewayResolver,
         protected LedgerService $ledgerService,
     ) {}
@@ -40,11 +39,11 @@ class PaymentManager
     }
 
     /**
-     * Get the commission rate for a provider.
+     * Get the commission rate for a provider (Zeen fee as decimal).
      */
     public function getCommissionRate(Provider $provider): float
     {
-        return $this->subscriptionService->getPlatformFeeRate($provider);
+        return $this->feeCalculator->getZeenFeeRate($provider) / 100;
     }
 
     /**
@@ -135,7 +134,7 @@ class PaymentManager
      */
     public function calculateFees(Provider $provider, float $servicePrice, ?Service $service = null): array
     {
-        return $this->subscriptionService->calculateFees($provider, $servicePrice, $service);
+        return $this->feeCalculator->calculateFees($provider, $servicePrice, $service)->toArray();
     }
 
     /**

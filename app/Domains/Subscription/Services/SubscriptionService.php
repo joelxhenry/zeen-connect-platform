@@ -3,41 +3,36 @@
 namespace App\Domains\Subscription\Services;
 
 use App\Domains\Admin\Models\SystemSetting;
+use App\Domains\Booking\Models\Booking;
+use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
 
 class SubscriptionService
 {
+    public function __construct(
+        protected FeeCalculator $feeCalculator
+    ) {}
+
     // =========================================================================
-    // Fee Rate Methods
+    // Fee Rate Methods (delegated to FeeCalculator)
     // =========================================================================
 
     /**
      * Get the gateway fee rate (percentage).
-     * This is a single admin-configured rate for all tiers.
      */
     public function getGatewayFeeRate(): float
     {
-        return (float) SystemSetting::get('gateway_fee_rate', 4.0);
+        return $this->feeCalculator->getGatewayFeeRate();
     }
 
     /**
      * Get the Zeen platform fee rate for a provider based on their tier (percentage).
-     * Founding members with an active fee waiver get 0% Zeen fee.
-     *
-     * Note: Fee waiver persists across tier upgrades. A Growth Founder who
-     * upgrades to Enterprise still benefits from their original waiver period.
      */
     public function getZeenFeeRate(Provider $provider): float
     {
-        // Founding members with active fee waiver get 0% Zeen fee
-        // This applies regardless of their current subscription tier
-        if ($provider->hasFoundingFeeWaiver()) {
-            return 0.0;
-        }
-
-        return $provider->getTier()->zeenFeeRate();
+        return $this->feeCalculator->getZeenFeeRate($provider);
     }
 
     /**
@@ -45,7 +40,7 @@ class SubscriptionService
      */
     public function getTotalFeeRate(Provider $provider): float
     {
-        return $this->getZeenFeeRate($provider) + $this->getGatewayFeeRate();
+        return $this->feeCalculator->getTotalFeeRate($provider);
     }
 
     /**
@@ -58,172 +53,7 @@ class SubscriptionService
     }
 
     // =========================================================================
-    // Fee Calculation Methods
-    // =========================================================================
-
-    /**
-     * Calculate all fees for a booking based on provider tier and service price.
-     * Returns separated Zeen fee and Gateway fee.
-     *
-     * Fee calculation logic:
-     * - Zeen fee: percentage of full service price (platform fee)
-     * - Gateway fee: percentage of the amount being charged (deposit or full)
-     *
-     * @param  Provider  $provider  The service provider
-     * @param  float  $servicePrice  The service price
-     * @param  Service|null  $service  Optional service for deposit settings
-     */
-    public function calculateFees(Provider $provider, float $servicePrice, ?Service $service = null): array
-    {
-        $tier = $provider->getTier();
-        $feePayer = $provider->fee_payer ?? 'provider';
-
-        // Get fee rates as percentages
-        $zeenFeeRate = $this->getZeenFeeRate($provider);
-        $gatewayFeeRate = $this->getGatewayFeeRate();
-
-        // Calculate deposit based on service settings or provider tier
-        $depositData = $this->calculateDepositAmount($provider, $servicePrice, $service);
-        $depositAmount = $depositData['amount'];
-        $depositPercentage = $depositData['percentage'];
-        $requiresDeposit = $depositAmount > 0;
-
-        // Zeen fee is always based on full service price
-        $zeenFee = round($servicePrice * ($zeenFeeRate / 100), 2);
-
-        // Base charge amount (deposit or full service price)
-        $chargeAmount = $requiresDeposit ? $depositAmount : $servicePrice;
-
-        // Gateway fee is calculated on (chargeAmount + zeenFee)
-        // This is for display purposes - WiPay handles their own fee calculation
-        $processingBase = $chargeAmount + $zeenFee;
-        $gatewayFee = round($processingBase * ($gatewayFeeRate / 100), 2);
-
-        $totalFees = $zeenFee + $gatewayFee;
-
-        // Calculate amounts based on who pays the fees
-        if ($feePayer === 'client') {
-            // Client pays: add fees on top as "convenience fee"
-            $convenienceFee = $totalFees;
-            $clientPays = $servicePrice + $convenienceFee;
-            $providerReceives = $servicePrice;
-        } else {
-            // Provider pays: deduct fees from their payout
-            $convenienceFee = 0.0;
-            $clientPays = $servicePrice;
-            $providerReceives = $servicePrice - $totalFees;
-        }
-
-        // Combined rate for display purposes
-        $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
-
-        // Amount to send to gateway API (excludes processing fee - WiPay handles their own fee)
-        // When client pays: gateway receives (charge_amount + zeen_fee)
-        // When provider pays: gateway receives (charge_amount), zeen_fee deducted from provider payout
-        $amountToGateway = $feePayer === 'client'
-            ? $chargeAmount + $zeenFee
-            : $chargeAmount;
-
-        return [
-            'tier' => $tier->value,
-            'tier_label' => $tier->label(),
-            'service_price' => $servicePrice,
-
-            'deposit_amount' => $depositAmount,
-            'deposit_percentage' => $depositPercentage,
-            'requires_deposit' => $requiresDeposit,
-
-            // New separated fee structure
-            'zeen_fee' => $zeenFee,
-            'zeen_fee_rate' => $zeenFeeRate,
-            'gateway_fee' => $gatewayFee,
-            'gateway_fee_rate' => $gatewayFeeRate,
-            'total_fees' => $totalFees,
-            'total_fee_rate' => $totalFeeRate,
-
-            // Legacy aliases for backwards compatibility
-            'platform_fee' => $totalFees,
-            'platform_fee_rate' => $totalFeeRate,
-
-            'convenience_fee' => $convenienceFee,
-            'fee_payer' => $feePayer,
-            'client_pays' => $clientPays,
-            'provider_receives' => $providerReceives,
-
-            // Gateway integration
-            'amount_to_gateway' => $amountToGateway,
-            'processing_base' => $processingBase,
-        ];
-    }
-
-    /**
-     * Calculate the payment amount based on payment type.
-     *
-     * Fee calculation by payment type:
-     * - Full payment: Zeen fee on full price, processing fee on (full + zeen)
-     * - Deposit: Zeen fee on full price, processing fee on (deposit + zeen)
-     * - Balance: No Zeen fee (already charged), processing fee on balance only
-     */
-    public function calculatePaymentAmount(
-        Provider $provider,
-        float $servicePrice,
-        string $paymentType = 'full',
-        ?Service $service = null
-    ): array {
-        $fees = $this->calculateFees($provider, $servicePrice, $service);
-        $feePayer = $fees['fee_payer'];
-        $gatewayFeeRate = $fees['gateway_fee_rate'];
-
-        $baseAmount = match ($paymentType) {
-            'deposit' => $fees['deposit_amount'],
-            'balance' => $servicePrice - $fees['deposit_amount'],
-            default => $servicePrice,
-        };
-
-        // Calculate fees based on payment type
-        if ($paymentType === 'balance') {
-            // Balance payment: no Zeen fee (already charged), only processing fee on balance
-            $zeenFee = 0.0;
-            $processingBase = $baseAmount;
-            $processingFee = round($processingBase * ($gatewayFeeRate / 100), 2);
-            $totalFees = $processingFee;
-        } else {
-            // Full or deposit payment: use calculated fees
-            $zeenFee = $fees['zeen_fee'];
-            $processingBase = $fees['processing_base'];
-            $processingFee = $fees['gateway_fee'];
-            $totalFees = $fees['total_fees'];
-        }
-
-        // Determine convenience fee and amount to gateway based on who pays
-        if ($feePayer === 'client') {
-            $convenienceFee = $zeenFee + $processingFee;
-            $totalToCharge = $baseAmount + $convenienceFee;
-            // Gateway receives base amount + zeen fee (excludes processing fee)
-            $amountToGateway = $baseAmount + $zeenFee;
-        } else {
-            $convenienceFee = 0.0;
-            $totalToCharge = $baseAmount;
-            // Gateway receives base amount only (zeen fee deducted from provider payout)
-            $amountToGateway = $baseAmount;
-        }
-
-        return [
-            'amount' => $baseAmount,
-            'zeen_fee' => $zeenFee,
-            'gateway_fee' => $processingFee,
-            'total_fees' => $totalFees,
-            'convenience_fee' => $convenienceFee,
-            'total_to_charge' => $totalToCharge,
-            'amount_to_gateway' => $amountToGateway,
-            'processing_base' => $processingBase,
-            'payment_type' => $paymentType,
-            ...$fees,
-        ];
-    }
-
-    // =========================================================================
-    // Deposit Methods
+    // Deposit Methods (delegated to FeeCalculator)
     // =========================================================================
 
     /**
@@ -231,13 +61,7 @@ class SubscriptionService
      */
     public function getEffectiveDepositPercentage(Provider $provider): float
     {
-        $tier = $provider->getTier();
-
-        return match ($tier) {
-            SubscriptionTier::STARTER => (float) SystemSetting::get('free_tier_deposit_percentage', 20),
-            SubscriptionTier::PREMIUM => $this->getPremiumDepositPercentage($provider),
-            SubscriptionTier::ENTERPRISE => 0.0,
-        };
+        return $this->feeCalculator->getEffectiveDepositPercentage($provider);
     }
 
     /**
@@ -257,72 +81,12 @@ class SubscriptionService
 
     /**
      * Calculate the deposit amount based on service settings or provider tier.
-     * Uses the service's effective booking settings when available.
-     *
-     * Important: Tier restrictions always apply. If a tier requires deposits,
-     * the deposit cannot be disabled even if the provider/service settings say 'none'.
      *
      * @return array{amount: float, percentage: float}
      */
     public function calculateDepositAmount(Provider $provider, float $servicePrice, ?Service $service = null): array
     {
-        // If no service provided, use tier-based percentage
-        if ($service === null) {
-            $percentage = $this->getEffectiveDepositPercentage($provider);
-
-            return [
-                'amount' => round($servicePrice * $percentage / 100, 2),
-                'percentage' => $percentage,
-            ];
-        }
-
-        // Get tier restrictions to know if deposit can be disabled
-        $tier = $provider->getTier();
-        $canDisableDeposit = $tier === SubscriptionTier::ENTERPRISE;
-        $minPercentage = $this->getMinimumDepositPercentage($provider);
-
-        // Get the service's effective booking settings (uses provider defaults if enabled)
-        $settings = $service->getEffectiveBookingSettings();
-        $depositType = $settings['deposit_type'] ?? 'none';
-        $depositAmount = $settings['deposit_amount'] ?? null;
-
-        // If deposit is set to 'none' but tier doesn't allow disabling deposits,
-        // fall back to tier-based minimum deposit percentage
-        if ($depositType === 'none') {
-            if ($canDisableDeposit) {
-                return [
-                    'amount' => 0.0,
-                    'percentage' => 0.0,
-                ];
-            }
-
-            // Tier requires deposit - use tier-based percentage
-            $percentage = $this->getEffectiveDepositPercentage($provider);
-
-            return [
-                'amount' => round($servicePrice * $percentage / 100, 2),
-                'percentage' => $percentage,
-            ];
-        }
-
-        // Percentage-based deposit (only type supported now)
-        if ($depositType === 'percentage' && $depositAmount !== null) {
-            // Ensure minimum deposit percentage is respected
-            $effectivePercentage = max((float) $depositAmount, $minPercentage);
-
-            return [
-                'amount' => round($servicePrice * $effectivePercentage / 100, 2),
-                'percentage' => $effectivePercentage,
-            ];
-        }
-
-        // Fallback to tier-based percentage
-        $percentage = $this->getEffectiveDepositPercentage($provider);
-
-        return [
-            'amount' => round($servicePrice * $percentage / 100, 2),
-            'percentage' => $percentage,
-        ];
+        return $this->feeCalculator->calculateDepositAmount($provider, $servicePrice, $service);
     }
 
     /**

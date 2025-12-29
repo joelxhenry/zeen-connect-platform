@@ -4,6 +4,7 @@ import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import type { Booking } from '@/types/models/booking';
+import payment from '@/routes/payment';
 
 interface Props {
     booking: Booking;
@@ -135,7 +136,7 @@ const getInitials = (name: string) => {
                             <span class="text-sm font-medium">Deposit Paid</span>
                         </div>
                         <div v-else>
-                            <AppLink :href="`/payment/${booking.uuid}/checkout`">
+                            <AppLink :href="payment.checkout({ bookingUuid: booking.uuid }).url">
                                 <Button
                                     label="Pay Deposit Now"
                                     icon="pi pi-credit-card"

@@ -18,6 +18,7 @@ readonly class HttpClientConfig
         public array $sensitiveHeaders = [],
         public array $sensitiveBodyKeys = [],
         public ?string $correlationId = null,
+        public bool $asForm = false,
     ) {}
 
     /**
@@ -51,6 +52,7 @@ readonly class HttpClientConfig
             sensitiveHeaders: $sensitiveHeaders,
             sensitiveBodyKeys: $sensitiveBodyKeys,
             correlationId: null,
+            asForm: false,
         );
     }
 
@@ -73,6 +75,7 @@ readonly class HttpClientConfig
             sensitiveHeaders: $overrides['sensitiveHeaders'] ?? $this->sensitiveHeaders,
             sensitiveBodyKeys: $overrides['sensitiveBodyKeys'] ?? $this->sensitiveBodyKeys,
             correlationId: $overrides['correlationId'] ?? $this->correlationId,
+            asForm: $overrides['asForm'] ?? $this->asForm,
         );
     }
 

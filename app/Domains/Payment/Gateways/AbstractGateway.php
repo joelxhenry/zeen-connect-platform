@@ -3,8 +3,10 @@
 namespace App\Domains\Payment\Gateways;
 
 use App\Domains\Payment\Contracts\PaymentGatewayInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 abstract class AbstractGateway implements PaymentGatewayInterface
 {
@@ -12,10 +14,27 @@ abstract class AbstractGateway implements PaymentGatewayInterface
 
     protected string $baseUrl;
 
+    protected string $correlationId;
+
+    protected array $sensitiveKeys = [
+        'password',
+        'secret',
+        'token',
+        'api_key',
+        'apikey',
+        'authorization',
+        'card_number',
+        'cvv',
+        'cvc',
+        'expiry',
+        'account_number',
+    ];
+
     public function __construct()
     {
         $this->testMode = $this->isTestMode();
         $this->baseUrl = $this->getBaseUrl();
+        $this->correlationId = 'pay_' . Str::random(16);
     }
 
     /**
@@ -92,6 +111,102 @@ abstract class AbstractGateway implements PaymentGatewayInterface
             "[{$this->getProvider()}] {$message}",
             $context
         );
+    }
+
+    /**
+     * Log an outgoing HTTP request.
+     */
+    protected function logHttpRequest(string $method, string $url, array $data = [], array $headers = []): void
+    {
+        Log::channel('payments')->info(
+            "[{$this->getProvider()}] HTTP Request",
+            [
+                'correlation_id' => $this->correlationId,
+                'method' => $method,
+                'url' => $url,
+                'headers' => $this->redactSensitiveData($headers),
+                'body' => $this->redactSensitiveData($data),
+            ]
+        );
+    }
+
+    /**
+     * Log an HTTP response.
+     */
+    protected function logHttpResponse(Response $response, string $method, string $url, float $durationMs): void
+    {
+        $level = $response->successful() ? 'info' : 'warning';
+
+        Log::channel('payments')->{$level}(
+            "[{$this->getProvider()}] HTTP Response",
+            [
+                'correlation_id' => $this->correlationId,
+                'method' => $method,
+                'url' => $url,
+                'status' => $response->status(),
+                'duration_ms' => round($durationMs, 2),
+                'body' => $this->redactSensitiveData($response->json() ?? []),
+            ]
+        );
+    }
+
+    /**
+     * Log an HTTP error.
+     */
+    protected function logHttpError(string $method, string $url, \Throwable $e, float $durationMs): void
+    {
+        Log::channel('payments')->error(
+            "[{$this->getProvider()}] HTTP Error",
+            [
+                'correlation_id' => $this->correlationId,
+                'method' => $method,
+                'url' => $url,
+                'error' => $e->getMessage(),
+                'duration_ms' => round($durationMs, 2),
+            ]
+        );
+    }
+
+    /**
+     * Redact sensitive values from data for logging.
+     */
+    protected function redactSensitiveData(array $data, int $depth = 0): array
+    {
+        if ($depth > 5) {
+            return $data;
+        }
+
+        $redacted = [];
+
+        foreach ($data as $key => $value) {
+            $lowercaseKey = strtolower((string) $key);
+            $isSensitive = false;
+
+            foreach ($this->sensitiveKeys as $pattern) {
+                if (str_contains($lowercaseKey, $pattern)) {
+                    $isSensitive = true;
+                    break;
+                }
+            }
+
+            if ($isSensitive) {
+                $redacted[$key] = '[REDACTED]';
+            } elseif (is_array($value)) {
+                $redacted[$key] = $this->redactSensitiveData($value, $depth + 1);
+            } else {
+                $redacted[$key] = $value;
+            }
+        }
+
+        return $redacted;
+    }
+
+    /**
+     * Get the current correlation ID.
+     */
+    protected function getCorrelationId(): string
+    {
+        return $this->correlationId;
     }
 
     /**

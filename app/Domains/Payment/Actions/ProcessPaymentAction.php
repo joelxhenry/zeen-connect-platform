@@ -34,6 +34,7 @@ class ProcessPaymentAction
             $cancelUrl
         );
 
+
         if ($result->success) {
             return [
                 'success' => true,

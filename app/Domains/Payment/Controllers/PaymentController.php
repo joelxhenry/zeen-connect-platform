@@ -6,19 +6,18 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Actions\CreatePaymentAction;
 use App\Domains\Payment\Actions\ProcessPaymentAction;
 use App\Domains\Payment\Models\Payment;
+use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Payment\Services\PaymentManager;
-use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PaymentController extends Controller
 {
     public function __construct(
-        protected SubscriptionService $subscriptionService,
+        protected FeeCalculator $feeCalculator,
         protected PaymentManager $paymentManager
     ) {}
 
@@ -50,11 +49,13 @@ class PaymentController extends Controller
             ? 'deposit'
             : 'full';
 
-        // Calculate payment amount using SubscriptionService
-        $paymentInfo = $this->subscriptionService->calculatePaymentAmount(
+        // Calculate payment amount using FeeCalculator
+        $paymentFees = $this->feeCalculator->calculatePaymentAmount(
             $booking->provider,
             (float) $booking->service_price,
-            $paymentType
+            $paymentType,
+            $booking->service,
+            $booking
         );
 
         // Determine gateway type for provider
@@ -82,17 +83,17 @@ class PaymentController extends Controller
             ],
             'payment' => [
                 'type' => $paymentType,
-                'amount' => Arr::get($paymentInfo, 'amount', 0),
-                'zeen_fee' => Arr::get($paymentInfo, 'zeen_fee', 0),
-                'gateway_fee' => Arr::get($paymentInfo, 'gateway_fee', 0),
-                'total_fees' => Arr::get($paymentInfo, 'total_fees', 0),
-                'convenience_fee' => Arr::get($paymentInfo, 'convenience_fee', 0),
-                'total_to_charge' => Arr::get($paymentInfo, 'total_to_charge', 0),
-                'amount_to_gateway' => Arr::get($paymentInfo, 'amount_to_gateway', 0),
-                'deposit_percentage' => Arr::get($paymentInfo, 'deposit_percentage', 0),
-                'fee_payer' => Arr::get($paymentInfo, 'fee_payer', 'provider'),
-                'tier' => Arr::get($paymentInfo, 'tier', 'starter'),
-                'tier_label' => Arr::get($paymentInfo, 'tier_label', 'Starter'),
+                'amount' => $paymentFees->amount,
+                'zeen_fee' => $paymentFees->zeenFee,
+                'gateway_fee' => $paymentFees->gatewayFee,
+                'total_fees' => $paymentFees->totalFees,
+                'convenience_fee' => $paymentFees->convenienceFee,
+                'total_to_charge' => $paymentFees->totalToCharge,
+                'amount_to_gateway' => $paymentFees->amountToGateway,
+                'deposit_percentage' => $paymentFees->baseFees->depositPercentage,
+                'fee_payer' => $paymentFees->baseFees->feePayer,
+                'tier' => $paymentFees->baseFees->tier,
+                'tier_label' => $paymentFees->baseFees->tierLabel,
                 'gateway_type' => $gatewayType->value,
             ],
             'isAuthenticated' => (bool) $request->user(),
@@ -108,7 +109,7 @@ class PaymentController extends Controller
             ->with([
                 'provider:id,business_name,slug,fee_payer',
                 'provider.subscription',
-                'service:id,name,duration_minutes,price',
+                'service',
             ]);
 
         // For authenticated users, verify ownership
@@ -147,11 +148,13 @@ class PaymentController extends Controller
         $booking = $this->findBookingForPayment($request, $bookingUuid);
         $paymentType = $request->input('payment_type', 'deposit');
 
-        // Calculate payment amount
-        $paymentInfo = $this->subscriptionService->calculatePaymentAmount(
+        // Calculate payment amount using FeeCalculator
+        $paymentFees = $this->feeCalculator->calculatePaymentAmount(
             $booking->provider,
             (float) $booking->service_price,
-            $paymentType
+            $paymentType,
+            $booking->service,
+            $booking
         );
 
         // Determine gateway type and provider
@@ -168,11 +171,11 @@ class PaymentController extends Controller
             // Update existing pending payment with current amounts
             // amount_to_gateway excludes processing fee - WiPay handles their own fee
             $payment->update([
-                'amount' => Arr::get($paymentInfo, 'amount_to_gateway', 0),
-                'platform_fee' => Arr::get($paymentInfo, 'total_fees', 0),
-                'provider_amount' => Arr::get($paymentInfo, 'provider_receives', 0),
-                'processing_fee' => Arr::get($paymentInfo, 'gateway_fee', 0),
-                'processing_fee_payer' => Arr::get($paymentInfo, 'fee_payer', 'provider'),
+                'amount' => $paymentFees->amountToGateway,
+                'platform_fee' => $paymentFees->totalFees,
+                'provider_amount' => $paymentFees->providerReceives,
+                'processing_fee' => $paymentFees->gatewayFee,
+                'processing_fee_payer' => $paymentFees->baseFees->feePayer,
                 'gateway_type' => $gatewayType->value,
                 'gateway_provider' => $gateway->getProvider(),
             ]);
@@ -181,12 +184,12 @@ class PaymentController extends Controller
             // amount_to_gateway excludes processing fee - WiPay handles their own fee
             $payment = $createPayment->execute(
                 booking: $booking,
-                amount: Arr::get($paymentInfo, 'amount_to_gateway', 0),
+                amount: $paymentFees->amountToGateway,
                 paymentType: $paymentType,
-                platformFee: Arr::get($paymentInfo, 'total_fees', 0),
-                providerAmount: Arr::get($paymentInfo, 'provider_receives', 0),
-                processingFee: Arr::get($paymentInfo, 'gateway_fee', 0),
-                processingFeePayer: Arr::get($paymentInfo, 'fee_payer', 'provider'),
+                platformFee: $paymentFees->totalFees,
+                providerAmount: $paymentFees->providerReceives,
+                processingFee: $paymentFees->gatewayFee,
+                processingFeePayer: $paymentFees->baseFees->feePayer,
                 gatewayType: $gatewayType->value,
                 gatewayProvider: $gateway->getProvider()
             );
@@ -204,7 +207,9 @@ class PaymentController extends Controller
                 session(['payment_spi_token_' . $payment->uuid => $result['spi_token']]);
             }
 
-            return redirect()->away($result['redirect_url']);
+            // Use Inertia::location() for external redirects to avoid CORS issues
+            // This forces a full page navigation instead of XHR redirect
+            return Inertia::location($result['redirect_url']);
         }
 
         return back()->withErrors(['payment' => $result['error'] ?? 'Payment initialization failed']);
@@ -221,9 +226,9 @@ class PaymentController extends Controller
             ->firstOrFail();
 
         // Verify the user owns this payment (skip for guest bookings)
-        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
-            abort(403);
-        }
+        // if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
+        //     abort(403);
+        // }
 
         // Extract WiPay callback data from query params
         $callbackData = [
@@ -282,16 +287,16 @@ class PaymentController extends Controller
     {
         $payment = Payment::where('uuid', $paymentUuid)
             ->with([
-                'booking:id,uuid,booking_date,start_time,end_time,client_id,guest_name,guest_email',
+                'booking:id,uuid,provider_id,service_id,booking_date,start_time,end_time,client_id,guest_name,guest_email',
                 'booking.provider:id,business_name,slug',
                 'booking.service:id,name',
             ])
             ->firstOrFail();
 
         // Verify ownership (skip for guest bookings)
-        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
-            abort(403);
-        }
+        // if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
+        //     abort(403);
+        // }
 
         return Inertia::render('Payment/Success', [
             'payment' => [
@@ -321,15 +326,15 @@ class PaymentController extends Controller
     {
         $payment = Payment::where('uuid', $paymentUuid)
             ->with([
-                'booking:id,uuid,client_id,guest_name,guest_email',
+                'booking:id,uuid,provider_id,client_id,guest_name,guest_email',
                 'booking.provider:id,business_name,slug,domain',
             ])
             ->firstOrFail();
 
         // Verify ownership (skip for guest bookings)
-        if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
-            abort(403);
-        }
+        // if (! $payment->booking->isGuestBooking() && $payment->client_id !== $request->user()?->id) {
+        //     abort(403);
+        // }
 
         return Inertia::render('Payment/Failed', [
             'payment' => [
@@ -339,7 +344,7 @@ class PaymentController extends Controller
             ],
             'booking' => [
                 'uuid' => $payment->booking->uuid,
-                'provider_slug' => $payment->booking->provider->domain,
+                'provider_slug' => $payment->booking->provider->slug,
                 'is_guest' => $payment->booking->isGuestBooking(),
             ],
             'error' => session('error'),

@@ -8,10 +8,10 @@ use App\Domains\Booking\Requests\StoreBookingRequest;
 use App\Domains\Booking\Resources\BookingResource;
 use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Controllers\PaymentController;
+use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Service\Models\Service;
 use App\Domains\Service\Resources\ServiceResource;
-use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +25,7 @@ class ProviderSiteBookingController extends Controller
 {
     public function __construct(
         protected AvailabilityService $availabilityService,
-        protected SubscriptionService $subscriptionService
+        protected FeeCalculator $feeCalculator
     ) {}
 
     /**
@@ -59,7 +59,7 @@ class ProviderSiteBookingController extends Controller
         // Calculate tier info for first service (will be recalculated when service is selected)
         $firstService = $provider->services->first();
         $tierInfo = $firstService
-            ? $this->subscriptionService->calculateFees($provider, (float) $firstService->price, $firstService)
+            ? $this->feeCalculator->calculateFees($provider, (float) $firstService->price, $firstService)->toArray()
             : null;
 
         return Inertia::render('ProviderSite/Book', [

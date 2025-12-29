@@ -9,6 +9,7 @@ enum TemplateType: string
     case DEFAULT = 'default';
     case MINIMAL = 'minimal';
     case BARBER_DELUX = 'barber_delux';
+    case ARCHITECT_BOLD = 'architect_bold';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum TemplateType: string
             self::DEFAULT => 'Classic',
             self::MINIMAL => 'Minimal',
             self::BARBER_DELUX => 'Barber Delux',
+            self::ARCHITECT_BOLD => 'Architect Bold',
         };
     }
 
@@ -25,6 +27,7 @@ enum TemplateType: string
             self::DEFAULT => 'A balanced, professional layout suitable for all businesses with full-featured sections.',
             self::MINIMAL => 'Clean and simple design focused on content with less visual clutter.',
             self::BARBER_DELUX => 'Feature-rich template with split hero layout, team showcase, and feature cards.',
+            self::ARCHITECT_BOLD => 'Professional template for contractors, lawyers, and consultants. Features bold typography, stats bar, and lead capture.',
         };
     }
 
@@ -42,6 +45,7 @@ enum TemplateType: string
             self::DEFAULT => SubscriptionTier::STARTER,
             self::MINIMAL => SubscriptionTier::PREMIUM,
             self::BARBER_DELUX => SubscriptionTier::PREMIUM,
+            self::ARCHITECT_BOLD => SubscriptionTier::PREMIUM,
         };
     }
 

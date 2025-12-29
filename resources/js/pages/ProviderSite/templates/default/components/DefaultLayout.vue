@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, useSlots } from 'vue';
+import { computed, useSlots, onMounted } from 'vue';
 import type { User } from '@/types/models';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -92,6 +92,16 @@ const isActive = (path: string) => {
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
+
+// Load Google Font
+onMounted(() => {
+    if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Inter"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap';
+        document.head.appendChild(link);
+    }
+});
 
 const homeUrl = computed(() => {
     return site.home({ provider: __provider?.domain ?? '' }).url;
@@ -187,6 +197,10 @@ const getBookingUrl = () => {
 
 <style scoped>
 .default-layout {
+    /* Typography - Inter: Clean, professional sans-serif */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: var(--font-sans);
+
     /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
@@ -205,6 +219,29 @@ const getBookingUrl = () => {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    font-family: var(--font-sans);
+}
+
+/* Typography hierarchy */
+.default-layout :deep(h1) {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+}
+
+.default-layout :deep(h2) {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+}
+
+.default-layout :deep(h3),
+.default-layout :deep(h4) {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 .header {

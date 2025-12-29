@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, useSlots } from 'vue';
+import { computed, useSlots, onMounted } from 'vue';
 import type { User } from '@/types/models';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
@@ -88,6 +88,16 @@ const isActive = (path: string) => {
     return currentPath.value.includes(path);
 };
 
+// Load Google Font - DM Sans: Elegant, geometric sans-serif
+onMounted(() => {
+    if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=DM+Sans"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap';
+        document.head.appendChild(link);
+    }
+});
+
 const homeUrl = computed(() => {
     return site.home({ provider: __provider?.domain ?? '' }).url;
 });
@@ -173,6 +183,10 @@ const getBookingUrl = () => {
 
 <style scoped>
 .minimal-layout {
+    /* Typography - DM Sans: Elegant geometric sans-serif for minimal aesthetic */
+    --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-heading: var(--font-sans);
+
     /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
@@ -192,6 +206,33 @@ const getBookingUrl = () => {
     display: flex;
     flex-direction: column;
     background: #fff;
+    font-family: var(--font-sans);
+}
+
+/* Typography hierarchy - Minimal: Clean, light weights, generous spacing */
+.minimal-layout :deep(h1) {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+}
+
+.minimal-layout :deep(h2) {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.minimal-layout :deep(h3),
+.minimal-layout :deep(h4) {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.minimal-layout :deep(p) {
+    line-height: 1.7;
 }
 
 .header {

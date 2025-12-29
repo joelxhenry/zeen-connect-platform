@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref, useSlots } from 'vue';
+import { computed, ref, useSlots, onMounted } from 'vue';
 import type { User } from '@/types/models';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
@@ -108,6 +108,16 @@ const getBookingUrl = () => {
 const toggleMobileMenu = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value;
 };
+
+// Load Google Fonts - Playfair Display (headings) + Inter (body)
+onMounted(() => {
+    if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Playfair"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap';
+        document.head.appendChild(link);
+    }
+});
 </script>
 
 <template>
@@ -206,6 +216,14 @@ const toggleMobileMenu = () => {
 
 <style scoped>
 .barber-delux-layout {
+    /* Typography - Premium barbershop aesthetic */
+    /* Playfair Display: Classic serif for headings - elegant, premium feel */
+    /* Inter: Clean sans-serif for body - highly readable */
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: var(--font-serif);
+    --font-body: var(--font-sans);
+
     /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
@@ -229,6 +247,41 @@ const toggleMobileMenu = () => {
     display: flex;
     flex-direction: column;
     background: var(--provider-background, #f9fafb);
+    font-family: var(--font-body);
+}
+
+/* Typography hierarchy - Barber Delux: Elegant serif headings, clean body */
+.barber-delux-layout :deep(h1) {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.barber-delux-layout :deep(h2) {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.barber-delux-layout :deep(h3) {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+.barber-delux-layout :deep(h4),
+.barber-delux-layout :deep(h5),
+.barber-delux-layout :deep(h6) {
+    font-family: var(--font-body);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.barber-delux-layout :deep(p) {
+    font-family: var(--font-body);
+    line-height: 1.6;
 }
 
 .header {

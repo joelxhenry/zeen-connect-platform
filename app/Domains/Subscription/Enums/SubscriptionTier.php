@@ -153,6 +153,7 @@ enum SubscriptionTier: string
                 SubscriptionFeature::TEAM_MEMBERS,
                 SubscriptionFeature::WHATSAPP_NOTIFICATIONS,
                 SubscriptionFeature::PRIORITY_LISTING,
+                SubscriptionFeature::BRANDING
             ],
             self::ENTERPRISE => [
                 ...self::PREMIUM->features(),

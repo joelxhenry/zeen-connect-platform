@@ -154,7 +154,7 @@ const dueNowAmount = computed(() => {
                     :label="fees?.requires_deposit ? 'Continue to Payment' : 'Confirm Booking'"
                     icon="pi pi-arrow-right"
                     iconPos="right"
-                    class="w-full !bg-[#106B4F] !border-[#106B4F]"
+                    class="w-full btn-primary"
                     :disabled="!canSubmit"
                     :loading="loading"
                     @click="emit('submit')"
@@ -187,7 +187,7 @@ const dueNowAmount = computed(() => {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .booking-summary__content {
@@ -220,7 +220,7 @@ const dueNowAmount = computed(() => {
 .booking-summary__service h3 {
     margin: 0;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .booking-summary__service p {
@@ -237,7 +237,7 @@ const dueNowAmount = computed(() => {
 }
 
 .booking-summary__datetime i {
-    color: #106B4F;
+    color: var(--provider-primary);
 }
 
 .booking-summary__separator {
@@ -253,7 +253,7 @@ const dueNowAmount = computed(() => {
 }
 
 .booking-summary__team-member i {
-    color: #106B4F;
+    color: var(--provider-primary);
 }
 
 .booking-summary__details hr {
@@ -275,7 +275,7 @@ const dueNowAmount = computed(() => {
 }
 
 .booking-summary__line--highlight {
-    color: #106B4F;
+    color: var(--provider-primary);
 }
 
 .booking-summary__line--muted {
@@ -300,13 +300,23 @@ const dueNowAmount = computed(() => {
 
 .booking-summary__total span:first-child {
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .booking-summary__total-amount {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #106B4F;
+    color: var(--provider-primary);
+}
+
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
 }
 
 .booking-summary__terms {

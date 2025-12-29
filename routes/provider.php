@@ -8,6 +8,7 @@ use App\Domains\Payment\Controllers\ProviderGatewaySetupController;
 use App\Domains\Payment\Controllers\ProviderRefundController;
 use App\Domains\Provider\Controllers\AvailabilityController;
 use App\Domains\Provider\Controllers\BankingInfoController;
+use App\Domains\Provider\Controllers\BrandingController;
 use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
@@ -52,6 +53,12 @@ Route::post('/services/{service}/toggle-active', [ServiceController::class, 'tog
 Route::prefix('settings')->name('provider.settings.')->group(function () {
     Route::get('/', [SettingsController::class, 'edit'])->name('edit');
     Route::put('/booking', [SettingsController::class, 'updateBookingSettings'])->name('booking');
+});
+
+// Branding management
+Route::prefix('branding')->name('provider.branding.')->group(function () {
+    Route::get('/', [BrandingController::class, 'edit'])->name('edit');
+    Route::put('/', [BrandingController::class, 'update'])->name('update');
 });
 
 // Availability management

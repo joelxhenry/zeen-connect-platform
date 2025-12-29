@@ -65,8 +65,8 @@ const isSelected = (service: ServiceForBooking) => {
 }
 
 .service-card--selected {
-    border-color: #106B4F;
-    background-color: rgba(16, 107, 79, 0.05);
+    border-color: var(--provider-primary);
+    background-color: var(--provider-primary-05);
 }
 
 .service-card__content {
@@ -85,7 +85,7 @@ const isSelected = (service: ServiceForBooking) => {
     margin: 0;
     font-size: 1rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .service-card__description {
@@ -116,7 +116,7 @@ const isSelected = (service: ServiceForBooking) => {
 .service-card__price {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #106B4F;
+    color: var(--provider-primary);
     white-space: nowrap;
 }
 </style>

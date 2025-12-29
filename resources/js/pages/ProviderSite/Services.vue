@@ -76,7 +76,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
                                 <div class="service-actions">
                                     <span class="price">{{ service.price_display }}</span>
                                     <AppLink :href="getBookingUrl(service.id)">
-                                        <Button label="Book" size="small" class="!bg-[#106B4F] !border-[#106B4F]" />
+                                        <Button label="Book" size="small" class="btn-primary" />
                                     </AppLink>
                                 </div>
                             </div>
@@ -114,7 +114,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     margin: 0 0 0.25rem 0;
     font-size: 1.75rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .page-header p {
@@ -146,14 +146,14 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 
 .category-icon {
     font-size: 1.25rem;
-    color: #106B4F;
+    color: var(--provider-primary);
 }
 
 .category-header h2 {
     margin: 0;
     font-size: 1.125rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
     flex: 1;
 }
 
@@ -208,7 +208,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     margin: 0 0 0.25rem 0;
     font-size: 1rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .service-info .description {
@@ -241,7 +241,18 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 .service-actions .price {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #106B4F;
+    color: var(--provider-primary);
+}
+
+/* Primary button styling */
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
 }
 
 .empty-state {
@@ -261,7 +272,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 .empty-state h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.25rem;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .empty-state p {

@@ -205,7 +205,7 @@ const getPlatformColor = (platform: string) => {
 
 .play-button i {
     font-size: 2rem;
-    color: #106B4F;
+    color: var(--provider-primary);
     margin-left: 4px;
 }
 
@@ -242,7 +242,7 @@ const getPlatformColor = (platform: string) => {
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

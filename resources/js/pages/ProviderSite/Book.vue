@@ -317,11 +317,39 @@ const submit = () => {
     margin: 0 0 0.25rem 0;
     font-size: 1.75rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .page-header p {
     margin: 0;
     color: #6b7280;
+}
+
+/* Calendar branding overrides */
+:deep(.p-datepicker-day-selected) {
+    background-color: var(--provider-primary) !important;
+    color: white !important;
+}
+
+:deep(.p-datepicker-day-selected:hover) {
+    background-color: var(--provider-primary-hover) !important;
+}
+
+:deep(.p-datepicker-day:not(.p-datepicker-day-selected):not(.p-disabled):hover) {
+    background-color: var(--provider-primary-10) !important;
+}
+
+:deep(.p-datepicker-today > .p-datepicker-day:not(.p-datepicker-day-selected)) {
+    border-color: var(--provider-primary) !important;
+    color: var(--provider-primary) !important;
+}
+
+:deep(.p-datepicker-header button:hover) {
+    color: var(--provider-primary) !important;
+    background-color: var(--provider-primary-10) !important;
+}
+
+:deep(.p-datepicker-title button:hover) {
+    color: var(--provider-primary) !important;
 }
 </style>

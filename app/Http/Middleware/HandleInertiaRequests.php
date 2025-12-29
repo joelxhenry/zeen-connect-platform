@@ -62,6 +62,16 @@ class HandleInertiaRequests extends Middleware
                     'domain' => $provider->domain,
                     'avatar' => $provider->getAvatarUrlAttribute(),
                     'cover_image' => $provider->getCoverPhotoUrlAttribute(),
+                    // Branding
+                    'brand_primary_color' => $provider->brand_primary_color,
+                    'brand_primary_rgb' => $provider->brand_primary_rgb,
+                    'brand_hover_color' => $provider->brand_hover_color,
+                    'brand_text_color' => $provider->brand_text_color,
+                    'brand_success_color' => $provider->brand_success_color,
+                    'brand_warning_color' => $provider->brand_warning_color,
+                    'brand_danger_color' => $provider->brand_danger_color,
+                    'brand_info_color' => $provider->brand_info_color,
+                    'brand_secondary_color' => $provider->brand_secondary_color,
                 ] : null;
             },
             // Domain URLs

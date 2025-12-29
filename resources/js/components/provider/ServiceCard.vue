@@ -113,7 +113,7 @@ withDefaults(defineProps<Props>(), {
     margin: 0 0 0.25rem 0;
     font-size: 1rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .service-card__description {
@@ -154,7 +154,7 @@ withDefaults(defineProps<Props>(), {
 
 .service-card__price {
     font-weight: 600;
-    color: #106B4F;
+    color: var(--provider-primary);
     white-space: nowrap;
     font-size: 1.125rem;
     display: flex;

@@ -65,7 +65,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
                     <Button
                         label="Book Now"
                         icon="pi pi-calendar"
-                        class="!bg-[#106B4F] !border-[#106B4F] w-full"
+                        class="btn-primary w-full"
                     />
                 </AppLink>
             </div>
@@ -134,12 +134,12 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 }
 
 .business-hours__status-badge--open {
-    background: #22c55e;
+    background: var(--provider-success);
     color: white;
 }
 
 .business-hours__status-badge--closed {
-    background: #ef4444;
+    background: var(--provider-danger);
     color: white;
 }
 
@@ -181,11 +181,11 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 .business-hours__today-time {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .business-hours__today-time--closed {
-    color: #991b1b;
+    color: var(--provider-danger);
 }
 
 .business-hours__book-link {
@@ -244,7 +244,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 .business-hours__today-indicator {
     width: 0.5rem;
     height: 0.5rem;
-    background: #22c55e;
+    background: var(--provider-success);
     border-radius: 50%;
     animation: pulse 2s infinite;
 }
@@ -252,7 +252,18 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 .business-hours__day {
     font-size: 0.9375rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
+}
+
+/* Primary button styling */
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
 }
 
 .business-hours__row--today .business-hours__day {

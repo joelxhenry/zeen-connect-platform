@@ -88,7 +88,7 @@ const formatNumber = (num: number): string => {
 
 .provider-stats__icon {
     font-size: 1.5rem;
-    color: #106B4F;
+    color: var(--provider-primary);
     margin-bottom: 0.25rem;
 }
 
@@ -99,7 +99,7 @@ const formatNumber = (num: number): string => {
 .provider-stats__value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .provider-stats__label {

@@ -53,6 +53,8 @@ class Provider extends Model
         'deposit_percentage',
         'is_founding_member',
         'founding_member_at',
+        // Branding (JSON)
+        'branding',
         // Banking info for escrow payouts
         'bank_name',
         'bank_account_number',
@@ -79,6 +81,7 @@ class Provider extends Model
             'deposit_percentage' => 'decimal:2',
             'is_founding_member' => 'boolean',
             'founding_member_at' => 'datetime',
+            'branding' => 'array',
             'banking_info_verified' => 'boolean',
             'banking_info_verified_at' => 'datetime',
         ];
@@ -388,6 +391,126 @@ class Provider extends Model
         $reviewWord = $this->rating_count === 1 ? 'review' : 'reviews';
 
         return "{$this->rating_display} ({$this->rating_count} {$reviewWord})";
+    }
+
+    // =========================================================================
+    // Branding Methods
+    // =========================================================================
+
+    /**
+     * Get a branding value from the JSON column.
+     */
+    public function getBrandingValue(string $key, mixed $default = null): mixed
+    {
+        return $this->branding[$key] ?? $default;
+    }
+
+    /**
+     * Get the brand primary color.
+     */
+    public function getBrandPrimaryColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('primary_color');
+    }
+
+    /**
+     * Get the brand text color.
+     */
+    public function getBrandTextColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('text_color');
+    }
+
+    /**
+     * Get the brand success color.
+     */
+    public function getBrandSuccessColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('success_color');
+    }
+
+    /**
+     * Get the brand warning color.
+     */
+    public function getBrandWarningColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('warning_color');
+    }
+
+    /**
+     * Get the brand danger color.
+     */
+    public function getBrandDangerColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('danger_color');
+    }
+
+    /**
+     * Get the brand info color.
+     */
+    public function getBrandInfoColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('info_color');
+    }
+
+    /**
+     * Get the brand secondary color.
+     */
+    public function getBrandSecondaryColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('secondary_color');
+    }
+
+    /**
+     * Get the brand primary color as RGB values (for opacity support).
+     */
+    public function getBrandPrimaryRgbAttribute(): ?string
+    {
+        $primaryColor = $this->brand_primary_color;
+
+        if (! $primaryColor) {
+            return null;
+        }
+
+        $hex = ltrim($primaryColor, '#');
+
+        return implode(', ', [
+            hexdec(substr($hex, 0, 2)),
+            hexdec(substr($hex, 2, 2)),
+            hexdec(substr($hex, 4, 2)),
+        ]);
+    }
+
+    /**
+     * Get the brand hover color (darkened version of primary).
+     */
+    public function getBrandHoverColorAttribute(): ?string
+    {
+        $primaryColor = $this->brand_primary_color;
+
+        if (! $primaryColor) {
+            return null;
+        }
+
+        return $this->darkenColor($primaryColor, 15);
+    }
+
+    /**
+     * Darken a hex color by a percentage.
+     */
+    protected function darkenColor(string $hex, int $percent): string
+    {
+        $hex = ltrim($hex, '#');
+
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        $r = max(0, (int) ($r * (100 - $percent) / 100));
+        $g = max(0, (int) ($g * (100 - $percent) / 100));
+        $b = max(0, (int) ($b * (100 - $percent) / 100));
+
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
     }
 
     /**

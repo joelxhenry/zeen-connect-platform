@@ -51,7 +51,7 @@ withDefaults(defineProps<Props>(), {
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -70,7 +70,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .step-card__number--active {
-    background-color: #106B4F;
+    background-color: var(--provider-primary);
     color: white;
 }
 

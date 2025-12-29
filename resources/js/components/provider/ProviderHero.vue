@@ -91,7 +91,7 @@ const getInitials = (name: string) => {
                         <Button
                             label="Book Now"
                             icon="pi pi-calendar"
-                            class="!bg-[#106B4F] !border-[#106B4F] !px-6"
+                            class="btn-primary !px-6"
                         />
                     </AppLink>
                 </div>
@@ -170,7 +170,7 @@ const getInitials = (name: string) => {
 }
 
 .provider-hero__avatar--initials {
-    background-color: #106B4F !important;
+    background-color: var(--provider-primary) !important;
     font-size: 2rem !important;
     color: white !important;
 }
@@ -194,7 +194,7 @@ const getInitials = (name: string) => {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 @media (min-width: 768px) {
@@ -234,7 +234,18 @@ const getInitials = (name: string) => {
 }
 
 .provider-hero__location i {
-    color: #106B4F;
+    color: var(--provider-primary);
+}
+
+/* Primary button styling */
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
 }
 
 .provider-hero__actions {

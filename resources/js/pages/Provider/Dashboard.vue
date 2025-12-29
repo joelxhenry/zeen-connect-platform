@@ -97,7 +97,7 @@ const getStatusSeverity = (status: string) => {
                 <template v-if="provider.rating_count > 0" #badge>
                     <Tag severity="warn" class="!px-3 !py-2 !text-sm">
                         <i class="pi pi-star-fill mr-1"></i>
-                        {{ provider.rating_avg?.toFixed(1) }}
+                        {{ Number(provider.rating_avg ?? 0).toFixed(1) }}
                         <span class="font-normal ml-1">({{ provider.rating_count }} reviews)</span>
                     </Tag>
                 </template>

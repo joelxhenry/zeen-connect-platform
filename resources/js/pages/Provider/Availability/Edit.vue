@@ -20,6 +20,8 @@ import TabPanel from 'primevue/tabpanel';
 import { useToast } from 'primevue/usetoast';
 import AvailabilityController from '@/actions/App/Domains/Provider/Controllers/AvailabilityController';
 import type { Break } from '@/components/availability';
+import provider from '@/routes/provider';
+import { resolveUrl } from '@/utils/url';
 
 interface ScheduleDay {
     day_of_week: number;
@@ -163,7 +165,7 @@ const sortedBreakDays = computed(() => {
 
 // Actions
 const saveSchedule = () => {
-    scheduleForm.put(AvailabilityController.updateSchedule().url, {
+    scheduleForm.put(resolveUrl(provider.availability.schedule.url()), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -185,7 +187,7 @@ const saveSchedule = () => {
 };
 
 const saveBlockedDates = () => {
-    blockedDatesForm.put(AvailabilityController.updateBlockedDates().url, {
+    blockedDatesForm.put(resolveUrl(provider.availability.blockedDates.url()), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -236,7 +238,7 @@ const removeBlockedDate = (index: number) => {
 };
 
 const saveBreaks = () => {
-    breaksForm.put(AvailabilityController.updateBreaks().url, {
+    breaksForm.put(resolveUrl(provider.availability.breaks.url()), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -325,7 +327,7 @@ const removeBreak = (breakToRemove: Break) => {
 };
 
 const saveBuffer = () => {
-    bufferForm.put(AvailabilityController.updateBuffer().url, {
+    bufferForm.put( resolveUrl(provider.availability.buffer.url()), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({
@@ -351,10 +353,7 @@ const saveBuffer = () => {
     <ConsoleLayout title="Availability">
         <div class="w-full max-w-4xl mx-auto">
             <!-- Page Header -->
-            <ConsolePageHeader
-                title="Availability"
-                subtitle="Set when you're available for bookings"
-            />
+            <ConsolePageHeader title="Availability" subtitle="Set when you're available for bookings" />
 
             <!-- Quick Stats -->
             <div class="quick-stats">
@@ -406,49 +405,30 @@ const saveBuffer = () => {
                             <div class="tab-header">
                                 <div>
                                     <h3 class="tab-title">Weekly Schedule</h3>
-                                    <p class="tab-description">Set your regular working hours for each day of the week</p>
+                                    <p class="tab-description">Set your regular working hours for each day of the week
+                                    </p>
                                 </div>
-                                <ConsoleButton
-                                    label="Save Schedule"
-                                    icon="pi pi-check"
-                                    size="small"
-                                    :loading="scheduleForm.processing"
-                                    @click="saveSchedule"
-                                />
+                                <ConsoleButton label="Save Schedule" icon="pi pi-check" size="small"
+                                    :loading="scheduleForm.processing" @click="saveSchedule" />
                             </div>
 
                             <div class="schedule-grid">
-                                <div
-                                    v-for="day in scheduleForm.schedule"
-                                    :key="day.day_of_week"
-                                    class="schedule-row"
-                                    :class="{ 'schedule-row--disabled': !day.is_available }"
-                                >
+                                <div v-for="day in scheduleForm.schedule" :key="day.day_of_week" class="schedule-row"
+                                    :class="{ 'schedule-row--disabled': !day.is_available }">
                                     <div class="schedule-day">
                                         <InputSwitch v-model="day.is_available" />
                                         <span class="day-name">{{ dayNames[day.day_of_week] }}</span>
                                         <span class="day-name-short">{{ shortDayNames[day.day_of_week] }}</span>
                                     </div>
 
-                                    <div class="schedule-times" :class="{ 'schedule-times--disabled': !day.is_available }">
+                                    <div class="schedule-times"
+                                        :class="{ 'schedule-times--disabled': !day.is_available }">
                                         <template v-if="day.is_available">
-                                            <Select
-                                                v-model="day.start_time"
-                                                :options="timeOptions"
-                                                optionLabel="label"
-                                                optionValue="value"
-                                                placeholder="Start"
-                                                class="time-select"
-                                            />
+                                            <Select v-model="day.start_time" :options="timeOptions" optionLabel="label"
+                                                optionValue="value" placeholder="Start" class="time-select" />
                                             <span class="time-separator">to</span>
-                                            <Select
-                                                v-model="day.end_time"
-                                                :options="timeOptions"
-                                                optionLabel="label"
-                                                optionValue="value"
-                                                placeholder="End"
-                                                class="time-select"
-                                            />
+                                            <Select v-model="day.end_time" :options="timeOptions" optionLabel="label"
+                                                optionValue="value" placeholder="End" class="time-select" />
                                         </template>
                                         <span v-else class="closed-label">Closed</span>
                                     </div>
@@ -467,15 +447,11 @@ const saveBuffer = () => {
                             <div class="tab-header">
                                 <div>
                                     <h3 class="tab-title">Blocked Dates</h3>
-                                    <p class="tab-description">Block specific dates when you're unavailable for appointments</p>
+                                    <p class="tab-description">Block specific dates when you're unavailable for
+                                        appointments</p>
                                 </div>
-                                <ConsoleButton
-                                    label="Save Changes"
-                                    icon="pi pi-check"
-                                    size="small"
-                                    :loading="blockedDatesForm.processing"
-                                    @click="saveBlockedDates"
-                                />
+                                <ConsoleButton label="Save Changes" icon="pi pi-check" size="small"
+                                    :loading="blockedDatesForm.processing" @click="saveBlockedDates" />
                             </div>
 
                             <!-- Add New Blocked Date -->
@@ -483,63 +459,35 @@ const saveBuffer = () => {
                                 <div class="blocked-add-row">
                                     <div class="blocked-add-field">
                                         <label class="blocked-add-label">Date</label>
-                                        <DatePicker
-                                            v-model="newBlockedDate"
-                                            :minDate="new Date()"
-                                            placeholder="Select a date"
-                                            dateFormat="M dd, yy"
-                                            showIcon
-                                        />
+                                        <DatePicker v-model="newBlockedDate" :minDate="new Date()"
+                                            placeholder="Select a date" dateFormat="M dd, yy" showIcon />
                                     </div>
                                     <div class="blocked-add-field blocked-add-field--reason">
                                         <label class="blocked-add-label">Reason (optional)</label>
-                                        <InputText
-                                            v-model="newBlockedReason"
-                                            placeholder="e.g., Vacation, Holiday"
-                                        />
+                                        <InputText v-model="newBlockedReason" placeholder="e.g., Vacation, Holiday" />
                                     </div>
-                                    <Button
-                                        label="Add Date"
-                                        icon="pi pi-plus"
-                                        @click="addBlockedDate"
-                                        :disabled="!newBlockedDate"
-                                        severity="secondary"
-                                        class="blocked-add-btn"
-                                    />
+                                    <Button label="Add Date" icon="pi pi-plus" @click="addBlockedDate"
+                                        :disabled="!newBlockedDate" severity="secondary" class="blocked-add-btn" />
                                 </div>
                             </div>
 
                             <!-- Blocked Dates List -->
-                            <ConsoleEmptyState
-                                v-if="blockedDatesForm.blocked_dates.length === 0"
-                                icon="pi pi-calendar-times"
-                                title="No blocked dates"
-                                description="Add dates when you won't be available for bookings"
-                                size="compact"
-                            />
+                            <ConsoleEmptyState v-if="blockedDatesForm.blocked_dates.length === 0"
+                                icon="pi pi-calendar-times" title="No blocked dates"
+                                description="Add dates when you won't be available for bookings" size="compact" />
                             <div v-else class="blocked-list">
-                                <div
-                                    v-for="(blocked, index) in blockedDatesForm.blocked_dates"
-                                    :key="index"
-                                    class="blocked-item group"
-                                >
+                                <div v-for="(blocked, index) in blockedDatesForm.blocked_dates" :key="index"
+                                    class="blocked-item group">
                                     <div class="blocked-info">
                                         <i class="pi pi-calendar blocked-icon"></i>
                                         <div class="blocked-details">
                                             <span class="blocked-date">{{ formatDate(blocked.date) }}</span>
-                                            <span v-if="blocked.reason" class="blocked-reason">{{ blocked.reason }}</span>
+                                            <span v-if="blocked.reason" class="blocked-reason">{{ blocked.reason
+                                                }}</span>
                                         </div>
                                     </div>
-                                    <Button
-                                        icon="pi pi-trash"
-                                        severity="danger"
-                                        text
-                                        rounded
-                                        size="small"
-                                        @click="removeBlockedDate(index)"
-                                        class="remove-btn"
-                                        v-tooltip="'Remove'"
-                                    />
+                                    <Button icon="pi pi-trash" severity="danger" text rounded size="small"
+                                        @click="removeBlockedDate(index)" class="remove-btn" v-tooltip="'Remove'" />
                                 </div>
                             </div>
 
@@ -557,13 +505,8 @@ const saveBuffer = () => {
                                     <h3 class="tab-title">Recurring Breaks</h3>
                                     <p class="tab-description">Schedule regular breaks like lunch or personal time</p>
                                 </div>
-                                <ConsoleButton
-                                    label="Save Changes"
-                                    icon="pi pi-check"
-                                    size="small"
-                                    :loading="breaksForm.processing"
-                                    @click="saveBreaks"
-                                />
+                                <ConsoleButton label="Save Changes" icon="pi pi-check" size="small"
+                                    :loading="breaksForm.processing" @click="saveBreaks" />
                             </div>
 
                             <!-- Add New Break -->
@@ -571,84 +514,50 @@ const saveBuffer = () => {
                                 <div class="breaks-add-row">
                                     <div class="breaks-add-field">
                                         <label class="breaks-add-label">Day</label>
-                                        <Select
-                                            v-model="newBreak.day_of_week"
-                                            :options="dayOptions"
-                                            optionLabel="label"
-                                            optionValue="value"
-                                            placeholder="Select day"
-                                        />
+                                        <Select v-model="newBreak.day_of_week" :options="dayOptions" optionLabel="label"
+                                            optionValue="value" placeholder="Select day" />
                                     </div>
                                     <div class="breaks-add-field breaks-add-field--time">
                                         <label class="breaks-add-label">Time</label>
                                         <div class="breaks-time-range">
-                                            <Select
-                                                v-model="newBreak.start_time"
-                                                :options="timeOptions"
-                                                optionLabel="label"
-                                                optionValue="value"
-                                                placeholder="Start"
-                                            />
+                                            <Select v-model="newBreak.start_time" :options="timeOptions"
+                                                optionLabel="label" optionValue="value" placeholder="Start" />
                                             <span class="time-separator">to</span>
-                                            <Select
-                                                v-model="newBreak.end_time"
-                                                :options="timeOptions"
-                                                optionLabel="label"
-                                                optionValue="value"
-                                                placeholder="End"
-                                            />
+                                            <Select v-model="newBreak.end_time" :options="timeOptions"
+                                                optionLabel="label" optionValue="value" placeholder="End" />
                                         </div>
                                     </div>
                                     <div class="breaks-add-field breaks-add-field--label">
                                         <label class="breaks-add-label">Label (optional)</label>
-                                        <InputText
-                                            v-model="newBreak.label"
-                                            placeholder="e.g., Lunch"
-                                        />
+                                        <InputText v-model="newBreak.label" placeholder="e.g., Lunch" />
                                     </div>
-                                    <Button
-                                        label="Add Break"
-                                        icon="pi pi-plus"
-                                        @click="addBreak"
-                                        severity="secondary"
-                                        class="breaks-add-btn"
-                                    />
+                                    <Button label="Add Break" icon="pi pi-plus" @click="addBreak" severity="secondary"
+                                        class="breaks-add-btn" />
                                 </div>
                             </div>
 
                             <!-- Breaks List -->
-                            <ConsoleEmptyState
-                                v-if="breaksForm.breaks.length === 0"
-                                icon="pi pi-clock"
+                            <ConsoleEmptyState v-if="breaksForm.breaks.length === 0" icon="pi pi-clock"
                                 title="No breaks scheduled"
                                 description="Add recurring breaks to block time for lunch, meetings, or personal time"
-                                size="compact"
-                            />
+                                size="compact" />
                             <div v-else class="breaks-list">
                                 <div v-for="day in sortedBreakDays" :key="day" class="breaks-day-group">
                                     <div class="breaks-day-header">{{ dayNames[day] }}</div>
                                     <div class="breaks-day-items">
-                                        <div
-                                            v-for="(breakItem, index) in breaksByDay[day]"
-                                            :key="`${day}-${index}`"
-                                            class="break-item group"
-                                        >
+                                        <div v-for="(breakItem, index) in breaksByDay[day]" :key="`${day}-${index}`"
+                                            class="break-item group">
                                             <div class="break-info">
                                                 <span class="break-time">
-                                                    {{ formatTime(breakItem.start_time) }} - {{ formatTime(breakItem.end_time) }}
+                                                    {{ formatTime(breakItem.start_time) }} - {{
+                                                        formatTime(breakItem.end_time) }}
                                                 </span>
-                                                <span v-if="breakItem.label" class="break-label">{{ breakItem.label }}</span>
+                                                <span v-if="breakItem.label" class="break-label">{{ breakItem.label
+                                                    }}</span>
                                             </div>
-                                            <Button
-                                                icon="pi pi-trash"
-                                                severity="danger"
-                                                text
-                                                rounded
-                                                size="small"
-                                                @click="removeBreak(breakItem)"
-                                                class="remove-btn"
-                                                v-tooltip="'Remove'"
-                                            />
+                                            <Button icon="pi pi-trash" severity="danger" text rounded size="small"
+                                                @click="removeBreak(breakItem)" class="remove-btn"
+                                                v-tooltip="'Remove'" />
                                         </div>
                                     </div>
                                 </div>
@@ -666,7 +575,8 @@ const saveBuffer = () => {
                             <div class="tab-header">
                                 <div>
                                     <h3 class="tab-title">Buffer Time</h3>
-                                    <p class="tab-description">Add time between appointments for preparation or cleanup</p>
+                                    <p class="tab-description">Add time between appointments for preparation or cleanup
+                                    </p>
                                 </div>
                             </div>
 
@@ -678,23 +588,14 @@ const saveBuffer = () => {
                                     <div class="buffer-content">
                                         <label class="buffer-label">Time between bookings</label>
                                         <p class="buffer-description">
-                                            Buffer time is automatically added after each appointment, preventing back-to-back bookings.
+                                            Buffer time is automatically added after each appointment, preventing
+                                            back-to-back bookings.
                                         </p>
                                         <div class="buffer-controls">
-                                            <Select
-                                                v-model="bufferForm.buffer_minutes"
-                                                :options="bufferOptions"
-                                                optionLabel="label"
-                                                optionValue="value"
-                                                class="buffer-select"
-                                            />
-                                            <ConsoleButton
-                                                label="Save"
-                                                icon="pi pi-check"
-                                                size="small"
-                                                :loading="bufferForm.processing"
-                                                @click="saveBuffer"
-                                            />
+                                            <Select v-model="bufferForm.buffer_minutes" :options="bufferOptions"
+                                                optionLabel="label" optionValue="value" class="buffer-select" />
+                                            <ConsoleButton label="Save" icon="pi pi-check" size="small"
+                                                :loading="bufferForm.processing" @click="saveBuffer" />
                                         </div>
                                     </div>
                                 </div>
@@ -705,9 +606,11 @@ const saveBuffer = () => {
                                         Example
                                     </div>
                                     <p class="example-text">
-                                        With a {{ bufferForm.buffer_minutes || 0 }} minute buffer, if a 1-hour appointment ends at 2:00 PM,
-                                        the next available slot will be at {{ bufferForm.buffer_minutes ? '2:' + (bufferForm.buffer_minutes < 10 ? '0' : '') + bufferForm.buffer_minutes : '2:00' }} PM.
-                                    </p>
+                                        With a {{ bufferForm.buffer_minutes || 0 }} minute buffer, if a 1-hour
+                                        appointment ends at 2:00 PM,
+                                        the next available slot will be at {{ bufferForm.buffer_minutes ? '2:' +
+                                            (bufferForm.buffer_minutes
+                                                < 10 ? '0' : '') + bufferForm.buffer_minutes : '2:00' }} PM. </p>
                                 </div>
                             </div>
 

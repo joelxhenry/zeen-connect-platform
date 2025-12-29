@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useForm, usePage, router } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import {
     ConsoleFormCard,
@@ -13,7 +13,6 @@ import { useToast } from 'primevue/usetoast';
 import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 import GalleryUpload from '@/components/media/GalleryUpload.vue';
 import VideoEmbedForm from '@/components/media/VideoEmbedForm.vue';
-import ProfileController from '@/actions/App/Domains/Provider/Controllers/ProfileController';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
 import type { Provider, MediaItem, VideoEmbed } from '@/types/models';
@@ -29,7 +28,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const toast = useToast();
-const page = usePage();
 
 // Media state - separate from form to handle uploads independently
 const avatar = ref<MediaItem | null>(props.provider.avatar_media || null);
@@ -51,13 +49,10 @@ const form = useForm({
     },
 });
 
-const baseUrl = computed(() => {
-    return (page.props as any).ziggy?.url || window.location.origin;
-});
-
-const uploadUrl = computed(() => `${baseUrl.value}/media/upload`);
-const uploadMultipleUrl = computed(() => `${baseUrl.value}/media/upload-multiple`);
-const addVideoUrl = computed(() => `${baseUrl.value}/videos/provider`);
+// Media upload URLs using Wayfinder routes
+const uploadUrl = computed(() => resolveUrl(provider.media.upload.url()));
+const uploadMultipleUrl = computed(() => resolveUrl(provider.media.uploadMultiple.url()));
+const addVideoUrl = computed(() => resolveUrl(provider.videos.provider.add.url()));
 
 // Check if form has changes
 const hasChanges = computed(() => form.isDirty);
@@ -81,7 +76,7 @@ const profileCompleteness = computed(() => {
 });
 
 const submit = () => {
-    form.put(ProfileController.update().url, {
+    form.put(resolveUrl(provider.profile.update.url()), {
         preserveScroll: true,
         onSuccess: () => {
             toast.add({

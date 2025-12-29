@@ -14,6 +14,7 @@ enum SubscriptionFeature: string
     case TEAM_MEMBERS = 'team_members';
     case WHATSAPP_NOTIFICATIONS = 'whatsapp_notifications';
     case PRIORITY_LISTING = 'priority_listing';
+    case BRANDING = 'branding';
 
     // Enterprise features
     case EMBEDDABLE_WIDGETS = 'embeddable_widgets';
@@ -34,6 +35,7 @@ enum SubscriptionFeature: string
             self::TEAM_MEMBERS => 'Team Members',
             self::WHATSAPP_NOTIFICATIONS => 'WhatsApp Notifications',
             self::PRIORITY_LISTING => 'Priority Directory Listing',
+            self::BRANDING => 'Custom Branding',
             self::EMBEDDABLE_WIDGETS => 'Embeddable Booking Widgets',
             self::API_ACCESS => 'API Access',
             self::WHITE_LABELING => 'White-Labeling',
@@ -54,6 +56,7 @@ enum SubscriptionFeature: string
             self::TEAM_MEMBERS => 'Add team members to manage your business together',
             self::WHATSAPP_NOTIFICATIONS => 'Send booking notifications via WhatsApp',
             self::PRIORITY_LISTING => 'Get featured placement in the Zeen directory',
+            self::BRANDING => 'Customize your storefront colors to match your brand',
             self::EMBEDDABLE_WIDGETS => 'Embed the booking engine directly into your own website',
             self::API_ACCESS => 'Full API access to integrate with external CRMs and apps',
             self::WHITE_LABELING => 'Remove Zeen branding for a fully custom experience',
@@ -74,6 +77,7 @@ enum SubscriptionFeature: string
             self::TEAM_MEMBERS => 'pi pi-user-plus',
             self::WHATSAPP_NOTIFICATIONS => 'pi pi-whatsapp',
             self::PRIORITY_LISTING => 'pi pi-star',
+            self::BRANDING => 'pi pi-palette',
             self::EMBEDDABLE_WIDGETS => 'pi pi-code',
             self::API_ACCESS => 'pi pi-server',
             self::WHITE_LABELING => 'pi pi-palette',
@@ -96,7 +100,8 @@ enum SubscriptionFeature: string
             // Premium features
             self::TEAM_MEMBERS,
             self::WHATSAPP_NOTIFICATIONS,
-            self::PRIORITY_LISTING => SubscriptionTier::PREMIUM,
+            self::PRIORITY_LISTING,
+            self::BRANDING => SubscriptionTier::PREMIUM,
 
             // Enterprise features
             self::EMBEDDABLE_WIDGETS,

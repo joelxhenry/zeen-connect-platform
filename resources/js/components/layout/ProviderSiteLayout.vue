@@ -27,7 +27,54 @@ const __provider = page.props.__provider as {
     domain: string;
     avatar?: string;
     cover_image?: string;
+    brand_primary_color?: string;
+    brand_primary_rgb?: string;
+    brand_hover_color?: string;
+    brand_text_color?: string;
+    brand_success_color?: string;
+    brand_warning_color?: string;
+    brand_danger_color?: string;
+    brand_info_color?: string;
+    brand_secondary_color?: string;
 } | null;
+
+// Dynamic branding styles - uses provider's custom colors or falls back to defaults
+const brandingStyles = computed(() => {
+    const p = __provider;
+    if (!p) return {};
+
+    const styles: Record<string, string> = {};
+
+    if (p.brand_primary_color) {
+        styles['--provider-primary'] = p.brand_primary_color;
+    }
+    if (p.brand_primary_rgb) {
+        styles['--provider-primary-rgb'] = p.brand_primary_rgb;
+    }
+    if (p.brand_hover_color) {
+        styles['--provider-primary-hover'] = p.brand_hover_color;
+    }
+    if (p.brand_text_color) {
+        styles['--provider-text'] = p.brand_text_color;
+    }
+    if (p.brand_success_color) {
+        styles['--provider-success'] = p.brand_success_color;
+    }
+    if (p.brand_warning_color) {
+        styles['--provider-warning'] = p.brand_warning_color;
+    }
+    if (p.brand_danger_color) {
+        styles['--provider-danger'] = p.brand_danger_color;
+    }
+    if (p.brand_info_color) {
+        styles['--provider-info'] = p.brand_info_color;
+    }
+    if (p.brand_secondary_color) {
+        styles['--provider-secondary'] = p.brand_secondary_color;
+    }
+
+    return styles;
+});
 
 
 const currentPath = computed(() => {
@@ -76,7 +123,7 @@ const getBookingUrl = () => {
     <Head :title="title ? `${title} | ${__provider?.business_name}` : __provider?.business_name" />
     <FlashMessages />
 
-    <div class="provider-site-layout">
+    <div class="provider-site-layout" :style="brandingStyles">
         <!-- Header -->
         <header class="header">
             <div class="header-content">
@@ -84,7 +131,7 @@ const getBookingUrl = () => {
                 <AppLink :href="homeUrl" class="provider-brand">
                     <Avatar v-if="__provider?.avatar" :image="__provider.avatar" shape="circle" class="!w-10 !h-10" />
                     <Avatar v-else :label="getInitials(__provider?.business_name || '')" shape="circle"
-                        class="!w-10 !h-10 !bg-[#106B4F]" />
+                        class="avatar-fallback" />
                     <span class="provider-name">{{ __provider?.business_name }}</span>
                 </AppLink>
 
@@ -105,7 +152,7 @@ const getBookingUrl = () => {
                 <!-- Right Side -->
                 <div class="header-right">
                     <AppLink :href="getBookingUrl()">
-                        <Button label="Book Now" class="!bg-[#106B4F] !border-[#106B4F]" />
+                        <Button label="Book Now" class="btn-primary" />
                     </AppLink>
 
                     <div class="auth-nav">
@@ -148,6 +195,21 @@ const getBookingUrl = () => {
 
 <style scoped>
 .provider-site-layout {
+    /* Provider branding CSS variables - can be overridden dynamically */
+    --provider-primary: #106B4F;
+    --provider-primary-rgb: 16, 107, 79;
+    --provider-primary-hover: #0D5A42;
+    --provider-text: #0D1F1B;
+    --provider-primary-10: rgba(var(--provider-primary-rgb), 0.1);
+    --provider-primary-05: rgba(var(--provider-primary-rgb), 0.05);
+
+    /* Semantic colors */
+    --provider-success: #22C55E;
+    --provider-warning: #F59E0B;
+    --provider-danger: #EF4444;
+    --provider-info: #3B82F6;
+    --provider-secondary: #6B7280;
+
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -182,7 +244,7 @@ const getBookingUrl = () => {
 .provider-name {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .main-nav {
@@ -200,13 +262,13 @@ const getBookingUrl = () => {
 }
 
 .nav-link:hover {
-    color: #0D1F1B;
+    color: var(--provider-text);
     background-color: #f3f4f6;
 }
 
 .nav-link.active {
-    color: #106B4F;
-    background-color: rgba(16, 107, 79, 0.1);
+    color: var(--provider-primary);
+    background-color: var(--provider-primary-10);
     font-weight: 500;
 }
 
@@ -220,6 +282,24 @@ const getBookingUrl = () => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Primary button styling */
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
+}
+
+/* Avatar fallback styling */
+:deep(.avatar-fallback) {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    background-color: var(--provider-primary) !important;
 }
 
 .main-content {

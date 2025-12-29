@@ -261,7 +261,7 @@ const getStatusClass = (status: string) => {
                                         </span>
                                         <span class="provider-rating">
                                             <i class="pi pi-star-fill"></i>
-                                            {{ provider.rating_avg?.toFixed(1) || 'N/A' }}
+                                            {{ provider.rating_avg ? Number(provider.rating_avg).toFixed(1) : 'N/A' }}
                                         </span>
                                     </div>
                                 </div>

@@ -33,10 +33,10 @@ const getInitials = (name: string) => {
             <div class="max-w-2xl mx-auto px-4 py-8">
                 <!-- Success Header -->
                 <div class="text-center mb-6">
-                    <div class="w-16 h-16 rounded-full bg-[#106B4F]/10 flex items-center justify-center mx-auto mb-4">
-                        <i class="pi pi-check text-3xl text-[#106B4F]"></i>
+                    <div class="success-icon">
+                        <i class="pi pi-check text-3xl text-[var(--provider-primary)]"></i>
                     </div>
-                    <h1 class="text-2xl font-semibold text-[#0D1F1B] m-0">Booking Submitted!</h1>
+                    <h1 class="text-2xl font-semibold text-[var(--provider-text)] m-0">Booking Submitted!</h1>
                     <p class="text-gray-500 mt-2">
                         {{ booking.requires_deposit && !booking.deposit_paid
                             ? 'Complete your deposit payment to secure your booking.'
@@ -48,7 +48,7 @@ const getInitials = (name: string) => {
                 <!-- Booking Details Card -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
                     <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">Booking Details</h2>
+                        <h2 class="text-base font-semibold text-[var(--provider-text)] m-0">Booking Details</h2>
                         <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" />
                     </div>
                     <div class="p-5 space-y-4">
@@ -64,10 +64,10 @@ const getInitials = (name: string) => {
                                 v-else
                                 :label="getInitials(booking.provider?.business_name || '')"
                                 shape="circle"
-                                class="!w-12 !h-12 !bg-[#106B4F]"
+                                class="!w-12 !h-12 avatar-primary"
                             />
                             <div>
-                                <h3 class="font-medium text-[#0D1F1B] m-0">{{ booking.provider?.business_name }}</h3>
+                                <h3 class="font-medium text-[var(--provider-text)] m-0">{{ booking.provider?.business_name }}</h3>
                                 <p v-if="booking.provider?.address" class="text-sm text-gray-500 m-0">
                                     <i class="pi pi-map-marker mr-1"></i>
                                     {{ booking.provider.address }}
@@ -79,26 +79,26 @@ const getInitials = (name: string) => {
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="text-sm text-gray-500 block mb-1">Service</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.service.name }}</p>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.service.name }}</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-500 block mb-1">Duration</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.service.duration_minutes }} minutes</p>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.service.duration_minutes }} minutes</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-500 block mb-1">Date</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.formatted_date }}</p>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.formatted_date }}</p>
                             </div>
                             <div>
                                 <label class="text-sm text-gray-500 block mb-1">Time</label>
-                                <p class="font-medium text-[#0D1F1B] m-0">{{ booking.formatted_time }}</p>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.formatted_time }}</p>
                             </div>
                         </div>
 
                         <!-- Your Info -->
                         <div class="pt-4 border-t border-gray-100">
                             <label class="text-sm text-gray-500 block mb-1">Booked by</label>
-                            <p class="font-medium text-[#0D1F1B] m-0">{{ booking.client?.name }}</p>
+                            <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.client?.name }}</p>
                             <p class="text-sm text-gray-500 m-0">{{ booking.client?.email }}</p>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ const getInitials = (name: string) => {
                 <!-- Payment Card (if deposit required) -->
                 <div v-if="booking.requires_deposit" class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
                     <div class="px-5 py-4 border-b border-gray-200">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">Payment</h2>
+                        <h2 class="text-base font-semibold text-[var(--provider-text)] m-0">Payment</h2>
                     </div>
                     <div class="p-5">
                         <div class="space-y-3 text-sm">
@@ -119,7 +119,7 @@ const getInitials = (name: string) => {
                                 <span class="text-gray-600">Service Fee</span>
                                 <span class="font-medium">${{ booking.convenience_fee.toFixed(2) }}</span>
                             </div>
-                            <div class="flex justify-between text-[#106B4F]">
+                            <div class="flex justify-between text-[var(--provider-primary)]">
                                 <span>Deposit Required</span>
                                 <span class="font-medium">${{ booking.deposit_amount.toFixed(2) }}</span>
                             </div>
@@ -140,7 +140,7 @@ const getInitials = (name: string) => {
                                 <Button
                                     label="Pay Deposit Now"
                                     icon="pi pi-credit-card"
-                                    class="w-full !bg-[#106B4F] !border-[#106B4F]"
+                                    class="w-full btn-primary"
                                 />
                             </AppLink>
                             <p class="text-xs text-center text-gray-400 mt-2 m-0">
@@ -153,41 +153,41 @@ const getInitials = (name: string) => {
                 <!-- What's Next Card -->
                 <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                     <div class="px-5 py-4 border-b border-gray-200">
-                        <h2 class="text-base font-semibold text-[#0D1F1B] m-0">What's Next?</h2>
+                        <h2 class="text-base font-semibold text-[var(--provider-text)] m-0">What's Next?</h2>
                     </div>
                     <div class="p-5">
                         <ul class="space-y-3 m-0 p-0 list-none">
                             <li v-if="booking.requires_deposit && !booking.deposit_paid" class="flex items-start gap-3">
                                 <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0 text-sm">1</span>
                                 <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Complete your deposit payment</p>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">Complete your deposit payment</p>
                                     <p class="text-sm text-gray-500 m-0">Pay the deposit to secure your booking</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
-                                <span class="w-6 h-6 rounded-full bg-[#106B4F]/10 text-[#106B4F] flex items-center justify-center shrink-0 text-sm">
+                                <span class="step-indicator">
                                     {{ booking.requires_deposit && !booking.deposit_paid ? '2' : '1' }}
                                 </span>
                                 <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Check your email</p>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">Check your email</p>
                                     <p class="text-sm text-gray-500 m-0">We've sent booking details to {{ booking.client?.email }}</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
-                                <span class="w-6 h-6 rounded-full bg-[#106B4F]/10 text-[#106B4F] flex items-center justify-center shrink-0 text-sm">
+                                <span class="step-indicator">
                                     {{ booking.requires_deposit && !booking.deposit_paid ? '3' : '2' }}
                                 </span>
                                 <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Save the date</p>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">Save the date</p>
                                     <p class="text-sm text-gray-500 m-0">{{ booking.formatted_date }} at {{ booking.formatted_time }}</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
-                                <span class="w-6 h-6 rounded-full bg-[#106B4F]/10 text-[#106B4F] flex items-center justify-center shrink-0 text-sm">
+                                <span class="step-indicator">
                                     {{ booking.requires_deposit && !booking.deposit_paid ? '4' : '3' }}
                                 </span>
                                 <div>
-                                    <p class="font-medium text-[#0D1F1B] m-0">Arrive on time</p>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">Arrive on time</p>
                                     <p class="text-sm text-gray-500 m-0">{{ booking.provider?.address }}</p>
                                 </div>
                             </li>
@@ -201,7 +201,7 @@ const getInitials = (name: string) => {
                         <Button label="Back to Home" severity="secondary" />
                     </AppLink>
                     <AppLink href="/services">
-                        <Button label="Browse Services" outlined class="!border-[#106B4F] !text-[#106B4F]" />
+                        <Button label="Browse Services" outlined class="btn-outlined" />
                     </AppLink>
                 </div>
             </div>
@@ -213,5 +213,52 @@ const getInitials = (name: string) => {
 .confirmation-page {
     min-height: 100%;
     background-color: #f9fafb;
+}
+
+.success-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    background: var(--provider-primary-10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.step-indicator {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background: var(--provider-primary-10);
+    color: var(--provider-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.875rem;
+}
+
+:deep(.avatar-primary) {
+    background-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.btn-primary:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
+}
+
+:deep(.btn-outlined) {
+    border-color: var(--provider-primary) !important;
+    color: var(--provider-primary) !important;
+}
+
+:deep(.btn-outlined:hover) {
+    background-color: var(--provider-primary-10) !important;
 }
 </style>

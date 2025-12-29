@@ -215,7 +215,7 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
                     <p>Choose a service and find a time that works for you.</p>
                     <AppLink :href="bookingUrl">
                         <Button label="Book an Appointment" icon="pi pi-calendar" size="large"
-                            class="!bg-white !text-[#106B4F] !border-white" />
+                            class="cta-button" />
                     </AppLink>
                 </div>
             </section>
@@ -243,7 +243,7 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
     margin: 0 0 1rem 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .bio {
@@ -269,14 +269,14 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .view-all {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    color: #106B4F;
+    color: var(--provider-primary);
     text-decoration: none;
     font-size: 0.875rem;
     font-weight: 500;
@@ -301,7 +301,7 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
     margin: 0 0 1.5rem 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .availability-section {
@@ -313,7 +313,7 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
     margin: 0 0 1.5rem 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .reviews-section {
@@ -325,7 +325,7 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .review-summary {
@@ -344,8 +344,19 @@ const getServiceBookingUrl = (serviceId: number) => `/book?service=${serviceId}`
 }
 
 .cta-section {
-    background: linear-gradient(135deg, #106B4F 0%, #0D5A42 100%);
+    background: linear-gradient(135deg, var(--provider-primary) 0%, var(--provider-primary-hover) 100%);
     padding: 4rem 1.5rem;
+}
+
+/* CTA button styling */
+:deep(.cta-button) {
+    background-color: white !important;
+    color: var(--provider-primary) !important;
+    border-color: white !important;
+}
+
+:deep(.cta-button:hover) {
+    background-color: #f9fafb !important;
 }
 
 .cta-content {

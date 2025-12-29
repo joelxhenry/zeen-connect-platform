@@ -101,7 +101,7 @@ const formatSlotTime = (slot: Slot) => {
 
 .time-slot-picker__loading i {
     font-size: 1.5rem;
-    color: #106B4F;
+    color: var(--provider-primary);
 }
 
 .time-slot-picker__grid {
@@ -124,12 +124,12 @@ const formatSlotTime = (slot: Slot) => {
 }
 
 .time-slot-picker__slot:hover {
-    border-color: #106B4F;
+    border-color: var(--provider-primary);
 }
 
 .time-slot-picker__slot--selected {
-    background-color: #106B4F;
-    border-color: #106B4F;
+    background-color: var(--provider-primary);
+    border-color: var(--provider-primary);
     color: white;
 }
 </style>

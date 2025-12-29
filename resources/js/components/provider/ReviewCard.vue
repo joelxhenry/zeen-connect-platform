@@ -95,7 +95,7 @@ const getInitials = (name: string) => {
 
 .review-card__name {
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .review-card__date {
@@ -126,9 +126,9 @@ const getInitials = (name: string) => {
 .review-card__response {
     margin-top: 1rem;
     padding: 0.875rem;
-    background: #f0fdf4;
+    background: var(--provider-primary-05);
     border-radius: 0.5rem;
-    border-left: 3px solid #106B4F;
+    border-left: 3px solid var(--provider-primary);
 }
 
 .review-card__response-header {
@@ -137,7 +137,7 @@ const getInitials = (name: string) => {
     gap: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #106B4F;
+    color: var(--provider-primary);
     margin-bottom: 0.5rem;
 }
 
@@ -148,7 +148,7 @@ const getInitials = (name: string) => {
 .review-card__response p {
     margin: 0;
     font-size: 0.875rem;
-    color: #166534;
+    color: var(--provider-text);
     line-height: 1.5;
 }
 </style>

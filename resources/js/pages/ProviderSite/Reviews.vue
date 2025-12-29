@@ -146,7 +146,7 @@ const loadMore = () => {
     margin: 0 0 0.25rem 0;
     font-size: 1.75rem;
     font-weight: 600;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .header-content p {
@@ -175,7 +175,7 @@ const loadMore = () => {
 .rating-number {
     font-size: 3rem;
     font-weight: 700;
-    color: #0D1F1B;
+    color: var(--provider-text);
     line-height: 1;
 }
 
@@ -210,7 +210,7 @@ const loadMore = () => {
 }
 
 .distribution-bar :deep(.p-progressbar-value) {
-    background: #106B4F;
+    background: var(--provider-primary);
 }
 
 .distribution-row .count {
@@ -248,7 +248,7 @@ const loadMore = () => {
 
 .reviewer-info .name {
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .reviewer-info .date {
@@ -285,9 +285,9 @@ const loadMore = () => {
 .provider-response {
     margin-top: 1rem;
     padding: 1rem;
-    background: #f0fdf4;
+    background: var(--provider-primary-05);
     border-radius: 0.5rem;
-    border-left: 3px solid #106B4F;
+    border-left: 3px solid var(--provider-primary);
 }
 
 .response-header {
@@ -329,7 +329,7 @@ const loadMore = () => {
 .empty-state h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.25rem;
-    color: #0D1F1B;
+    color: var(--provider-text);
 }
 
 .empty-state p {

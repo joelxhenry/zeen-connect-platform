@@ -105,8 +105,8 @@ const getInitials = (name: string): string => {
 }
 
 .team-member-card--selected {
-    border-color: #106B4F;
-    background-color: rgba(16, 107, 79, 0.05);
+    border-color: var(--provider-primary);
+    background-color: var(--provider-primary-05);
 }
 
 .team-member-card__avatar {
@@ -127,12 +127,12 @@ const getInitials = (name: string): string => {
 }
 
 .team-member-card--selected .team-member-card__avatar--any {
-    background-color: rgba(16, 107, 79, 0.1);
-    color: #106B4F;
+    background-color: var(--provider-primary-10);
+    color: var(--provider-primary);
 }
 
 .team-member-card__avatar--initials {
-    background-color: #0D1F1B;
+    background-color: var(--provider-text);
     color: white;
     font-size: 1rem;
     font-weight: 600;
@@ -148,7 +148,7 @@ const getInitials = (name: string): string => {
 .team-member-card__name {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #0D1F1B;
+    color: var(--provider-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

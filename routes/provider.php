@@ -13,6 +13,7 @@ use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Provider\Controllers\SettingsController;
+use App\Domains\Provider\Controllers\SiteTemplateController;
 use App\Domains\Provider\Controllers\TeamMemberAvailabilityController;
 use App\Domains\Provider\Controllers\TeamMemberController;
 use App\Domains\Review\Controllers\ProviderReviewController;
@@ -59,6 +60,12 @@ Route::prefix('settings')->name('provider.settings.')->group(function () {
 Route::prefix('branding')->name('provider.branding.')->group(function () {
     Route::get('/', [BrandingController::class, 'edit'])->name('edit');
     Route::put('/', [BrandingController::class, 'update'])->name('update');
+});
+
+// Site template management
+Route::prefix('site/template')->name('provider.site.template.')->group(function () {
+    Route::get('/', [SiteTemplateController::class, 'edit'])->name('edit');
+    Route::put('/', [SiteTemplateController::class, 'update'])->name('update');
 });
 
 // Availability management

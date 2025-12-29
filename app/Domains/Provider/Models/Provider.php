@@ -55,6 +55,10 @@ class Provider extends Model
         'founding_member_at',
         // Branding (JSON)
         'branding',
+        // Site template
+        'site_template',
+        // Site features (JSON) - configurable feature cards for templates
+        'site_features',
         // Banking info for escrow payouts
         'bank_name',
         'bank_account_number',
@@ -82,6 +86,7 @@ class Provider extends Model
             'is_founding_member' => 'boolean',
             'founding_member_at' => 'datetime',
             'branding' => 'array',
+            'site_features' => 'array',
             'banking_info_verified' => 'boolean',
             'banking_info_verified_at' => 'datetime',
         ];
@@ -511,6 +516,27 @@ class Provider extends Model
         $b = max(0, (int) ($b * (100 - $percent) / 100));
 
         return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    // =========================================================================
+    // Site Template Methods
+    // =========================================================================
+
+    /**
+     * Get the site template for this provider.
+     */
+    public function getSiteTemplate(): \App\Domains\ProviderSite\Enums\TemplateType
+    {
+        return \App\Domains\ProviderSite\Enums\TemplateType::tryFrom($this->site_template)
+            ?? \App\Domains\ProviderSite\Enums\TemplateType::DEFAULT;
+    }
+
+    /**
+     * Check if provider can use a specific template based on their tier.
+     */
+    public function canUseTemplate(\App\Domains\ProviderSite\Enums\TemplateType $template): bool
+    {
+        return $template->isAvailableForTier($this->getTier());
     }
 
     /**

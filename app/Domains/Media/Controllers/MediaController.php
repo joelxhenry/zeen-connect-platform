@@ -44,6 +44,14 @@ class MediaController extends Controller
             return ApiResponse::success(['media' => $media->toMediaArray()]);
         } catch (\InvalidArgumentException $e) {
             return ApiResponse::error($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Media upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $request->file('file')?->getClientOriginalName(),
+                'collection' => $request->input('collection'),
+            ]);
+            return ApiResponse::error('Upload failed: ' . $e->getMessage(), 500);
         }
     }
 
@@ -68,6 +76,13 @@ class MediaController extends Controller
             return ApiResponse::success(['media' => array_map(fn ($m) => $m->toMediaArray(), $media)]);
         } catch (\InvalidArgumentException $e) {
             return ApiResponse::error($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Media multiple upload failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'collection' => $request->input('collection'),
+            ]);
+            return ApiResponse::error('Upload failed: ' . $e->getMessage(), 500);
         }
     }
 

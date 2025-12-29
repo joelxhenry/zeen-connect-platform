@@ -5,28 +5,27 @@ namespace App\Http\Controllers\ProviderSite;
 use App\Domains\Booking\Actions\CreateBookingAction;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Requests\StoreBookingRequest;
-use App\Domains\Booking\Resources\BookingResource;
 use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Controllers\PaymentController;
-use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
+use App\Domains\ProviderSite\Services\ProviderSiteDataService;
+use App\Domains\ProviderSite\Services\TemplateResolver;
 use App\Domains\Service\Models\Service;
-use App\Domains\Service\Resources\ServiceResource;
 use App\Http\Controllers\Controller;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProviderSiteBookingController extends Controller
 {
     public function __construct(
-        protected AvailabilityService $availabilityService,
-        protected FeeCalculator $feeCalculator
+        protected ProviderSiteDataService $dataService,
+        protected TemplateResolver $templateResolver,
+        protected AvailabilityService $availabilityService
     ) {}
 
     /**
@@ -43,54 +42,17 @@ class ProviderSiteBookingController extends Controller
     public function create(Request $request): Response
     {
         $provider = $this->getProvider();
+        $template = $this->templateResolver->resolve($provider);
+        $data = $this->dataService->getBookingPageData(
+            $provider,
+            $request->service ? (int) $request->service : null,
+            $request->user()
+        );
 
-        // Load additional data needed for booking
-        $provider->load([
-            'user:id,name,avatar',
-            'subscription',
-            'services.category',
-            'services.provider',
-            'teamMembers' => fn($q) => $q->active(),
-        ]);
-
-        // Get available dates for the next 30 days
-        $startDate = now()->format('Y-m-d');
-        $endDate = now()->addDays(30)->format('Y-m-d');
-        $availableDates = $this->availabilityService->getAvailableDates($provider, $startDate, $endDate);
-
-        // Calculate tier info for first service (will be recalculated when service is selected)
-        $firstService = $provider->services->first();
-        $tierInfo = $firstService
-            ? $this->feeCalculator->calculateFees($provider, (float) $firstService->price, $firstService)->toArray()
-            : null;
-
-        return Inertia::render('ProviderSite/Book', [
-            'provider' => [
-                'id' => $provider->id,
-                'business_name' => $provider->business_name,
-                'slug' => $provider->slug,
-                'avatar' => $provider->user?->avatar,
-                'tier' => Arr::get($tierInfo, 'tier', 'free'),
-                'tier_label' => Arr::get($tierInfo, 'tier_label', 'Free'),
-            ],
-            'services' => $provider->services->map(
-                fn ($service) => (new ServiceResource($service))->withCategory()->withFees()->resolve()
-            ),
-            'availableDates' => $availableDates,
-            'preselectedService' => $request->service ? (int) $request->service : null,
-            'isAuthenticated' => (bool) $request->user(),
-            'user' => $request->user() ? [
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'phone' => $request->user()->phone,
-            ] : null,
-            'teamMembers' => $provider->teamMembers->map(fn ($member) => [
-                'id' => $member->id,
-                'uuid' => $member->uuid,
-                'name' => $member->display_name,
-                'avatar' => $member->avatar,
-            ]),
-        ]);
+        return Inertia::render(
+            $this->templateResolver->getPagePath($template, 'Book'),
+            $data
+        );
     }
 
     /**
@@ -212,24 +174,13 @@ class ProviderSiteBookingController extends Controller
     public function confirmation(string $provider, string $uuid): Response
     {
         $providerModel = $this->getProvider();
+        $template = $this->templateResolver->resolve($providerModel);
+        $data = $this->dataService->getConfirmationPageData($providerModel, $uuid);
 
-        $booking = Booking::where('uuid', $uuid)
-            ->where('provider_id', $providerModel->id)
-            ->with([
-                'client',
-                'provider:id,business_name,slug,address',
-                'provider.user:id,name,avatar,email',
-                'service:id,uuid,name,description,duration_minutes,price',
-                'payment',
-            ])
-            ->firstOrFail();
-
-        return Inertia::render('ProviderSite/Confirmation', [
-            'booking' => (new BookingResource($booking))
-                ->withProvider()
-                ->withPayment()
-                ->resolve(),
-        ]);
+        return Inertia::render(
+            $this->templateResolver->getPagePath($template, 'Confirmation'),
+            $data
+        );
     }
 
     /**
@@ -287,5 +238,4 @@ class ProviderSiteBookingController extends Controller
 
         return 'Booking created successfully! Awaiting provider confirmation.';
     }
-
 }

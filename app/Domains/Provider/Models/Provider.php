@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
@@ -48,6 +49,7 @@ class Provider extends Model
         'advance_booking_days',
         'min_booking_notice_hours',
         'fee_payer',
+        'buffer_minutes',
         'deposit_percentage',
         'is_founding_member',
         'founding_member_at',
@@ -73,6 +75,7 @@ class Provider extends Model
             'deposit_amount' => 'decimal:2',
             'advance_booking_days' => 'integer',
             'min_booking_notice_hours' => 'integer',
+            'buffer_minutes' => 'integer',
             'deposit_percentage' => 'decimal:2',
             'is_founding_member' => 'boolean',
             'founding_member_at' => 'datetime',
@@ -180,6 +183,23 @@ class Provider extends Model
     public function blockedDates(): HasMany
     {
         return $this->hasMany(BlockedDate::class);
+    }
+
+    /**
+     * Get the provider's availability breaks.
+     */
+    public function breaks(): MorphMany
+    {
+        return $this->morphMany(AvailabilityBreak::class, 'scheduleable');
+    }
+
+    /**
+     * Get the buffer minutes between bookings.
+     * Service buffer overrides provider buffer if set.
+     */
+    public function getBufferMinutes(): int
+    {
+        return $this->buffer_minutes ?? 0;
     }
 
     /**

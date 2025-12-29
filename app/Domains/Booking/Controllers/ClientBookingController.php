@@ -9,6 +9,7 @@ use App\Domains\Booking\Resources\BookingResource;
 use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Service\Models\Service;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -74,6 +75,7 @@ class ClientBookingController extends Controller
                 'services' => fn($q) => $q->where('is_active', true)->orderBy('sort_order'),
                 'services.category:id,name,icon',
                 'subscription',
+                'teamMembers' => fn($q) => $q->active(),
             ])
             ->firstOrFail();
 
@@ -125,6 +127,12 @@ class ClientBookingController extends Controller
                 'email' => $request->user()->email,
                 'phone' => $request->user()->phone,
             ] : null,
+            'teamMembers' => $provider->teamMembers->map(fn ($member) => [
+                'id' => $member->id,
+                'uuid' => $member->uuid,
+                'name' => $member->display_name,
+                'avatar' => $member->avatar,
+            ]),
         ]);
     }
 
@@ -137,12 +145,26 @@ class ClientBookingController extends Controller
             'provider_id' => 'required|exists:providers,id',
             'service_id' => 'required|exists:services,id',
             'date' => 'required|date|after_or_equal:today',
+            'team_member_id' => 'nullable|exists:team_members,id',
         ]);
 
         $provider = Provider::findOrFail($request->provider_id);
         $service = Service::findOrFail($request->service_id);
 
-        $slots = $this->availabilityService->getAvailableSlots($provider, $service, $request->date);
+        // Load team member if specified
+        $teamMember = $request->team_member_id
+            ? TeamMember::where('id', $request->team_member_id)
+                ->where('provider_id', $provider->id)
+                ->active()
+                ->first()
+            : null;
+
+        $slots = $this->availabilityService->getAvailableSlots(
+            $provider,
+            $service,
+            $request->date,
+            $teamMember
+        );
 
         return response()->json(['slots' => $slots]);
     }
@@ -156,6 +178,14 @@ class ClientBookingController extends Controller
         // Load service with provider to ensure getEffectiveBookingSettings() works correctly
         $service = Service::with('provider')->findOrFail($request->service_id);
 
+        // Load team member if specified
+        $teamMember = $request->team_member_id
+            ? TeamMember::where('id', $request->team_member_id)
+                ->where('provider_id', $provider->id)
+                ->active()
+                ->first()
+            : null;
+
         try {
             // Handle guest vs authenticated booking
             if ($request->isGuestBooking()) {
@@ -167,7 +197,8 @@ class ClientBookingController extends Controller
                     guestEmail: $request->guest_email,
                     guestName: $request->guest_name,
                     guestPhone: $request->guest_phone,
-                    notes: $request->notes
+                    notes: $request->notes,
+                    teamMember: $teamMember
                 );
 
                 // For guests, redirect to public booking confirmation page
@@ -182,7 +213,8 @@ class ClientBookingController extends Controller
                 $service,
                 $request->date,
                 $request->start_time,
-                $request->notes
+                $request->notes,
+                $teamMember
             );
 
             return redirect()

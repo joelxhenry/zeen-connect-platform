@@ -34,6 +34,7 @@ class Service extends Model
         'cancellation_policy',
         'advance_booking_days',
         'min_booking_notice_hours',
+        'buffer_minutes',
     ];
 
     // Note: cover is not in $appends - use ServiceResource->withMedia() when needed
@@ -50,6 +51,7 @@ class Service extends Model
             'deposit_amount' => 'decimal:2',
             'advance_booking_days' => 'integer',
             'min_booking_notice_hours' => 'integer',
+            'buffer_minutes' => 'integer',
         ];
     }
 
@@ -70,6 +72,21 @@ class Service extends Model
             'advance_booking_days' => $this->advance_booking_days ?? 30,
             'min_booking_notice_hours' => $this->min_booking_notice_hours ?? 24,
         ];
+    }
+
+    /**
+     * Get the effective buffer minutes between bookings.
+     * Service buffer overrides provider buffer if set.
+     */
+    public function getEffectiveBufferMinutes(): int
+    {
+        // Service-level buffer takes precedence if set
+        if ($this->buffer_minutes !== null) {
+            return $this->buffer_minutes;
+        }
+
+        // Fall back to provider buffer
+        return $this->provider->getBufferMinutes();
     }
 
     public function provider(): BelongsTo

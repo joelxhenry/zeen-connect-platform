@@ -7,6 +7,7 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Service\Models\Service;
 use App\Mail\BookingCreated;
 use App\Models\User;
@@ -30,7 +31,8 @@ class CreateBookingAction
         Service $service,
         string $date,
         string $startTime,
-        ?string $notes = null
+        ?string $notes = null,
+        ?TeamMember $teamMember = null
     ): Booking {
         return $this->createBooking(
             provider: $provider,
@@ -38,7 +40,8 @@ class CreateBookingAction
             date: $date,
             startTime: $startTime,
             notes: $notes,
-            client: $client
+            client: $client,
+            teamMember: $teamMember
         );
     }
 
@@ -53,7 +56,8 @@ class CreateBookingAction
         string $guestEmail,
         string $guestName,
         string $guestPhone,
-        ?string $notes = null
+        ?string $notes = null,
+        ?TeamMember $teamMember = null
     ): Booking {
         return $this->createBooking(
             provider: $provider,
@@ -63,7 +67,8 @@ class CreateBookingAction
             notes: $notes,
             guestEmail: $guestEmail,
             guestName: $guestName,
-            guestPhone: $guestPhone
+            guestPhone: $guestPhone,
+            teamMember: $teamMember
         );
     }
 
@@ -79,15 +84,26 @@ class CreateBookingAction
         ?User $client = null,
         ?string $guestEmail = null,
         ?string $guestName = null,
-        ?string $guestPhone = null
+        ?string $guestPhone = null,
+        ?TeamMember $teamMember = null
     ): Booking {
         // Calculate end time based on service duration
         $endTime = Carbon::parse($startTime)
             ->addMinutes($service->duration_minutes)
             ->format('H:i');
 
-        // Verify slot is still available
-        if (! $this->availabilityService->isSlotAvailable($provider, $date, $startTime, $endTime)) {
+        // Get buffer minutes for availability checking
+        $bufferMinutes = $service->getEffectiveBufferMinutes();
+
+        // Verify slot is still available (with team member and buffer support)
+        if (! $this->availabilityService->isSlotAvailable(
+            $provider,
+            $date,
+            $startTime,
+            $endTime,
+            $teamMember,
+            $bufferMinutes
+        )) {
             throw new \Exception('This time slot is no longer available.');
         }
 
@@ -105,6 +121,7 @@ class CreateBookingAction
             'uuid' => Str::uuid(),
             'client_id' => $client?->id,
             'provider_id' => $provider->id,
+            'team_member_id' => $teamMember?->id,
             'service_id' => $service->id,
             'booking_date' => $date,
             'start_time' => $startTime,
@@ -132,7 +149,7 @@ class CreateBookingAction
         ]);
 
         // Load relationships for email
-        $booking->load(['client', 'provider.user', 'service']);
+        $booking->load(['client', 'provider.user', 'service', 'teamMember']);
 
         // Get client email (either from user or guest)
         $clientEmail = $client?->email ?? $guestEmail;

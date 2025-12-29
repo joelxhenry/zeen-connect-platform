@@ -3,6 +3,7 @@
 namespace App\Domains\Provider\Controllers;
 
 use App\Domains\Provider\Actions\UpdateAvailabilityAction;
+use App\Domains\Provider\Actions\UpdateAvailabilityBreaksAction;
 use App\Domains\Provider\Actions\UpdateBlockedDatesAction;
 use App\Domains\Provider\Requests\UpdateAvailabilityRequest;
 use App\Domains\Provider\Requests\UpdateBlockedDatesRequest;
@@ -60,9 +61,24 @@ class AvailabilityController extends Controller
                 'reason' => $blocked->reason,
             ]);
 
+        // Get breaks organized by day
+        $breaks = $provider->breaks()
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn ($break) => [
+                'id' => $break->id,
+                'day_of_week' => $break->day_of_week,
+                'start_time' => $break->start_time,
+                'end_time' => $break->end_time,
+                'label' => $break->label,
+            ]);
+
         return Inertia::render('Provider/Availability/Edit', [
             'weeklySchedule' => $weeklySchedule,
             'blockedDates' => $blockedDates,
+            'breaks' => $breaks,
+            'bufferMinutes' => $provider->buffer_minutes ?? 0,
         ]);
     }
 
@@ -92,5 +108,45 @@ class AvailabilityController extends Controller
         $action->execute($provider, $request->validated('blocked_dates'));
 
         return back()->with('success', 'Blocked dates updated successfully.');
+    }
+
+    /**
+     * Update availability breaks.
+     */
+    public function updateBreaks(
+        Request $request,
+        UpdateAvailabilityBreaksAction $action
+    ): RedirectResponse {
+        $provider = $request->user()->provider;
+
+        $validated = $request->validate([
+            'breaks' => 'array',
+            'breaks.*.day_of_week' => 'required|integer|min:0|max:6',
+            'breaks.*.start_time' => 'required|date_format:H:i',
+            'breaks.*.end_time' => 'required|date_format:H:i|after:breaks.*.start_time',
+            'breaks.*.label' => 'nullable|string|max:50',
+        ]);
+
+        $action->execute($provider, $validated['breaks'] ?? []);
+
+        return back()->with('success', 'Breaks updated successfully.');
+    }
+
+    /**
+     * Update buffer time between bookings.
+     */
+    public function updateBuffer(Request $request): RedirectResponse
+    {
+        $provider = $request->user()->provider;
+
+        $validated = $request->validate([
+            'buffer_minutes' => 'required|integer|min:0|max:120',
+        ]);
+
+        $provider->update([
+            'buffer_minutes' => $validated['buffer_minutes'],
+        ]);
+
+        return back()->with('success', 'Buffer time updated successfully.');
     }
 }

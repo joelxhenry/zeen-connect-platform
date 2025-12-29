@@ -2,12 +2,15 @@
 
 namespace App\Domains\Provider\Models;
 
+use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Enums\TeamMemberStatus;
 use App\Domains\Provider\Enums\TeamPermission;
 use App\Models\User;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
 class TeamMember extends Model
@@ -50,6 +53,125 @@ class TeamMember extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the team member's availability schedule.
+     */
+    public function availability(): HasMany
+    {
+        return $this->hasMany(TeamMemberAvailability::class);
+    }
+
+    /**
+     * Get the team member's breaks.
+     */
+    public function breaks(): MorphMany
+    {
+        return $this->morphMany(AvailabilityBreak::class, 'scheduleable');
+    }
+
+    /**
+     * Get the team member's blocked dates.
+     */
+    public function blockedDates(): HasMany
+    {
+        return $this->hasMany(TeamMemberBlockedDate::class);
+    }
+
+    /**
+     * Get the bookings assigned to this team member.
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Get the effective availability for a specific day of the week.
+     * Returns provider defaults if use_provider_defaults is true.
+     *
+     * @return array{is_available: bool, start_time: ?string, end_time: ?string}|null
+     */
+    public function getEffectiveAvailabilityForDay(int $dayOfWeek): ?array
+    {
+        $availability = $this->availability()->forDay($dayOfWeek)->first();
+
+        // If no custom availability record exists, use provider defaults
+        if (! $availability) {
+            return $this->getProviderAvailabilityForDay($dayOfWeek);
+        }
+
+        // If using provider defaults, get from provider
+        if ($availability->use_provider_defaults) {
+            return $this->getProviderAvailabilityForDay($dayOfWeek);
+        }
+
+        return [
+            'is_available' => $availability->is_available,
+            'start_time' => $availability->start_time,
+            'end_time' => $availability->end_time,
+        ];
+    }
+
+    /**
+     * Get provider availability for a specific day.
+     *
+     * @return array{is_available: bool, start_time: ?string, end_time: ?string}|null
+     */
+    protected function getProviderAvailabilityForDay(int $dayOfWeek): ?array
+    {
+        $providerAvailability = $this->provider->availability()
+            ->where('day_of_week', $dayOfWeek)
+            ->first();
+
+        if (! $providerAvailability) {
+            return null;
+        }
+
+        return [
+            'is_available' => $providerAvailability->is_available,
+            'start_time' => $providerAvailability->start_time,
+            'end_time' => $providerAvailability->end_time,
+        ];
+    }
+
+    /**
+     * Check if the team member is available on a specific date.
+     */
+    public function isAvailableOnDate(\DateTimeInterface $date): bool
+    {
+        // Check provider blocked dates first
+        if ($this->provider->blockedDates()->where('date', $date->format('Y-m-d'))->exists()) {
+            return false;
+        }
+
+        // Check team member blocked dates
+        if ($this->blockedDates()->where('date', $date->format('Y-m-d'))->exists()) {
+            return false;
+        }
+
+        // Check availability for day of week
+        $dayOfWeek = (int) $date->format('w');
+        $availability = $this->getEffectiveAvailabilityForDay($dayOfWeek);
+
+        return $availability && $availability['is_available'];
+    }
+
+    /**
+     * Get breaks for a specific day (combines team member and provider breaks).
+     *
+     * @return \Illuminate\Support\Collection<AvailabilityBreak>
+     */
+    public function getBreaksForDay(int $dayOfWeek): \Illuminate\Support\Collection
+    {
+        // Get team member's own breaks
+        $teamBreaks = $this->breaks()->forDay($dayOfWeek)->get();
+
+        // Get provider breaks
+        $providerBreaks = $this->provider->breaks()->forDay($dayOfWeek)->get();
+
+        return $teamBreaks->merge($providerBreaks)->sortBy('start_time');
     }
 
     /**

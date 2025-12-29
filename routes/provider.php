@@ -12,6 +12,7 @@ use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Provider\Controllers\SettingsController;
+use App\Domains\Provider\Controllers\TeamMemberAvailabilityController;
 use App\Domains\Provider\Controllers\TeamMemberController;
 use App\Domains\Review\Controllers\ProviderReviewController;
 use App\Domains\Subscription\Controllers\SubscriptionController;
@@ -58,6 +59,8 @@ Route::prefix('availability')->name('provider.availability.')->group(function ()
     Route::get('/', [AvailabilityController::class, 'edit'])->name('edit');
     Route::put('/schedule', [AvailabilityController::class, 'updateSchedule'])->name('schedule');
     Route::put('/blocked-dates', [AvailabilityController::class, 'updateBlockedDates'])->name('blocked-dates');
+    Route::put('/breaks', [AvailabilityController::class, 'updateBreaks'])->name('breaks');
+    Route::put('/buffer', [AvailabilityController::class, 'updateBuffer'])->name('buffer');
 });
 
 // Booking management
@@ -128,6 +131,13 @@ Route::prefix('team')->name('provider.team.')->group(function () {
     Route::post('/{member}/resend', [TeamMemberController::class, 'resendInvite'])->name('resend');
     Route::post('/{member}/suspend', [TeamMemberController::class, 'suspend'])->name('suspend');
     Route::post('/{member}/reactivate', [TeamMemberController::class, 'reactivate'])->name('reactivate');
+
+    // Team member availability
+    Route::get('/{member}/availability', [TeamMemberAvailabilityController::class, 'edit'])->name('availability.edit');
+    Route::put('/{member}/availability/schedule', [TeamMemberAvailabilityController::class, 'updateSchedule'])->name('availability.schedule');
+    Route::put('/{member}/availability/breaks', [TeamMemberAvailabilityController::class, 'updateBreaks'])->name('availability.breaks');
+    Route::put('/{member}/availability/blocked-dates', [TeamMemberAvailabilityController::class, 'updateBlockedDates'])->name('availability.blocked-dates');
+    Route::post('/{member}/availability/reset', [TeamMemberAvailabilityController::class, 'resetToDefaults'])->name('availability.reset');
 });
 
 // Subscription management

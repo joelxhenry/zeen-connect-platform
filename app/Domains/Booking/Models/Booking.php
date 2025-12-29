@@ -5,6 +5,7 @@ namespace App\Domains\Booking\Models;
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Payment\Models\Payment;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
 use App\Models\User;
@@ -21,6 +22,7 @@ class Booking extends Model
     protected $fillable = [
         'client_id',
         'provider_id',
+        'team_member_id',
         'service_id',
         'booking_date',
         'start_time',
@@ -98,6 +100,22 @@ class Booking extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Get the team member assigned to this booking.
+     */
+    public function teamMember(): BelongsTo
+    {
+        return $this->belongsTo(TeamMember::class);
+    }
+
+    /**
+     * Check if this booking is assigned to a team member.
+     */
+    public function hasTeamMember(): bool
+    {
+        return ! is_null($this->team_member_id);
     }
 
     /**
@@ -203,6 +221,14 @@ class Booking extends Model
     public function scopeForClient($query, int $clientId)
     {
         return $query->where('client_id', $clientId);
+    }
+
+    /**
+     * Scope for a team member's bookings.
+     */
+    public function scopeForTeamMember($query, int $teamMemberId)
+    {
+        return $query->where('team_member_id', $teamMemberId);
     }
 
     /**

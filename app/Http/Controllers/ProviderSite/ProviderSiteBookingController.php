@@ -10,6 +10,7 @@ use App\Domains\Booking\Services\AvailabilityService;
 use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Payment\Services\FeeCalculator;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Service\Models\Service;
 use App\Domains\Service\Resources\ServiceResource;
 use App\Http\Controllers\Controller;
@@ -49,6 +50,7 @@ class ProviderSiteBookingController extends Controller
             'subscription',
             'services.category',
             'services.provider',
+            'teamMembers' => fn($q) => $q->active(),
         ]);
 
         // Get available dates for the next 30 days
@@ -82,6 +84,12 @@ class ProviderSiteBookingController extends Controller
                 'email' => $request->user()->email,
                 'phone' => $request->user()->phone,
             ] : null,
+            'teamMembers' => $provider->teamMembers->map(fn ($member) => [
+                'id' => $member->id,
+                'uuid' => $member->uuid,
+                'name' => $member->display_name,
+                'avatar' => $member->avatar,
+            ]),
         ]);
     }
 
@@ -95,6 +103,7 @@ class ProviderSiteBookingController extends Controller
         $request->validate([
             'service_id' => 'required|exists:services,id',
             'date' => 'required|date|after_or_equal:today',
+            'team_member_id' => 'nullable|exists:team_members,id',
         ]);
 
         $service = Service::findOrFail($request->service_id);
@@ -104,7 +113,20 @@ class ProviderSiteBookingController extends Controller
             return ApiResponse::notFound('Service not found');
         }
 
-        $slots = $this->availabilityService->getAvailableSlots($provider, $service, $request->date);
+        // Load team member if specified
+        $teamMember = $request->team_member_id
+            ? TeamMember::where('id', $request->team_member_id)
+                ->where('provider_id', $provider->id)
+                ->active()
+                ->first()
+            : null;
+
+        $slots = $this->availabilityService->getAvailableSlots(
+            $provider,
+            $service,
+            $request->date,
+            $teamMember
+        );
 
         return ApiResponse::success(['slots' => $slots]);
     }
@@ -123,6 +145,14 @@ class ProviderSiteBookingController extends Controller
             return back()->withErrors(['service' => 'Service not found']);
         }
 
+        // Load team member if specified
+        $teamMember = $request->team_member_id
+            ? TeamMember::where('id', $request->team_member_id)
+                ->where('provider_id', $provider->id)
+                ->active()
+                ->first()
+            : null;
+
         try {
             // Handle guest vs authenticated booking
             if ($request->isGuestBooking()) {
@@ -134,7 +164,8 @@ class ProviderSiteBookingController extends Controller
                     guestEmail: $request->guest_email,
                     guestName: $request->guest_name,
                     guestPhone: $request->guest_phone,
-                    notes: $request->notes
+                    notes: $request->notes,
+                    teamMember: $teamMember
                 );
 
                 // Redirect to provider site confirmation
@@ -152,7 +183,8 @@ class ProviderSiteBookingController extends Controller
                 $service,
                 $request->date,
                 $request->start_time,
-                $request->notes
+                $request->notes,
+                $teamMember
             );
 
             // Redirect to provider site confirmation or main platform dashboard

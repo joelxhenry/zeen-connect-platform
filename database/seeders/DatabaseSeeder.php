@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,16 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed locations and categories first
-        $this->call([
-            LocationSeeder::class,
-            CategorySeeder::class,
-        ]);
+        // Always run production seeders (idempotent - safe to run multiple times)
+        $this->call(ProductionSeeder::class);
 
-        // Create test user
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Only run dev seeder in non-production environments
+        if (app()->environment(['local', 'development', 'testing'])) {
+            $this->call(DevSeeder::class);
+        }
     }
 }

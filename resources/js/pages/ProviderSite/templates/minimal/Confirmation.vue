@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import MinimalLayout from './components/MinimalLayout.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import type { ConfirmationPageProps } from '@/types/providersite';
@@ -19,7 +19,7 @@ const getStatusSeverity = (status: string) => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Booking Confirmed">
+    <MinimalLayout title="Booking Confirmed">
         <div class="minimal-confirmation">
             <div class="page-container">
                 <!-- Success Message -->
@@ -137,7 +137,7 @@ const getStatusSeverity = (status: string) => {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </MinimalLayout>
 </template>
 
 <style scoped>

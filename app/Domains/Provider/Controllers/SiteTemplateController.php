@@ -31,12 +31,21 @@ class SiteTemplateController extends Controller
             ];
         });
 
+        // Default features structure
+        $defaultFeatures = [
+            ['icon' => 'pi pi-star', 'title' => '', 'description' => ''],
+            ['icon' => 'pi pi-users', 'title' => '', 'description' => ''],
+            ['icon' => 'pi pi-clock', 'title' => '', 'description' => ''],
+            ['icon' => 'pi pi-check-circle', 'title' => '', 'description' => ''],
+        ];
+
         return Inertia::render('Provider/Settings/SiteTemplate', [
             'templates' => $templates,
             'currentTemplate' => $provider->site_template ?? 'default',
             'currentTier' => $currentTier->value,
             'currentTierLabel' => $currentTier->label(),
-            'siteUrl' => $provider->getUrl(),
+            'siteUrl' => $provider->public_url,
+            'siteFeatures' => $provider->site_features ?? $defaultFeatures,
         ]);
     }
 
@@ -44,6 +53,10 @@ class SiteTemplateController extends Controller
     {
         $request->validate([
             'template' => ['required', 'string', 'in:' . implode(',', array_column(TemplateType::cases(), 'value'))],
+            'site_features' => ['sometimes', 'array', 'max:6'],
+            'site_features.*.icon' => ['nullable', 'string', 'max:50'],
+            'site_features.*.title' => ['nullable', 'string', 'max:100'],
+            'site_features.*.description' => ['nullable', 'string', 'max:255'],
         ]);
 
         $provider = Auth::user()->provider;
@@ -56,9 +69,20 @@ class SiteTemplateController extends Controller
                 ->withErrors(['template' => "The {$template->label()} template requires a {$template->requiredTier()->label()} subscription or higher."]);
         }
 
-        $provider->update([
+        $updateData = [
             'site_template' => $template->value,
-        ]);
+        ];
+
+        // Only save non-empty features
+        if ($request->has('site_features')) {
+            $features = collect($request->site_features)
+                ->filter(fn ($feature) => !empty($feature['title']) && !empty($feature['description']))
+                ->values()
+                ->toArray();
+            $updateData['site_features'] = $features;
+        }
+
+        $provider->update($updateData);
 
         return redirect()
             ->route('provider.site.template.edit')

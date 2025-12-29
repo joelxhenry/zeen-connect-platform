@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import DefaultLayout from './components/DefaultLayout.vue';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
 import type { HomePageProps } from '@/types/providersite';
@@ -29,7 +29,7 @@ const {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Home">
+    <DefaultLayout title="Home">
         <template #hero>
             <ProviderHero :provider="provider" :bookingUrl="bookingUrl" />
         </template>
@@ -113,7 +113,7 @@ const {
                 </div>
             </section>
         </div>
-    </ProviderSiteLayout>
+    </DefaultLayout>
 </template>
 
 <style scoped>

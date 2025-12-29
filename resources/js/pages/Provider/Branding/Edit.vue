@@ -12,8 +12,18 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
+import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
+
+interface MediaItem {
+    id: number;
+    uuid: string;
+    url: string;
+    thumbnail: string;
+    medium: string;
+    filename: string;
+}
 
 interface BrandSettings {
     primary_color: string | null;
@@ -41,10 +51,14 @@ interface Props {
     currentTierLabel: string;
     brandSettings: BrandSettings;
     defaultColors: DefaultColors;
+    logo: MediaItem | null;
 }
 
 const props = defineProps<Props>();
 const toast = useToast();
+
+// Logo state
+const logo = ref<MediaItem | null>(props.logo);
 
 // Convert hex to color picker format (without #)
 const hexToColorPicker = (hex: string | null): string => {
@@ -225,6 +239,39 @@ const colorFields = [
             </Message>
 
             <form @submit.prevent="submit" class="space-y-6">
+                <!-- Logo Upload Section -->
+                <ConsoleFormCard title="Business Logo" icon="pi pi-image">
+                    <p class="text-sm text-gray-500 m-0 mb-4">
+                        Upload your business logo. This will be displayed on your public storefront.
+                    </p>
+                    <div class="flex items-start gap-6">
+                        <SingleImageUpload
+                            v-if="canAccess"
+                            v-model="logo"
+                            :upload-url="resolveUrl(provider.media.upload.url())"
+                            collection="logo"
+                            shape="square"
+                            placeholder="Upload Logo"
+                            @uploaded="() => toast.add({ severity: 'success', summary: 'Success', detail: 'Logo uploaded successfully', life: 3000 })"
+                            @deleted="() => toast.add({ severity: 'info', summary: 'Removed', detail: 'Logo removed', life: 3000 })"
+                            @error="(msg) => toast.add({ severity: 'error', summary: 'Error', detail: msg, life: 5000 })"
+                        />
+                        <div v-else class="logo-placeholder">
+                            <i class="pi pi-lock text-2xl text-gray-400"></i>
+                            <span class="text-sm text-gray-500">Upgrade to customize logo</span>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-sm font-medium text-gray-700 m-0 mb-2">Logo Guidelines</h4>
+                            <ul class="text-xs text-gray-500 m-0 pl-4 space-y-1">
+                                <li>Recommended size: 512x512 pixels</li>
+                                <li>Supported formats: JPEG, PNG, WebP</li>
+                                <li>Maximum file size: 10MB</li>
+                                <li>Square images work best</li>
+                            </ul>
+                        </div>
+                    </div>
+                </ConsoleFormCard>
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Color Settings Card -->
                     <div class="lg:col-span-2">
@@ -408,5 +455,18 @@ const colorFields = [
     padding: 0.75rem;
     background: #f9fafb;
     border-radius: 0.5rem;
+}
+
+.logo-placeholder {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: var(--p-surface-100);
+    border: 2px dashed var(--p-surface-300);
+    border-radius: 8px;
 }
 </style>

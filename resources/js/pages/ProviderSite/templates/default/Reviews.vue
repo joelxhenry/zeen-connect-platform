@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import DefaultLayout from './components/DefaultLayout.vue';
 import Button from 'primevue/button';
 import ProgressBar from 'primevue/progressbar';
 import Rating from 'primevue/rating';
@@ -13,7 +13,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 </script>
 
 <template>
-    <ProviderSiteLayout title="Reviews">
+    <DefaultLayout title="Reviews">
         <div class="reviews-page">
             <div class="page-container">
                 <!-- Header with Stats -->
@@ -60,7 +60,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </DefaultLayout>
 </template>
 
 <style scoped>

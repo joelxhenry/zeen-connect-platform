@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import BarberDeluxLayout from './components/BarberDeluxLayout.vue';
 import Calendar from 'primevue/calendar';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -37,7 +37,7 @@ const getInitials = (name: string) => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Book">
+    <BarberDeluxLayout title="Book">
         <div class="booking-page">
             <div class="page-container">
                 <!-- Header -->
@@ -328,7 +328,7 @@ const getInitials = (name: string) => {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </BarberDeluxLayout>
 </template>
 
 <style scoped>

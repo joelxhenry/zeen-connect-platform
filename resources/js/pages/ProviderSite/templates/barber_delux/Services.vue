@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import BarberDeluxLayout from './components/BarberDeluxLayout.vue';
 import Button from 'primevue/button';
 import type { ServicesPageProps } from '@/types/providersite';
 
@@ -9,7 +9,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 </script>
 
 <template>
-    <ProviderSiteLayout title="Services">
+    <BarberDeluxLayout title="Services">
         <div class="services-page">
             <div class="page-container">
                 <!-- Header -->
@@ -81,7 +81,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </BarberDeluxLayout>
 </template>
 
 <style scoped>

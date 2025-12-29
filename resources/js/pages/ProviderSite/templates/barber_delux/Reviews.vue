@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import BarberDeluxLayout from './components/BarberDeluxLayout.vue';
 import Button from 'primevue/button';
 import ProgressBar from 'primevue/progressbar';
 import Rating from 'primevue/rating';
@@ -17,7 +17,7 @@ const getInitials = (name: string) => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Reviews">
+    <BarberDeluxLayout title="Reviews">
         <div class="reviews-page">
             <div class="page-container">
                 <!-- Header -->
@@ -109,7 +109,7 @@ const getInitials = (name: string) => {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </BarberDeluxLayout>
 </template>
 
 <style scoped>

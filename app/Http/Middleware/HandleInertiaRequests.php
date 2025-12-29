@@ -62,6 +62,7 @@ class HandleInertiaRequests extends Middleware
                     'domain' => $provider->domain,
                     'avatar' => $provider->getAvatarUrlAttribute(),
                     'cover_image' => $provider->getCoverPhotoUrlAttribute(),
+                    'logo' => $provider->getFirstMediaUrl('logo', 'medium'),
                     // Branding
                     'brand_primary_color' => $provider->brand_primary_color,
                     'brand_primary_rgb' => $provider->brand_primary_rgb,

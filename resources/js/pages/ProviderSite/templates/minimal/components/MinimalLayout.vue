@@ -2,7 +2,6 @@
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, useSlots } from 'vue';
 import type { User } from '@/types/models';
-import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
@@ -39,7 +38,7 @@ const __provider = page.props.__provider as {
     brand_secondary_color?: string;
 } | null;
 
-// Dynamic branding styles - uses provider's custom colors or falls back to defaults
+// Dynamic branding styles
 const brandingStyles = computed(() => {
     const p = __provider;
     if (!p) return {};
@@ -77,7 +76,6 @@ const brandingStyles = computed(() => {
     return styles;
 });
 
-
 const currentPath = computed(() => {
     const url = new URL(window.location.href);
     return url.pathname;
@@ -90,99 +88,77 @@ const isActive = (path: string) => {
     return currentPath.value.includes(path);
 };
 
-const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-};
-
-
-
 const homeUrl = computed(() => {
     return site.home({ provider: __provider?.domain ?? '' }).url;
 });
-
 
 const servicesUrl = computed(() => {
     return site.services({ provider: __provider?.domain ?? '' }).url;
 });
 
-
 const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
-
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
-
-
-
 </script>
 
 <template>
-
     <Head :title="title ? `${title} | ${__provider?.business_name}` : __provider?.business_name" />
     <FlashMessages />
 
-    <div class="provider-site-layout" :style="brandingStyles">
-        <!-- Header -->
+    <div class="minimal-layout" :style="brandingStyles">
+        <!-- Header - Minimal Template Style: Clean, centered, no border -->
         <header class="header">
             <div class="header-content">
-                <!-- Provider Logo/Name -->
+                <!-- Left: Auth -->
+                <div class="header-left">
+                    <template v-if="user">
+                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="text-link">
+                            My Bookings
+                        </AppLink>
+                    </template>
+                    <template v-else>
+                        <AppLink :href="login().url" class="text-link">
+                            Login
+                        </AppLink>
+                    </template>
+                </div>
+
+                <!-- Center: Logo Only -->
                 <AppLink :href="homeUrl" class="provider-brand">
                     <img v-if="__provider?.logo" :src="__provider.logo" :alt="__provider?.business_name" class="provider-logo" />
-                    <Avatar v-else-if="__provider?.avatar" :image="__provider.avatar" shape="circle" class="!w-10 !h-10" />
-                    <Avatar v-else :label="getInitials(__provider?.business_name || '')" shape="circle"
-                        class="avatar-fallback" />
-                    <span class="provider-name">{{ __provider?.business_name }}</span>
+                    <span v-else class="provider-name">{{ __provider?.business_name }}</span>
                 </AppLink>
 
-                <!-- Main Navigation -->
-                <nav class="main-nav">
-                    <AppLink :href="homeUrl" class="nav-link"
-                        :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
-                        Home
-                    </AppLink>
-                    <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
-                        Services
-                    </AppLink>
-                    <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
-                        Reviews
-                    </AppLink>
-                </nav>
-
-                <!-- Right Side -->
+                <!-- Right: Book Button -->
                 <div class="header-right">
                     <AppLink :href="getBookingUrl()">
-                        <Button label="Book Now" class="btn-primary" />
+                        <Button label="Book" class="btn-primary" size="small" />
                     </AppLink>
-
-                    <div class="auth-nav">
-                        <template v-if="user">
-                            <AppLink :href="resolveUrl(client.bookings.index().url)" class="nav-link text-sm">
-                                My Bookings
-                            </AppLink>
-                        </template>
-                        <template v-else>
-                            <AppLink :href="login().url" class="nav-link text-sm">
-                                Login
-                            </AppLink>
-                        </template>
-                    </div>
                 </div>
             </div>
+
+            <!-- Minimal Navigation: Simple text links below header -->
+            <nav class="minimal-nav">
+                <AppLink :href="homeUrl" class="nav-link"
+                    :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
+                    Home
+                </AppLink>
+                <span class="nav-divider">·</span>
+                <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
+                    Services
+                </AppLink>
+                <span class="nav-divider">·</span>
+                <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
+                    Reviews
+                </AppLink>
+            </nav>
         </header>
 
-        <!-- Banner (cover image) -->
-        <div v-if="showBanner !== false && !slots.hero" class="layout-banner">
-            <div class="layout-banner__cover" :style="__provider?.cover_image
-                ? { backgroundImage: `url(${__provider.cover_image})` }
-                : null">
-                <div class="layout-banner__overlay"></div>
-            </div>
-        </div>
-
-        <!-- Hero Slot (replaces banner when provided) -->
+        <!-- Hero Slot -->
         <slot name="hero" />
 
         <!-- Main Content -->
@@ -196,8 +172,8 @@ const getBookingUrl = () => {
 </template>
 
 <style scoped>
-.provider-site-layout {
-    /* Provider branding CSS variables - can be overridden dynamically */
+.minimal-layout {
+    /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
     --provider-primary-hover: #0D5A42;
@@ -215,82 +191,92 @@ const getBookingUrl = () => {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background: #fff;
 }
 
 .header {
     background-color: white;
-    border-bottom: 1px solid #e5e7eb;
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    padding: 1.5rem 0 1rem;
 }
 
 .header-content {
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 1.5rem;
-    height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 2rem;
+}
+
+.header-left,
+.header-right {
+    flex: 1;
+}
+
+.header-right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.text-link {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.15s;
+}
+
+.text-link:hover {
+    color: var(--provider-text);
 }
 
 .provider-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    justify-content: center;
     text-decoration: none;
 }
 
 .provider-logo {
-    height: 40px;
+    height: 48px;
     width: auto;
-    max-width: 140px;
+    max-width: 180px;
     object-fit: contain;
 }
 
 .provider-name {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--provider-text);
+    letter-spacing: -0.025em;
 }
 
-.main-nav {
+/* Minimal navigation: centered, simple */
+.minimal-nav {
     display: flex;
-    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
 }
 
 .nav-link {
-    padding: 0.5rem 1rem;
     color: #6b7280;
     text-decoration: none;
     font-size: 0.875rem;
-    border-radius: 0.375rem;
-    transition: all 0.15s;
+    transition: color 0.15s;
 }
 
 .nav-link:hover {
     color: var(--provider-text);
-    background-color: #f3f4f6;
 }
 
 .nav-link.active {
     color: var(--provider-primary);
-    background-color: var(--provider-primary-10);
     font-weight: 500;
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.auth-nav {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.nav-divider {
+    color: #d1d5db;
 }
 
 /* Primary button styling */
@@ -304,49 +290,35 @@ const getBookingUrl = () => {
     border-color: var(--provider-primary-hover) !important;
 }
 
-/* Avatar fallback styling */
-:deep(.avatar-fallback) {
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    background-color: var(--provider-primary) !important;
-}
-
 .main-content {
     flex: 1;
-    background-color: #f9fafb;
-}
-
-.layout-banner {
-    position: relative;
-}
-
-.layout-banner__cover {
-    height: 200px;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #d1d5db 100%);
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-
-.layout-banner__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 30%, rgba(249, 250, 251, 1) 100%);
+    background-color: #fff;
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .header-content {
         padding: 0 1rem;
-        gap: 1rem;
+    }
+
+    .header-left {
+        display: none;
+    }
+
+    .provider-logo {
+        height: 36px;
     }
 
     .provider-name {
-        display: none;
+        font-size: 1.25rem;
     }
 
-    .main-nav {
-        display: none;
+    .minimal-nav {
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        font-size: 0.8125rem;
     }
 }
 </style>

@@ -39,7 +39,7 @@ const __provider = page.props.__provider as {
     brand_secondary_color?: string;
 } | null;
 
-// Dynamic branding styles - uses provider's custom colors or falls back to defaults
+// Dynamic branding styles
 const brandingStyles = computed(() => {
     const p = __provider;
     if (!p) return {};
@@ -77,7 +77,6 @@ const brandingStyles = computed(() => {
     return styles;
 });
 
-
 const currentPath = computed(() => {
     const url = new URL(window.location.href);
     return url.pathname;
@@ -94,38 +93,29 @@ const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
 
-
-
 const homeUrl = computed(() => {
     return site.home({ provider: __provider?.domain ?? '' }).url;
 });
-
 
 const servicesUrl = computed(() => {
     return site.services({ provider: __provider?.domain ?? '' }).url;
 });
 
-
 const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
-
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
-
-
-
 </script>
 
 <template>
-
     <Head :title="title ? `${title} | ${__provider?.business_name}` : __provider?.business_name" />
     <FlashMessages />
 
-    <div class="provider-site-layout" :style="brandingStyles">
-        <!-- Header -->
+    <div class="default-layout" :style="brandingStyles">
+        <!-- Header - Default Template Style -->
         <header class="header">
             <div class="header-content">
                 <!-- Provider Logo/Name -->
@@ -182,7 +172,7 @@ const getBookingUrl = () => {
             </div>
         </div>
 
-        <!-- Hero Slot (replaces banner when provided) -->
+        <!-- Hero Slot -->
         <slot name="hero" />
 
         <!-- Main Content -->
@@ -196,8 +186,8 @@ const getBookingUrl = () => {
 </template>
 
 <style scoped>
-.provider-site-layout {
-    /* Provider branding CSS variables - can be overridden dynamically */
+.default-layout {
+    /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
     --provider-primary-hover: #0D5A42;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import DefaultLayout from './components/DefaultLayout.vue';
 import Button from 'primevue/button';
 
 interface Service {
@@ -41,7 +41,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 </script>
 
 <template>
-    <ProviderSiteLayout title="Services">
+    <DefaultLayout title="Services">
         <div class="services-page">
             <div class="page-container">
                 <!-- Header -->
@@ -92,7 +92,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </DefaultLayout>
 </template>
 
 <style scoped>

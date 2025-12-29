@@ -21,7 +21,7 @@ class UploadMediaRequest extends FormRequest
 
         return [
             'file' => ['required', 'file', 'mimes:' . $allowedMimes, 'max:' . $maxSize],
-            'collection' => ['required', 'string', 'in:avatar,cover,gallery,review_images'],
+            'collection' => ['required', 'string', 'in:avatar,cover,gallery,review_images,logo'],
         ];
     }
 

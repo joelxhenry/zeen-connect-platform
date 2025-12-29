@@ -38,6 +38,7 @@ const navItems = [
     { label: 'Reviews', icon: 'pi pi-star', route: provider.reviews.index.url() },
     { label: 'Team', icon: 'pi pi-users', route: provider.team.index.url() },
     { label: 'Subscription', icon: 'pi pi-credit-card', route: provider.subscription.index.url() },
+    { label: 'Site Template', icon: 'pi pi-desktop', route: provider.site.template.edit.url() },
     { label: 'Branding', icon: 'pi pi-palette', route: provider.branding.edit.url() },
     { label: 'Settings', icon: 'pi pi-cog', route: provider.settings.edit.url() },
 ];

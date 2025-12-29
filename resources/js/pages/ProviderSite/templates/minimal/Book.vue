@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import MinimalLayout from './components/MinimalLayout.vue';
 import Calendar from 'primevue/calendar';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -35,7 +35,7 @@ const handleSubmit = () => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Book">
+    <MinimalLayout title="Book">
         <div class="minimal-booking">
             <div class="page-container">
                 <!-- Header -->
@@ -223,7 +223,7 @@ const handleSubmit = () => {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </MinimalLayout>
 </template>
 
 <style scoped>

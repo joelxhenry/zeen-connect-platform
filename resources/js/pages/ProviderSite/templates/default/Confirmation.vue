@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import DefaultLayout from './components/DefaultLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -28,7 +28,7 @@ const getInitials = (name: string) => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Booking Confirmation">
+    <DefaultLayout title="Booking Confirmation">
         <div class="confirmation-page">
             <div class="max-w-2xl mx-auto px-4 py-8">
                 <!-- Success Header -->
@@ -206,7 +206,7 @@ const getInitials = (name: string) => {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </DefaultLayout>
 </template>
 
 <style scoped>

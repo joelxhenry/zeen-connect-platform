@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import BarberDeluxLayout from './components/BarberDeluxLayout.vue';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
 import type { HomePageProps } from '@/types/providersite';
@@ -58,7 +58,7 @@ const hasFeatures = (props.features?.length ?? 0) > 0;
 </script>
 
 <template>
-    <ProviderSiteLayout title="Home">
+    <BarberDeluxLayout title="Home">
         <div class="barber-delux-home">
             <!-- Split Hero Section -->
             <SplitHero
@@ -187,7 +187,7 @@ const hasFeatures = (props.features?.length ?? 0) > 0;
                 </div>
             </section>
         </div>
-    </ProviderSiteLayout>
+    </BarberDeluxLayout>
 </template>
 
 <style scoped>

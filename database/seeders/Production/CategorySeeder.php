@@ -44,22 +44,22 @@ class CategorySeeder extends Seeder
         return [
             [
                 'name' => 'Hair',
-                'icon' => 'pi-scissors',
+                'icon' => 'pi pi-scissors',
                 'description' => 'Haircuts, styling, coloring, and hair treatments',
             ],
             [
                 'name' => 'Beauty & Makeup',
-                'icon' => 'pi-heart',
+                'icon' => 'pi pi-heart',
                 'description' => 'Makeup, facials, skincare, and beauty treatments',
             ],
             [
                 'name' => 'Nails',
-                'icon' => 'pi-palette',
+                'icon' => 'pi pi-palette',
                 'description' => 'Manicures, pedicures, nail art, and nail care',
             ],
             [
                 'name' => 'Barbering',
-                'icon' => 'pi-user',
+                'icon' => 'pi pi-user',
                 'description' => 'Haircuts, beard trims, and grooming for men',
             ],
             [
@@ -69,37 +69,37 @@ class CategorySeeder extends Seeder
             ],
             [
                 'name' => 'Photography',
-                'icon' => 'pi-camera',
+                'icon' => 'pipi-camera',
                 'description' => 'Portrait, event, and professional photography',
             ],
             [
                 'name' => 'Fitness & Training',
-                'icon' => 'pi-bolt',
+                'icon' => 'pi pi-bolt',
                 'description' => 'Personal training, yoga, and fitness coaching',
             ],
             [
                 'name' => 'Tutoring & Education',
-                'icon' => 'pi-book',
+                'icon' => 'pi pi-book',
                 'description' => 'Academic tutoring, lessons, and educational services',
             ],
             [
                 'name' => 'Home Services',
-                'icon' => 'pi-home',
+                'icon' => 'pi pi-home',
                 'description' => 'Cleaning, repairs, and home maintenance',
             ],
             [
                 'name' => 'Events & Entertainment',
-                'icon' => 'pi-star',
+                'icon' => 'pi pi-star',
                 'description' => 'Event planning, DJ, MC, and entertainment services',
             ],
             [
                 'name' => 'Automotive',
-                'icon' => 'pi-car',
+                'icon' => 'pi pi-car',
                 'description' => 'Car wash, detailing, and automotive services',
             ],
             [
                 'name' => 'Other Services',
-                'icon' => 'pi-ellipsis-h',
+                'icon' => 'pi pi-ellipsis-h',
                 'description' => 'Other professional services',
             ],
         ];

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import DefaultLayout from './components/DefaultLayout.vue';
 import Calendar from 'primevue/calendar';
 import type { BookingPageProps } from '@/types/providersite';
 import { useProviderSiteBooking } from '@/composables/providersite';
@@ -33,7 +33,7 @@ const {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Book Appointment" show-banner>
+    <DefaultLayout title="Book Appointment" show-banner>
         <div class="booking-page">
             <div class="max-w-5xl mx-auto px-4 py-8">
                 <!-- Page Header -->
@@ -95,7 +95,7 @@ const {
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </DefaultLayout>
 </template>
 
 <style scoped>

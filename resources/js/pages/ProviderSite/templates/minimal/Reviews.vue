@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import MinimalLayout from './components/MinimalLayout.vue';
 import Button from 'primevue/button';
 import Rating from 'primevue/rating';
 import type { ReviewsPageProps } from '@/types/providersite';
@@ -12,7 +12,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 </script>
 
 <template>
-    <ProviderSiteLayout title="Reviews">
+    <MinimalLayout title="Reviews">
         <div class="minimal-reviews">
             <div class="page-container">
                 <!-- Header -->
@@ -87,7 +87,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
                 </div>
             </div>
         </div>
-    </ProviderSiteLayout>
+    </MinimalLayout>
 </template>
 
 <style scoped>

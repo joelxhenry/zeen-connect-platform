@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProviderSiteLayout from '@/components/layout/ProviderSiteLayout.vue';
+import MinimalLayout from './components/MinimalLayout.vue';
 import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Rating from 'primevue/rating';
@@ -24,7 +24,7 @@ const getInitials = (name: string) => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Home">
+    <MinimalLayout title="Home">
         <div class="minimal-home">
             <!-- Clean Hero Section -->
             <section class="hero-section">
@@ -142,7 +142,7 @@ const getInitials = (name: string) => {
                 </div>
             </section>
         </div>
-    </ProviderSiteLayout>
+    </MinimalLayout>
 </template>
 
 <style scoped>

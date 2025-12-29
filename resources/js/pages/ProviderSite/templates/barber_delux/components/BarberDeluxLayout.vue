@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, useSlots } from 'vue';
+import { computed, ref, useSlots } from 'vue';
 import type { User } from '@/types/models';
-import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import SiteFooter from '@/components/common/SiteFooter.vue';
 import FlashMessages from '@/components/error/FlashMessages.vue';
@@ -18,6 +17,7 @@ defineProps<{
 }>();
 
 const slots = useSlots();
+const mobileMenuOpen = ref(false);
 
 const page = usePage();
 const user = (page.props.auth as { user?: User } | undefined)?.user;
@@ -39,7 +39,7 @@ const __provider = page.props.__provider as {
     brand_secondary_color?: string;
 } | null;
 
-// Dynamic branding styles - uses provider's custom colors or falls back to defaults
+// Dynamic branding styles
 const brandingStyles = computed(() => {
     const p = __provider;
     if (!p) return {};
@@ -77,7 +77,6 @@ const brandingStyles = computed(() => {
     return styles;
 });
 
-
 const currentPath = computed(() => {
     const url = new URL(window.location.href);
     return url.pathname;
@@ -90,54 +89,42 @@ const isActive = (path: string) => {
     return currentPath.value.includes(path);
 };
 
-const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-};
-
-
-
 const homeUrl = computed(() => {
     return site.home({ provider: __provider?.domain ?? '' }).url;
 });
-
 
 const servicesUrl = computed(() => {
     return site.services({ provider: __provider?.domain ?? '' }).url;
 });
 
-
 const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
-
 
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
 
-
-
+const toggleMobileMenu = () => {
+    mobileMenuOpen.value = !mobileMenuOpen.value;
+};
 </script>
 
 <template>
-
     <Head :title="title ? `${title} | ${__provider?.business_name}` : __provider?.business_name" />
     <FlashMessages />
 
-    <div class="provider-site-layout" :style="brandingStyles">
-        <!-- Header -->
+    <div class="barber-delux-layout" :style="brandingStyles">
+        <!-- Header - Barber Delux Style: Dark, premium look -->
         <header class="header">
             <div class="header-content">
-                <!-- Provider Logo/Name -->
+                <!-- Logo -->
                 <AppLink :href="homeUrl" class="provider-brand">
                     <img v-if="__provider?.logo" :src="__provider.logo" :alt="__provider?.business_name" class="provider-logo" />
-                    <Avatar v-else-if="__provider?.avatar" :image="__provider.avatar" shape="circle" class="!w-10 !h-10" />
-                    <Avatar v-else :label="getInitials(__provider?.business_name || '')" shape="circle"
-                        class="avatar-fallback" />
-                    <span class="provider-name">{{ __provider?.business_name }}</span>
+                    <span v-else class="provider-name">{{ __provider?.business_name }}</span>
                 </AppLink>
 
-                <!-- Main Navigation -->
+                <!-- Center Navigation -->
                 <nav class="main-nav">
                     <AppLink :href="homeUrl" class="nav-link"
                         :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
@@ -153,36 +140,58 @@ const getBookingUrl = () => {
 
                 <!-- Right Side -->
                 <div class="header-right">
+                    <template v-if="user">
+                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="text-link">
+                            My Bookings
+                        </AppLink>
+                    </template>
+                    <template v-else>
+                        <AppLink :href="login().url" class="text-link">
+                            Sign In
+                        </AppLink>
+                    </template>
                     <AppLink :href="getBookingUrl()">
-                        <Button label="Book Now" class="btn-primary" />
+                        <Button label="Book Appointment" class="btn-primary" icon="pi pi-calendar" />
                     </AppLink>
-
-                    <div class="auth-nav">
-                        <template v-if="user">
-                            <AppLink :href="resolveUrl(client.bookings.index().url)" class="nav-link text-sm">
-                                My Bookings
-                            </AppLink>
-                        </template>
-                        <template v-else>
-                            <AppLink :href="login().url" class="nav-link text-sm">
-                                Login
-                            </AppLink>
-                        </template>
-                    </div>
                 </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" @click="toggleMobileMenu">
+                    <i :class="mobileMenuOpen ? 'pi pi-times' : 'pi pi-bars'"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div v-if="mobileMenuOpen" class="mobile-menu">
+                <nav class="mobile-nav">
+                    <AppLink :href="homeUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                        Home
+                    </AppLink>
+                    <AppLink :href="servicesUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                        Services
+                    </AppLink>
+                    <AppLink :href="reviewsUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                        Reviews
+                    </AppLink>
+                    <div class="mobile-nav-divider"></div>
+                    <template v-if="user">
+                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                            My Bookings
+                        </AppLink>
+                    </template>
+                    <template v-else>
+                        <AppLink :href="login().url" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                            Sign In
+                        </AppLink>
+                    </template>
+                    <AppLink :href="getBookingUrl()" class="mobile-book-btn" @click="mobileMenuOpen = false">
+                        <Button label="Book Appointment" class="btn-primary w-full" icon="pi pi-calendar" />
+                    </AppLink>
+                </nav>
             </div>
         </header>
 
-        <!-- Banner (cover image) -->
-        <div v-if="showBanner !== false && !slots.hero" class="layout-banner">
-            <div class="layout-banner__cover" :style="__provider?.cover_image
-                ? { backgroundImage: `url(${__provider.cover_image})` }
-                : null">
-                <div class="layout-banner__overlay"></div>
-            </div>
-        </div>
-
-        <!-- Hero Slot (replaces banner when provided) -->
+        <!-- Hero Slot -->
         <slot name="hero" />
 
         <!-- Main Content -->
@@ -191,13 +200,13 @@ const getBookingUrl = () => {
         </main>
 
         <!-- Footer -->
-        <SiteFooter :copyrightName="__provider?.business_name" :showPoweredBy="true" />
+        <SiteFooter :copyrightName="__provider?.business_name" :showPoweredBy="true" class="dark-footer" />
     </div>
 </template>
 
 <style scoped>
-.provider-site-layout {
-    /* Provider branding CSS variables - can be overridden dynamically */
+.barber-delux-layout {
+    /* Provider branding CSS variables */
     --provider-primary: #106B4F;
     --provider-primary-rgb: 16, 107, 79;
     --provider-primary-hover: #0D5A42;
@@ -212,14 +221,18 @@ const getBookingUrl = () => {
     --provider-info: #3B82F6;
     --provider-secondary: #6B7280;
 
+    /* Barber Delux specific */
+    --header-bg: var(--provider-text, #1a1a1a);
+    --header-text: #ffffff;
+
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background: var(--provider-background, #f9fafb);
 }
 
 .header {
-    background-color: white;
-    border-bottom: 1px solid #e5e7eb;
+    background-color: var(--header-bg);
     position: sticky;
     top: 0;
     z-index: 50;
@@ -229,7 +242,7 @@ const getBookingUrl = () => {
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 1.5rem;
-    height: 64px;
+    height: 72px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -239,64 +252,126 @@ const getBookingUrl = () => {
 .provider-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
     text-decoration: none;
 }
 
 .provider-logo {
-    height: 40px;
+    height: 44px;
     width: auto;
-    max-width: 140px;
+    max-width: 160px;
     object-fit: contain;
+    /* Invert if logo is dark */
+    filter: brightness(0) invert(1);
 }
 
 .provider-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--provider-text);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--header-text);
+    letter-spacing: -0.025em;
 }
 
 .main-nav {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.25rem;
 }
 
 .nav-link {
-    padding: 0.5rem 1rem;
-    color: #6b7280;
+    padding: 0.625rem 1.25rem;
+    color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    font-size: 0.875rem;
-    border-radius: 0.375rem;
-    transition: all 0.15s;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .nav-link:hover {
-    color: var(--provider-text);
-    background-color: #f3f4f6;
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav-link.active {
     color: var(--provider-primary);
-    background-color: var(--provider-primary-10);
-    font-weight: 500;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
-.auth-nav {
+.text-link {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.15s;
+}
+
+.text-link:hover {
+    color: #ffffff;
+}
+
+/* Mobile menu button */
+.mobile-menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--header-text);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Mobile menu */
+.mobile-menu {
+    display: none;
+    background: var(--header-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+}
+
+.mobile-nav {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 0.5rem;
+}
+
+.mobile-nav-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.mobile-nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
+}
+
+.mobile-book-btn {
+    display: block;
+    text-decoration: none;
+    margin-top: 0.5rem;
 }
 
 /* Primary button styling */
 :deep(.btn-primary) {
     background-color: var(--provider-primary) !important;
     border-color: var(--provider-primary) !important;
+    font-weight: 600;
 }
 
 :deep(.btn-primary:hover) {
@@ -304,49 +379,47 @@ const getBookingUrl = () => {
     border-color: var(--provider-primary-hover) !important;
 }
 
-/* Avatar fallback styling */
-:deep(.avatar-fallback) {
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    background-color: var(--provider-primary) !important;
-}
-
 .main-content {
     flex: 1;
-    background-color: #f9fafb;
 }
 
-.layout-banner {
-    position: relative;
-}
-
-.layout-banner__cover {
-    height: 200px;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #d1d5db 100%);
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-
-.layout-banner__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 30%, rgba(249, 250, 251, 1) 100%);
+/* Dark footer styling */
+:deep(.dark-footer) {
+    background-color: var(--header-bg) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* Mobile responsiveness */
+@media (max-width: 1024px) {
+    .main-nav {
+        display: none;
+    }
+
+    .header-right {
+        display: none;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+}
+
 @media (max-width: 768px) {
     .header-content {
         padding: 0 1rem;
-        gap: 1rem;
+        height: 64px;
+    }
+
+    .provider-logo {
+        height: 36px;
     }
 
     .provider-name {
-        display: none;
-    }
-
-    .main-nav {
-        display: none;
+        font-size: 1.25rem;
     }
 }
 </style>

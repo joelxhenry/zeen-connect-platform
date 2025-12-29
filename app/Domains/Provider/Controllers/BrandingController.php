@@ -17,6 +17,8 @@ class BrandingController extends Controller
         $provider = Auth::user()->provider;
         $canAccess = $provider->hasFeature(SubscriptionFeature::BRANDING);
 
+        $logoMedia = $provider->getFirstMedia('logo');
+
         return Inertia::render('Provider/Branding/Edit', [
             'canAccess' => $canAccess,
             'currentTier' => $provider->getTier()->value,
@@ -39,6 +41,7 @@ class BrandingController extends Controller
                 'info_color' => '#3B82F6',
                 'secondary_color' => '#6B7280',
             ],
+            'logo' => $logoMedia?->toMediaArray(),
         ]);
     }
 

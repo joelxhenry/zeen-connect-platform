@@ -29,7 +29,6 @@ class TemplateResolver
      */
     public function getPagePath(TemplateType $template, string $page): string
     {
-        $template = TemplateType::BARBER_DELUX;
         return "ProviderSite/templates/{$template->value}/{$page}";
     }
 

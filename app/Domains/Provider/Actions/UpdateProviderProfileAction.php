@@ -25,7 +25,7 @@ class UpdateProviderProfileAction
                 'tagline' => $data['tagline'] ?? null,
                 'bio' => $data['bio'] ?? null,
                 'address' => $data['address'] ?? null,
-                'website' => $data['website'] ?? null,
+                'domain' => $data['domain'],
                 'social_links' => $this->filterSocialLinks($data['social_links'] ?? []),
             ];
 

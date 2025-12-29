@@ -87,7 +87,7 @@ watch(depositType, (newType) => {
 
             <!-- Provider Defaults Summary (shown when using defaults) -->
             <div v-if="useProviderDefaults" class="bg-gray-50 rounded-lg p-4">
-                <p class="m-0 font-medium text-gray-700 mb-2">Current defaults:</p>
+                <!-- <p class="m-0 font-medium text-gray-700 mb-2">Current defaults:</p>
                 <div class="text-sm text-gray-500 space-y-1">
                     <p class="m-0">
                         <i class="pi pi-check-circle text-xs mr-2" />
@@ -109,7 +109,7 @@ watch(depositType, (newType) => {
                         <i class="pi pi-clock text-xs mr-2" />
                         Min notice: {{ providerDefaults.min_booking_notice_hours }} hours
                     </p>
-                </div>
+                </div> -->
             </div>
 
             <!-- Custom Settings (shown when not using defaults) -->

@@ -23,7 +23,7 @@ class SettingsController extends Controller
         $provider = Auth::user()->provider;
 
         return Inertia::render('Provider/Settings/Edit', [
-            'bookingSettings' => $provider->getBookingSettings(),
+            'bookingSettings' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'feePayer' => $provider->fee_payer ?? 'provider',
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);

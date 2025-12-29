@@ -30,8 +30,14 @@ class UpdateProviderProfileRequest extends FormRequest
             'tagline' => ['nullable', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:1000'],
             'address' => ['nullable', 'string', 'max:255'],
-            'website' => ['nullable', 'url', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'domain' => [
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/',
+                Rule::unique('providers', 'domain')->ignore($provider->id),
+            ],
 
             // Social links
             'social_links' => ['nullable', 'array'],
@@ -53,7 +59,11 @@ class UpdateProviderProfileRequest extends FormRequest
             'business_name.min' => 'Business name must be at least 2 characters.',
             'business_name.max' => 'Business name cannot exceed 100 characters.',
             'bio.max' => 'Bio cannot exceed 1000 characters.',
-            'website.url' => 'Please enter a valid website URL.',
+            'domain.required' => 'Please enter a booking site URL.',
+            'domain.min' => 'Booking site URL must be at least 3 characters.',
+            'domain.max' => 'Booking site URL cannot exceed 50 characters.',
+            'domain.regex' => 'Only lowercase letters, numbers, and hyphens are allowed. Cannot start or end with a hyphen.',
+            'domain.unique' => 'This booking site URL is already taken. Please choose a different one.',
         ];
     }
 }

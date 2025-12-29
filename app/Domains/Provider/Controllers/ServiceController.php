@@ -48,7 +48,7 @@ class ServiceController extends Controller
             'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategory()->withMedia()->withCounts()->resolve()),
             'stats' => $stats,
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
-            'providerDefaults' => $provider->getBookingSettings(),
+            'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }
@@ -60,7 +60,7 @@ class ServiceController extends Controller
 
         return Inertia::render('Provider/Services/Create', [
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
-            'providerDefaults' => $provider->getBookingSettings(),
+            'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }
@@ -97,7 +97,7 @@ class ServiceController extends Controller
                 ->withBookingSettings()
                 ->resolve(),
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
-            'providerDefaults' => $provider->getBookingSettings(),
+            'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
         ]);
     }

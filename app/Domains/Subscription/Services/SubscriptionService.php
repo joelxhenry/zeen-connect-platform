@@ -286,6 +286,54 @@ class SubscriptionService
     }
 
     /**
+     * Get effective booking settings for a provider, respecting tier restrictions.
+     *
+     * This method returns what the actual booking settings will be after applying
+     * tier-based rules. For example, if a Starter tier provider has deposit_type='none'
+     * stored, but their tier enforces a minimum deposit, this returns the enforced values.
+     *
+     * @return array{
+     *     requires_approval: bool,
+     *     deposit_type: string,
+     *     deposit_amount: float|null,
+     *     cancellation_policy: string,
+     *     advance_booking_days: int,
+     *     min_booking_notice_hours: int
+     * }
+     */
+    public function getEffectiveBookingSettings(Provider $provider): array
+    {
+        $raw = $provider->getBookingSettings();
+        $tier = $provider->getTier();
+        $minDepositPercentage = $this->getMinimumDepositPercentage($provider);
+
+        // Determine effective deposit settings based on tier
+        $canDisableDeposit = $tier === SubscriptionTier::ENTERPRISE;
+        $effectiveDepositType = $raw['deposit_type'];
+        $effectiveDepositAmount = $raw['deposit_amount'];
+
+        // If tier cannot disable deposit but provider has 'none', force percentage
+        if (! $canDisableDeposit && $effectiveDepositType === 'none') {
+            $effectiveDepositType = 'percentage';
+            $effectiveDepositAmount = $minDepositPercentage;
+        }
+
+        // Ensure deposit amount meets minimum for the tier
+        if ($effectiveDepositType === 'percentage' && $minDepositPercentage > 0) {
+            $effectiveDepositAmount = max($effectiveDepositAmount ?? 0, $minDepositPercentage);
+        }
+
+        return [
+            'requires_approval' => $raw['requires_approval'],
+            'deposit_type' => $effectiveDepositType,
+            'deposit_amount' => $effectiveDepositAmount,
+            'cancellation_policy' => $raw['cancellation_policy'],
+            'advance_booking_days' => $raw['advance_booking_days'],
+            'min_booking_notice_hours' => $raw['min_booking_notice_hours'],
+        ];
+    }
+
+    /**
      * Get all tier restrictions for frontend display.
      */
     public function getTierRestrictions(Provider $provider): array

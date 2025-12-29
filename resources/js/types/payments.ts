@@ -23,15 +23,52 @@ export interface Payment {
     platform_fee_display: string;
     provider_amount: number;
     provider_amount_display: string;
+    processing_fee: number;
+    currency: string;
+    payment_type: 'deposit' | 'full' | 'balance';
     status: PaymentStatus;
     status_label: string;
     status_color: string;
+    status_icon: string;
+    is_completed: boolean;
+    is_pending: boolean;
+    is_failed: boolean;
+    can_refund: boolean;
+    is_refunded: boolean;
+    failure_reason?: string | null;
+    refund_reason?: string | null;
+    refund_transaction_id?: string | null;
     gateway?: string;
+    gateway_type?: string;
+    gateway_provider?: GatewayProvider;
     gateway_mode?: GatewayMode;
+    gateway_transaction_id?: string;
+    gateway_order_id?: string;
+    gateway_response_code?: string;
+    processing_fee_payer?: 'provider' | 'client';
     card_display?: string;
     paid_at?: string;
     refunded_at?: string;
     created_at: string;
+    client?: {
+        id: number;
+        name: string;
+        email: string;
+        phone: string | null;
+    };
+    booking?: {
+        id: number;
+        uuid: string;
+        booking_date: string;
+        formatted_date: string;
+        start_time: string;
+        end_time: string;
+        status: string;
+        service_name: string;
+        service_duration: number;
+        guest_name: string | null;
+        guest_email: string | null;
+    };
 }
 
 export interface Payout {
@@ -285,6 +322,10 @@ export interface BankingInfoProps {
     bankingInfo: BankingInfo;
     hasWiPayAccount: boolean;
     banks: Record<string, string>;
+}
+
+export interface PaymentShowProps {
+    payment: Payment;
 }
 
 // Utility Types

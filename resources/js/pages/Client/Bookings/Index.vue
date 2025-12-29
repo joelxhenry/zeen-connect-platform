@@ -6,8 +6,8 @@ import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import type { PaginatedBookings } from '@/types/models/booking';
-import provider from '@/routes/provider';
-import providersite, { book } from '@/routes/providersite';
+import payment from '@/routes/payment';
+import { resolveUrl } from '@/utils/url';
 
 interface Props {
     bookings: PaginatedBookings;
@@ -197,10 +197,7 @@ const emptyStateContent = computed(() => {
                                     <p class="text-amber-600 m-0 text-xs">${{ booking.deposit_amount.toFixed(2) }} to
                                         confirm your booking</p>
                                 </div>
-                                <AppLink :href="providersite.payment.checkout({
-                                    provider: booking.provider?.domain ?? '',
-                                    bookingUuid: booking.uuid
-                                }).url" @click.stop class="shrink-0">
+                                <AppLink :href="resolveUrl(payment.checkout({ bookingUuid: booking.uuid }).url)" @click.stop class="shrink-0">
                                     <Button label="Pay" size="small"
                                         class="!bg-amber-500 !border-amber-500 !rounded-full !px-4" />
                                 </AppLink>

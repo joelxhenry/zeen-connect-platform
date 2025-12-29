@@ -48,9 +48,10 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
 
     protected function getBaseUrl(): string
     {
-        return $this->testMode
-            ? 'https://sandbox.wipayfinancial.com/v1'
-            : 'https://api.wipayfinancial.com/v1';
+        // return $this->testMode
+        //     ? 'https://sandbox.wipayfinancial.com/v1'
+        //     : 'https://api.wipayfinancial.com/v1';
+        return config('services.wipay.api_url');
     }
 
     protected function getHeaders(): array
@@ -78,17 +79,27 @@ class WiPayEscrowGateway extends AbstractGateway implements EscrowGatewayInterfa
     ): PaymentResult {
         $orderId = 'WP-'.strtoupper(Str::random(12));
 
+        // Determine fee structure based on provider settings
+        // 'customer_pay' = client pays fees, 'merchant_absorb' = provider pays fees
+        $feeStructure = $payment->processing_fee_payer === 'client' ? 'customer_pay' : 'merchant_absorb';
+
         try {
-            $response = Http::withHeaders($this->getHeaders())
-                ->post("{$this->baseUrl}/checkout", [
-                    'account_number' => $this->accountNumber,
-                    'currency' => $payment->currency,
-                    'dollar_amount' => $this->formatAmount($payment->amount),
-                    'order_id' => $orderId,
-                    'return_url' => $returnUrl,
-                    'cancel_url' => $cancelUrl,
-                    'notify_url' => route('webhooks.wipay'),
+            $response = Http::asForm()
+                ->post($this->baseUrl, [
+                    // Required parameters
+                    'account_number' => $this->testMode ? '1234567890' : $this->accountNumber,
+                    'country_code' => 'JM',
+                    'currency' => $payment->currency ?? 'JMD',
                     'environment' => $this->testMode ? 'sandbox' : 'live',
+                    'fee_structure' => $feeStructure,
+                    'method' => 'credit_card',
+                    'order_id' => $orderId,
+                    'origin' => 'zeen_connect',
+                    'response_url' => $returnUrl,
+                    'total' => $this->formatAmount($payment->amount),
+                    // Optional parameters
+                    'avs' => 0,
+                    'data' => json_encode(['payment_uuid' => $payment->uuid]),
                 ]);
 
             if ($response->successful() && isset($response['url'])) {

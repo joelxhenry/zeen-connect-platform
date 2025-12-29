@@ -74,6 +74,7 @@ class PaymentManager
             'gateway_provider' => $gateway->getProvider(),
         ]);
 
+
         // Configure split if using split gateway
         if ($gateway instanceof DirectSplitGatewayInterface) {
             $providerConfig = $this->gatewayResolver->getProviderConfig($provider);
@@ -88,7 +89,6 @@ class PaymentManager
                 $gateway->configureSplit($payment, $splitData);
             }
         }
-
         return $gateway->initializePayment($payment, $returnUrl, $cancelUrl);
     }
 

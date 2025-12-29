@@ -91,11 +91,13 @@ class SubscriptionService
         // Zeen fee is always based on full service price
         $zeenFee = round($servicePrice * ($zeenFeeRate / 100), 2);
 
-        // Gateway fee is based on what's actually being charged
-        // If deposit required: gateway fee on deposit amount
-        // If full payment: gateway fee on full service price
+        // Base charge amount (deposit or full service price)
         $chargeAmount = $requiresDeposit ? $depositAmount : $servicePrice;
-        $gatewayFee = round($chargeAmount * ($gatewayFeeRate / 100), 2);
+
+        // Gateway fee is calculated on (chargeAmount + zeenFee)
+        // This is for display purposes - WiPay handles their own fee calculation
+        $processingBase = $chargeAmount + $zeenFee;
+        $gatewayFee = round($processingBase * ($gatewayFeeRate / 100), 2);
 
         $totalFees = $zeenFee + $gatewayFee;
 
@@ -114,6 +116,13 @@ class SubscriptionService
 
         // Combined rate for display purposes
         $totalFeeRate = $zeenFeeRate + $gatewayFeeRate;
+
+        // Amount to send to gateway API (excludes processing fee - WiPay handles their own fee)
+        // When client pays: gateway receives (charge_amount + zeen_fee)
+        // When provider pays: gateway receives (charge_amount), zeen_fee deducted from provider payout
+        $amountToGateway = $feePayer === 'client'
+            ? $chargeAmount + $zeenFee
+            : $chargeAmount;
 
         return [
             'tier' => $tier->value,
@@ -140,18 +149,30 @@ class SubscriptionService
             'fee_payer' => $feePayer,
             'client_pays' => $clientPays,
             'provider_receives' => $providerReceives,
+
+            // Gateway integration
+            'amount_to_gateway' => $amountToGateway,
+            'processing_base' => $processingBase,
         ];
     }
 
     /**
      * Calculate the payment amount based on payment type.
+     *
+     * Fee calculation by payment type:
+     * - Full payment: Zeen fee on full price, processing fee on (full + zeen)
+     * - Deposit: Zeen fee on full price, processing fee on (deposit + zeen)
+     * - Balance: No Zeen fee (already charged), processing fee on balance only
      */
     public function calculatePaymentAmount(
         Provider $provider,
         float $servicePrice,
-        string $paymentType = 'full'
+        string $paymentType = 'full',
+        ?Service $service = null
     ): array {
-        $fees = $this->calculateFees($provider, $servicePrice);
+        $fees = $this->calculateFees($provider, $servicePrice, $service);
+        $feePayer = $fees['fee_payer'];
+        $gatewayFeeRate = $fees['gateway_fee_rate'];
 
         $baseAmount = match ($paymentType) {
             'deposit' => $fees['deposit_amount'],
@@ -159,20 +180,43 @@ class SubscriptionService
             default => $servicePrice,
         };
 
-        // For client-pays fees, calculate the fee portion for this payment
-        $convenienceFee = 0.0;
-        if ($fees['fee_payer'] === 'client' && $paymentType === 'full') {
-            $convenienceFee = $fees['convenience_fee'];
-        } elseif ($fees['fee_payer'] === 'client' && $paymentType === 'deposit') {
-            // Proportional convenience fee for deposit
-            $depositRatio = $fees['deposit_amount'] / $servicePrice;
-            $convenienceFee = round($fees['convenience_fee'] * $depositRatio, 2);
+        // Calculate fees based on payment type
+        if ($paymentType === 'balance') {
+            // Balance payment: no Zeen fee (already charged), only processing fee on balance
+            $zeenFee = 0.0;
+            $processingBase = $baseAmount;
+            $processingFee = round($processingBase * ($gatewayFeeRate / 100), 2);
+            $totalFees = $processingFee;
+        } else {
+            // Full or deposit payment: use calculated fees
+            $zeenFee = $fees['zeen_fee'];
+            $processingBase = $fees['processing_base'];
+            $processingFee = $fees['gateway_fee'];
+            $totalFees = $fees['total_fees'];
+        }
+
+        // Determine convenience fee and amount to gateway based on who pays
+        if ($feePayer === 'client') {
+            $convenienceFee = $zeenFee + $processingFee;
+            $totalToCharge = $baseAmount + $convenienceFee;
+            // Gateway receives base amount + zeen fee (excludes processing fee)
+            $amountToGateway = $baseAmount + $zeenFee;
+        } else {
+            $convenienceFee = 0.0;
+            $totalToCharge = $baseAmount;
+            // Gateway receives base amount only (zeen fee deducted from provider payout)
+            $amountToGateway = $baseAmount;
         }
 
         return [
             'amount' => $baseAmount,
+            'zeen_fee' => $zeenFee,
+            'gateway_fee' => $processingFee,
+            'total_fees' => $totalFees,
             'convenience_fee' => $convenienceFee,
-            'total_to_charge' => $baseAmount + $convenienceFee,
+            'total_to_charge' => $totalToCharge,
+            'amount_to_gateway' => $amountToGateway,
+            'processing_base' => $processingBase,
             'payment_type' => $paymentType,
             ...$fees,
         ];

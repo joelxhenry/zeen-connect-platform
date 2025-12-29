@@ -131,65 +131,68 @@ const canRefund = (payment: Payment): boolean => {
                 description="Payments matching your filters will appear here." />
 
             <div v-else class="space-y-4">
-                <ConsoleDataCard v-for="payment in payments.data" :key="payment.uuid">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-[#106B4F]/10 flex items-center justify-center shrink-0">
-                            <i class="pi pi-credit-card text-[#106B4F]" />
-                        </div>
-
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap mb-1">
-                                <h3 class="font-semibold text-[#0D1F1B] m-0">{{ payment.service_name }}</h3>
-                                <Tag :value="payment.status_label" :severity="getStatusSeverity(payment.status)"
-                                    class="!text-xs" />
+                <div v-for="payment in payments.data" :key="payment.uuid" class="payment-card">
+                    <!-- Card Header -->
+                    <div class="card-header">
+                        <div class="header-left">
+                            <div class="service-icon">
+                                <i class="pi pi-briefcase" />
                             </div>
-                            <p class="text-sm text-gray-500 m-0">
-                                {{ payment.client_name }} &bull; {{ payment.booking_date }}
-                            </p>
-                            <p v-if="payment.card_display" class="text-xs text-gray-400 m-0 mt-1">
-                                {{ payment.card_display }}
-                            </p>
+                            <div class="header-info">
+                                <h3 class="service-name">{{ payment.service_name }}</h3>
+                                <p class="client-info">{{ payment.client_name }} • {{ payment.booking_date }}</p>
+                            </div>
+                        </div>
+                        <Tag :value="payment.status_label" :severity="getStatusSeverity(payment.status)" />
+                    </div>
+
+                    <!-- Card Body - Two Column Layout -->
+                    <div class="card-body">
+                        <div class="amount-section">
+                            <div class="section-title">Amount Breakdown</div>
+                            <div class="amount-rows">
+                                <div class="amount-row">
+                                    <span class="amount-label">Total Charged</span>
+                                    <span class="amount-value">{{ payment.amount_display }}</span>
+                                </div>
+                                <div class="amount-row">
+                                    <span class="amount-label">Platform Fee</span>
+                                    <span class="amount-value text-gray-500">-{{ payment.platform_fee_display }}</span>
+                                </div>
+                                <div v-if="payment.card_display" class="amount-row">
+                                    <span class="amount-label">Card</span>
+                                    <span class="amount-value text-gray-500">{{ payment.card_display }}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="text-right shrink-0">
-                            <p class="font-semibold text-[#106B4F] m-0 text-lg">
-                                {{ payment.provider_amount_display }}
-                            </p>
-                            <p class="text-xs text-gray-400 m-0">
-                                of {{ payment.amount_display }}
-                            </p>
-                            <p class="text-xs text-gray-400 m-0">
-                                Fee: {{ payment.platform_fee_display }}
-                            </p>
-                        </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                            <AppLink :href="provider.bookings.show({ uuid: payment.booking_uuid }).url">
-                                <Button icon="pi pi-eye" size="small" severity="secondary" outlined
-                                    v-tooltip="'View Booking'" />
-                            </AppLink>
-                            <Button v-if="canRefund(payment)" icon="pi pi-replay" size="small" severity="warn" outlined
-                                v-tooltip="'Refund'" @click="openRefundDialog(payment)" />
+                        <div class="earnings-section">
+                            <div class="section-title">Provider Earnings</div>
+                            <div class="earnings-amount">
+                                <span class="earnings-label">You Receive</span>
+                                <span class="earnings-value">{{ payment.provider_amount_display }}</span>
+                            </div>
+                            <div v-if="payment.refunded_at" class="refund-badge">
+                                <i class="pi pi-replay" />
+                                <span>Refunded {{ payment.refunded_at }}</span>
+                            </div>
                         </div>
                     </div>
 
-                    <template #footer>
-                        <div class="flex items-center gap-4 text-xs text-gray-400">
-                            <span v-if="payment.paid_at">
-                                <i class="pi pi-check mr-1" />
-                                Paid {{ payment.paid_at }}
-                            </span>
-                            <span v-if="payment.refunded_at">
-                                <i class="pi pi-replay mr-1" />
-                                Refunded {{ payment.refunded_at }}
-                            </span>
-                            <span v-else>
-                                <i class="pi pi-clock mr-1" />
-                                Created {{ payment.created_at }}
-                            </span>
+                    <!-- Card Footer - Action Buttons -->
+                    <div class="card-footer">
+                        <AppLink :href="provider.payments.show({ uuid: payment.uuid }).url" class="no-underline">
+                            <Button label="View Details" icon="pi pi-file" size="small" severity="secondary" text />
+                        </AppLink>
+                        <div class="footer-actions">
+                            <AppLink :href="provider.bookings.show({ uuid: payment.booking_uuid }).url" class="no-underline">
+                                <Button label="View Booking" icon="pi pi-calendar" size="small" severity="secondary" outlined />
+                            </AppLink>
+                            <Button v-if="canRefund(payment)" label="Refund" icon="pi pi-replay" size="small"
+                                severity="warn" outlined @click="openRefundDialog(payment)" />
                         </div>
-                    </template>
-                </ConsoleDataCard>
+                    </div>
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -248,3 +251,195 @@ const canRefund = (payment: Payment): boolean => {
         </Dialog>
     </ConsoleLayout>
 </template>
+
+<style scoped>
+/* Payment Card */
+.payment-card {
+    background: white;
+    border-radius: 0.875rem;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.service-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    background: rgba(16, 107, 79, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.service-icon i {
+    font-size: 1rem;
+    color: #106B4F;
+}
+
+.header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.service-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #0D1F1B;
+    margin: 0;
+}
+
+.client-info {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Card Body */
+.card-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .card-body {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.section-title {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+/* Amount Section */
+.amount-section {
+    border-right: 1px solid #f3f4f6;
+    padding-right: 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .amount-section {
+        border-right: none;
+        border-bottom: 1px solid #f3f4f6;
+        padding-right: 0;
+        padding-bottom: 1rem;
+    }
+}
+
+.amount-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.amount-label {
+    font-size: 0.8125rem;
+    color: #4b5563;
+}
+
+.amount-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #0D1F1B;
+}
+
+/* Earnings Section */
+.earnings-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.earnings-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.earnings-label {
+    font-size: 0.8125rem;
+    color: #6b7280;
+}
+
+.earnings-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #106B4F;
+}
+
+.refund-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+    padding: 0.375rem 0.625rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.refund-badge i {
+    font-size: 0.625rem;
+}
+
+/* Card Footer */
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem 1.25rem;
+    background: #fafafa;
+    border-top: 1px solid #f3f4f6;
+}
+
+.footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+    .card-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .footer-actions {
+        justify-content: flex-end;
+    }
+}
+</style>

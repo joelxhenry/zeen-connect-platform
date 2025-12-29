@@ -10,6 +10,7 @@ import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
 import type { Booking } from '@/types/models/booking';
 import payment from '@/routes/payment';
+import { resolveUrl } from '@/utils/url';
 
 interface Props {
     booking: Booking;
@@ -218,7 +219,7 @@ const timelineEvents = computed(() => {
                         <p class="text-amber-600 m-0 text-sm">Pay ${{ booking.deposit_amount.toFixed(2) }} deposit to
                             confirm your booking</p>
                     </div>
-                    <AppLink :href="payment.checkout({ bookingUuid: booking.id }).url">
+                    <AppLink :href="resolveUrl(payment.checkout({ bookingUuid: booking.uuid }).url)">
                         <Button label="Pay Now" icon="pi pi-arrow-right" iconPos="right"
                             class="!bg-amber-500 !border-amber-500 !rounded-full" />
                     </AppLink>

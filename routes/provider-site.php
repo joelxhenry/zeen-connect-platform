@@ -28,4 +28,3 @@ Route::get('/book/{uuid}/confirmation', [ProviderSiteBookingController::class, '
 
 // Guest booking management
 Route::post('/book/{uuid}/cancel', [ProviderSiteBookingController::class, 'cancelGuest'])->name('providersite.book.cancel');
-Route::get('/payment/{bookingUuid}/checkout', [ProviderSiteBookingController::class, 'checkout'])->name('providersite.payment.checkout');

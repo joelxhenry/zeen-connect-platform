@@ -48,8 +48,8 @@ return [
 
     'wipay' => [
         // Platform credentials for collecting payments
-        'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID'),
-        'api_key' => env('WIPAY_API_KEY'),
+        'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID', '1234567890'),
+        'api_key' => env('WIPAY_API_KEY','123'),
         'developer_id' => env('WIPAY_DEVELOPER_ID'),
         'secret_key' => env('WIPAY_SECRET_KEY'),
 
@@ -57,8 +57,8 @@ return [
         'test_mode' => env('WIPAY_TEST_MODE', true),
 
         // API endpoints
-        'api_url' => env('WIPAY_API_URL', 'https://sandbox.wipaycaribbean.com/api'),
-        'disbursement_url' => env('WIPAY_DISBURSEMENT_URL', 'https://sandbox.wipaycaribbean.com/api/v1/disbursements'),
+        'api_url' => env('WIPAY_API_URL', 'https://jm.wipayfinancial.com/plugins/payments/request'),
+        'disbursement_url' => env('WIPAY_DISBURSEMENT_URL', 'https://jm.wipayfinancial.com/plugins/payments/request'),
     ],
 
 ];

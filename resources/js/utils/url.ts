@@ -91,6 +91,7 @@ function getBaseDomain(hostname: string): string {
  * If the domain matches the current page's domain, it returns just the path.
  */
 export function resolveUrl(url: string): string {
+
     if (typeof window === 'undefined') {
         // SSR: return URL as-is, the client will resolve it
         return url;

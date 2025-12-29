@@ -11,6 +11,7 @@ use App\Domains\Subscription\Services\SubscriptionService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -81,16 +82,17 @@ class PaymentController extends Controller
             ],
             'payment' => [
                 'type' => $paymentType,
-                'amount' => $paymentInfo['amount'],
-                'client_processing_fee' => $paymentInfo['client_processing_fee'],
-                'total_to_charge' => $paymentInfo['total_to_charge'],
-                'deposit_percentage' => $paymentInfo['deposit_percentage'],
-                'platform_fee' => $paymentInfo['platform_fee'],
-                'platform_fee_rate' => $paymentInfo['platform_fee_rate'],
-                'processing_fee' => $paymentInfo['processing_fee'],
-                'processing_fee_payer' => $paymentInfo['processing_fee_payer'],
-                'tier' => $paymentInfo['tier'],
-                'tier_label' => $paymentInfo['tier_label'],
+                'amount' => Arr::get($paymentInfo, 'amount', 0),
+                'zeen_fee' => Arr::get($paymentInfo, 'zeen_fee', 0),
+                'gateway_fee' => Arr::get($paymentInfo, 'gateway_fee', 0),
+                'total_fees' => Arr::get($paymentInfo, 'total_fees', 0),
+                'convenience_fee' => Arr::get($paymentInfo, 'convenience_fee', 0),
+                'total_to_charge' => Arr::get($paymentInfo, 'total_to_charge', 0),
+                'amount_to_gateway' => Arr::get($paymentInfo, 'amount_to_gateway', 0),
+                'deposit_percentage' => Arr::get($paymentInfo, 'deposit_percentage', 0),
+                'fee_payer' => Arr::get($paymentInfo, 'fee_payer', 'provider'),
+                'tier' => Arr::get($paymentInfo, 'tier', 'starter'),
+                'tier_label' => Arr::get($paymentInfo, 'tier_label', 'Starter'),
                 'gateway_type' => $gatewayType->value,
             ],
             'isAuthenticated' => (bool) $request->user(),
@@ -104,7 +106,7 @@ class PaymentController extends Controller
     {
         $query = Booking::where('uuid', $bookingUuid)
             ->with([
-                'provider:id,business_name,slug,processing_fee_payer',
+                'provider:id,business_name,slug,fee_payer',
                 'provider.subscription',
                 'service:id,name,duration_minutes,price',
             ]);
@@ -137,7 +139,7 @@ class PaymentController extends Controller
         string $bookingUuid,
         CreatePaymentAction $createPayment,
         ProcessPaymentAction $processPayment
-    ): RedirectResponse {
+    ) {
         $request->validate([
             'payment_type' => 'sometimes|in:full,deposit,balance',
         ]);
@@ -156,28 +158,51 @@ class PaymentController extends Controller
         $gatewayType = $this->paymentManager->determineGatewayType($booking->provider);
         $gateway = $this->paymentManager->resolveGateway($booking->provider);
 
-        // Create payment record with tier-based amounts and gateway info
-        $payment = $createPayment->execute(
-            booking: $booking,
-            amount: $paymentInfo['total_to_charge'],
-            paymentType: $paymentType,
-            platformFee: $paymentInfo['platform_fee'],
-            providerAmount: $paymentInfo['provider_payout'],
-            processingFee: $paymentInfo['processing_fee'],
-            processingFeePayer: $paymentInfo['processing_fee_payer'],
-            gatewayType: $gatewayType->value,
-            gatewayProvider: $gateway->getProvider()
-        );
+        // Check for existing pending payment to reuse
+        $payment = Payment::where('booking_id', $booking->id)
+            ->where('payment_type', $paymentType)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($payment) {
+            // Update existing pending payment with current amounts
+            // amount_to_gateway excludes processing fee - WiPay handles their own fee
+            $payment->update([
+                'amount' => Arr::get($paymentInfo, 'amount_to_gateway', 0),
+                'platform_fee' => Arr::get($paymentInfo, 'total_fees', 0),
+                'provider_amount' => Arr::get($paymentInfo, 'provider_receives', 0),
+                'processing_fee' => Arr::get($paymentInfo, 'gateway_fee', 0),
+                'processing_fee_payer' => Arr::get($paymentInfo, 'fee_payer', 'provider'),
+                'gateway_type' => $gatewayType->value,
+                'gateway_provider' => $gateway->getProvider(),
+            ]);
+        } else {
+            // Create new payment record
+            // amount_to_gateway excludes processing fee - WiPay handles their own fee
+            $payment = $createPayment->execute(
+                booking: $booking,
+                amount: Arr::get($paymentInfo, 'amount_to_gateway', 0),
+                paymentType: $paymentType,
+                platformFee: Arr::get($paymentInfo, 'total_fees', 0),
+                providerAmount: Arr::get($paymentInfo, 'provider_receives', 0),
+                processingFee: Arr::get($paymentInfo, 'gateway_fee', 0),
+                processingFeePayer: Arr::get($paymentInfo, 'fee_payer', 'provider'),
+                gatewayType: $gatewayType->value,
+                gatewayProvider: $gateway->getProvider()
+            );
+        }
 
         // Initialize payment with gateway
-        $returnUrl = route('payment.callback', ['payment' => $payment->uuid]);
-        $cancelUrl = route('payment.cancel', ['payment' => $payment->uuid]);
+        $returnUrl = route('payment.callback', ['paymentUuid' => $payment->uuid]);
+        $cancelUrl = route('payment.cancel', ['paymentUuid' => $payment->uuid]);
 
         $result = $processPayment->initialize($payment, $returnUrl, $cancelUrl);
 
         if ($result['success'] && isset($result['redirect_url'])) {
             // Store SPI token in session for verification
-            session(['payment_spi_token_' . $payment->uuid => $result['spi_token']]);
+            if (isset($result['spi_token'])) {
+                session(['payment_spi_token_' . $payment->uuid => $result['spi_token']]);
+            }
 
             return redirect()->away($result['redirect_url']);
         }
@@ -187,6 +212,7 @@ class PaymentController extends Controller
 
     /**
      * Handle payment gateway callback.
+     * WiPay returns: status, transaction_id, order_id, data (our custom JSON), message (on failure)
      */
     public function callback(Request $request, string $paymentUuid, ProcessPaymentAction $processPayment): RedirectResponse
     {
@@ -199,25 +225,54 @@ class PaymentController extends Controller
             abort(403);
         }
 
-        // Get SPI token from request or session
-        $spiToken = $request->input('SpiToken') ?? session('payment_spi_token_' . $payment->uuid);
+        // Extract WiPay callback data from query params
+        $callbackData = [
+            'status' => $request->query('status'),
+            'transaction_id' => $request->query('transaction_id'),
+            'order_id' => $request->query('order_id'),
+            'message' => $request->query('message'),
+            'data' => $request->query('data'),
+        ];
 
-        if (! $spiToken) {
-            return redirect()->route('payment.failed', ['payment' => $payment->uuid])
-                ->with('error', 'Payment verification failed. Missing token.');
-        }
-
-        $result = $processPayment->complete($payment, $spiToken);
-
-        // Clear session token
+        // Clear any stored session data
         session()->forget('payment_spi_token_' . $payment->uuid);
 
-        if ($result['success']) {
-            return redirect()->route('payment.success', ['payment' => $payment->uuid]);
+        // Check if WiPay returned a failed status directly
+        $status = strtolower($callbackData['status'] ?? '');
+        if ($status !== 'success') {
+            // Mark payment as failed if not already
+            if ($payment->isPending()) {
+                $payment->markAsFailed($callbackData['message'] ?? 'Payment was not completed');
+            }
+
+            return redirect()->route('payment.failed', ['paymentUuid' => $payment->uuid])
+                ->with('error', $callbackData['message'] ?? 'Payment failed');
         }
 
-        return redirect()->route('payment.failed', ['payment' => $payment->uuid])
-            ->with('error', $result['error']);
+        try {
+            $result = $processPayment->complete($payment, $callbackData);
+
+            if ($result['success']) {
+                return redirect()->route('payment.success', ['paymentUuid' => $payment->uuid]);
+            }
+
+            return redirect()->route('payment.failed', ['paymentUuid' => $payment->uuid])
+                ->with('error', $result['error'] ?? 'Payment verification failed');
+        } catch (\Exception $e) {
+            // Log the error but always redirect to failed page
+            \Illuminate\Support\Facades\Log::error('Payment callback error', [
+                'payment_uuid' => $paymentUuid,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Mark as failed if still pending
+            if ($payment->isPending()) {
+                $payment->markAsFailed('An error occurred processing your payment');
+            }
+
+            return redirect()->route('payment.failed', ['paymentUuid' => $payment->uuid])
+                ->with('error', 'An error occurred processing your payment');
+        }
     }
 
     /**
@@ -249,6 +304,7 @@ class PaymentController extends Controller
             'booking' => [
                 'uuid' => $payment->booking->uuid,
                 'provider_name' => $payment->booking->provider->business_name,
+                'provider_slug' => $payment->booking->provider->slug,
                 'service_name' => $payment->booking->service->name,
                 'formatted_date' => $payment->booking->formatted_date,
                 'formatted_time' => $payment->booking->formatted_time,
@@ -264,7 +320,10 @@ class PaymentController extends Controller
     public function failed(Request $request, string $paymentUuid): Response
     {
         $payment = Payment::where('uuid', $paymentUuid)
-            ->with(['booking:id,uuid,client_id'])
+            ->with([
+                'booking:id,uuid,client_id,guest_name,guest_email',
+                'booking.provider:id,business_name,slug,domain',
+            ])
             ->firstOrFail();
 
         // Verify ownership (skip for guest bookings)
@@ -278,8 +337,11 @@ class PaymentController extends Controller
                 'amount_display' => $payment->amount_display,
                 'failure_reason' => $payment->failure_reason,
             ],
-            'booking_uuid' => $payment->booking->uuid,
-            'is_guest' => $payment->booking->isGuestBooking(),
+            'booking' => [
+                'uuid' => $payment->booking->uuid,
+                'provider_slug' => $payment->booking->provider->domain,
+                'is_guest' => $payment->booking->isGuestBooking(),
+            ],
             'error' => session('error'),
             'isAuthenticated' => (bool) $request->user(),
         ]);

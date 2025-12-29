@@ -154,7 +154,7 @@ class ProviderEarningsController extends Controller
         $status = $request->get('status', 'all');
 
         $query = Payment::forProvider($provider->id)
-            ->with(['booking:id,uuid,booking_date,start_time', 'booking.service:id,name', 'client:id,name'])
+            ->with(['booking:id,uuid,booking_date,start_time,guest_name', 'booking.service:id,name', 'client:id,name'])
             ->orderByDesc('created_at');
 
         if ($status !== 'all' && PaymentStatus::tryFrom($status)) {
@@ -183,6 +183,31 @@ class ProviderEarningsController extends Controller
             'current_status' => $status,
             'counts' => $counts,
             'status_options' => PaymentStatus::options(),
+        ]);
+    }
+
+    /**
+     * Show payment details.
+     */
+    public function show(Request $request, string $uuid): Response
+    {
+        $provider = $request->user()->provider;
+
+        $payment = Payment::where('uuid', $uuid)
+            ->forProvider($provider->id)
+            ->with([
+                'booking:id,uuid,booking_date,start_time,end_time,guest_name,guest_email',
+                'booking.service:id,name,duration_minutes',
+                'client:id,name,email,phone',
+            ])
+            ->firstOrFail();
+
+        return Inertia::render('Provider/Payments/Show', [
+            'payment' => (new PaymentResource($payment))
+                ->withClient(true)
+                ->withBooking(true)
+                ->withGatewayDetails(true)
+                ->resolve(),
         ]);
     }
 

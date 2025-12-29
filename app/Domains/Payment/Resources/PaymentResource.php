@@ -71,6 +71,10 @@ class PaymentResource extends JsonResource
         $data = [
             'id' => $this->id,
             'uuid' => $this->uuid,
+            'booking_uuid' => $this->booking?->uuid,
+            'client_name' => $this->client?->name ?? $this->booking?->guest_name ?? 'Guest',
+            'service_name' => $this->booking?->service?->name ?? 'Service',
+            'booking_date' => $this->booking?->booking_date?->format('M j, Y'),
 
             // Amounts with display values
             'amount' => (float) $this->amount,
@@ -103,6 +107,10 @@ class PaymentResource extends JsonResource
             // Failure info
             'failure_reason' => $this->failure_reason,
 
+            // Refund details
+            'refund_reason' => $this->refund_reason,
+            'refund_transaction_id' => $this->refund_transaction_id,
+
             // Timestamps
             'paid_at' => $this->formatDateTime($this->paid_at),
             'refunded_at' => $this->formatDateTime($this->refunded_at),
@@ -123,6 +131,8 @@ class PaymentResource extends JsonResource
         }
 
         if ($this->includeGatewayDetails) {
+            $data['gateway_type'] = $this->gateway_type;
+            $data['gateway_provider'] = $this->gateway_provider;
             $data['gateway_transaction_id'] = $this->gateway_transaction_id;
             $data['gateway_order_id'] = $this->gateway_order_id;
             $data['gateway_response_code'] = $this->gateway_response_code;
@@ -181,8 +191,12 @@ class PaymentResource extends JsonResource
             'booking_date' => $this->booking->booking_date?->format('Y-m-d'),
             'formatted_date' => $this->booking->formatted_date ?? $this->booking->booking_date?->format('M j, Y'),
             'start_time' => $this->booking->start_time?->format('g:i A'),
+            'end_time' => $this->booking->end_time?->format('g:i A'),
             'status' => $this->booking->status?->value,
             'service_name' => $this->booking->service?->name,
+            'service_duration' => $this->booking->service?->duration_minutes,
+            'guest_name' => $this->booking->guest_name,
+            'guest_email' => $this->booking->guest_email,
         ];
     }
 }

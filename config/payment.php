@@ -76,12 +76,19 @@ return [
     |--------------------------------------------------------------------------
     |
     | Default processing fee configuration for payment gateways.
+    | WiPay Jamaica rate: 3.80% + GCT (15%) = 4.37% total
     |
     */
 
     'processing_fees' => [
-        // Default processing fee rate (percentage as decimal)
-        'default_rate' => env('PROCESSING_FEE_RATE', 0.035),
+        // WiPay base rate (3.80%)
+        'base_rate' => env('PROCESSING_FEE_BASE_RATE', 0.038),
+
+        // GCT rate in Jamaica (15%)
+        'gct_rate' => env('PROCESSING_FEE_GCT_RATE', 0.15),
+
+        // Total effective rate: 3.80% * 1.15 = 4.37%
+        'default_rate' => env('PROCESSING_FEE_RATE', 0.0437),
 
         // Default processing fee payer: 'platform', 'provider', 'client'
         'default_payer' => env('PROCESSING_FEE_PAYER', 'client'),

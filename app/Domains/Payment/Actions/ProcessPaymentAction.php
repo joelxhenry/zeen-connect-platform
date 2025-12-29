@@ -51,12 +51,11 @@ class ProcessPaymentAction
 
     /**
      * Complete a payment after gateway callback.
+     * WiPay callback data includes: status, transaction_id, order_id, message, data
      */
-    public function complete(Payment $payment, string $spiToken): array
+    public function complete(Payment $payment, array $callbackData): array
     {
-        $result = $this->paymentManager->completePayment($payment, [
-            'spi_token' => $spiToken,
-        ]);
+        $result = $this->paymentManager->completePayment($payment, $callbackData);
 
         if ($result->success) {
             return DB::transaction(function () use ($payment, $result) {

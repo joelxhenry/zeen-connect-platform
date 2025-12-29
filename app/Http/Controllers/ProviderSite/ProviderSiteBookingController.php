@@ -237,7 +237,7 @@ class ProviderSiteBookingController extends Controller
     public function checkout(Request $request, string $provider, string $bookingUuid)
     {
         // Delegate to the main PaymentController
-        return app(PaymentController::class)->checkout($bookingUuid);
+        return app(PaymentController::class)->checkout($request, $bookingUuid);
     }
 
     /**

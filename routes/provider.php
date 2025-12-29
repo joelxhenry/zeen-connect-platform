@@ -106,6 +106,9 @@ Route::prefix('payments')->name('provider.payments.')->group(function () {
     // Refunds
     Route::get('/refunds', [ProviderRefundController::class, 'index'])->name('refunds');
     Route::post('/{uuid}/refund', [ProviderRefundController::class, 'store'])->name('refund');
+
+    // Payment detail
+    Route::get('/show/{uuid}', [ProviderEarningsController::class, 'show'])->name('show');
 });
 
 // Review management

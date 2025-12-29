@@ -43,9 +43,7 @@ class WiPayDirectSplitGateway extends AbstractGateway implements DirectSplitGate
 
     protected function getBaseUrl(): string
     {
-        return $this->testMode
-            ? 'https://sandbox.wipayfinancial.com/v1'
-            : 'https://api.wipayfinancial.com/v1';
+        return config('services.wipay.api_url');
     }
 
     protected function getHeaders(): array
@@ -121,6 +119,9 @@ class WiPayDirectSplitGateway extends AbstractGateway implements DirectSplitGate
 
         $orderId = 'WP-'.strtoupper(Str::random(12));
 
+        // Determine fee structure based on provider settings
+        $feeStructure = $payment->processing_fee_payer === 'client' ? 'customer_pay' : 'merchant_absorb';
+
         try {
             $splits = [
                 [
@@ -135,17 +136,25 @@ class WiPayDirectSplitGateway extends AbstractGateway implements DirectSplitGate
                 ],
             ];
 
-            $response = Http::withHeaders($this->getHeaders())
-                ->post("{$this->baseUrl}/checkout/split", [
-                    'account_number' => $this->merchantCredentials['account_number'],
-                    'currency' => $this->splitData->currency,
-                    'dollar_amount' => $this->splitData->totalAmount,
-                    'order_id' => $orderId,
-                    'return_url' => $returnUrl,
-                    'cancel_url' => $cancelUrl,
-                    'notify_url' => route('webhooks.wipay'),
-                    'splits' => $splits,
+            $response = Http::asForm()
+                ->post($this->baseUrl, [
+                    // Required parameters
+                    'account_number' => $this->testMode ? '1234567890' : $this->merchantCredentials['account_number'],
+                    'country_code' => 'JM',
+                    'currency' => $this->splitData->currency ?? 'JMD',
                     'environment' => $this->testMode ? 'sandbox' : 'live',
+                    'fee_structure' => $feeStructure,
+                    'method' => 'credit_card',
+                    'order_id' => $orderId,
+                    'origin' => 'zeen_connect',
+                    'response_url' => $returnUrl,
+                    'total' => $this->formatAmount($this->splitData->totalAmount),
+                    // Optional parameters
+                    'avs' => 0,
+                    'data' => json_encode([
+                        'payment_uuid' => $payment->uuid,
+                        'splits' => $splits,
+                    ]),
                 ]);
 
             if ($response->successful() && isset($response['url'])) {

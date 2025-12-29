@@ -38,9 +38,9 @@ class SettingsController extends Controller
                     'type' => 'percentage',
                     'min' => 0,
                     'max' => 20,
-                    'step' => 0.1,
-                    'description' => 'Payment gateway fee rate (passed through to all tiers)',
-                    'default' => 4.0,
+                    'step' => 0.01,
+                    'description' => 'WiPay Jamaica: 3.80% + GCT (15%) = 4.37%',
+                    'default' => 4.37,
                 ],
                 'starter_zeen_fee_rate' => [
                     'label' => 'Starter Tier Zeen Fee',

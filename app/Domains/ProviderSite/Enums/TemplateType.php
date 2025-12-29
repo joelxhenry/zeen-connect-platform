@@ -11,6 +11,7 @@ enum TemplateType: string
     case BARBER_DELUX = 'barber_delux';
     case ARCHITECT_BOLD = 'architect_bold';
     case SHOWCASE = 'showcase';
+    case BOUTIQUE = 'boutique';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum TemplateType: string
             self::BARBER_DELUX => 'Barber Delux',
             self::ARCHITECT_BOLD => 'Architect Bold',
             self::SHOWCASE => 'The Showcase',
+            self::BOUTIQUE => 'The Boutique',
         };
     }
 
@@ -31,6 +33,7 @@ enum TemplateType: string
             self::BARBER_DELUX => 'Feature-rich template with split hero layout, team showcase, and feature cards.',
             self::ARCHITECT_BOLD => 'Professional template for contractors, lawyers, and consultants. Features bold typography, stats bar, and lead capture.',
             self::SHOWCASE => 'Luxury experience booking template with dramatic cover imagery, overlapping typography, and highlight gallery.',
+            self::BOUTIQUE => 'Elegant boutique template with centered artistic layout, soft rounded galleries, and airy typography for refined services.',
         };
     }
 
@@ -50,6 +53,7 @@ enum TemplateType: string
             self::BARBER_DELUX => SubscriptionTier::PREMIUM,
             self::ARCHITECT_BOLD => SubscriptionTier::PREMIUM,
             self::SHOWCASE => SubscriptionTier::PREMIUM,
+            self::BOUTIQUE => SubscriptionTier::PREMIUM,
         };
     }
 

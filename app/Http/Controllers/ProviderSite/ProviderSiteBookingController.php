@@ -78,9 +78,9 @@ class ProviderSiteBookingController extends Controller
         // Load team member if specified
         $teamMember = $request->team_member_id
             ? TeamMember::where('id', $request->team_member_id)
-                ->where('provider_id', $provider->id)
-                ->active()
-                ->first()
+            ->where('provider_id', $provider->id)
+            ->active()
+            ->first()
             : null;
 
         $slots = $this->availabilityService->getAvailableSlots(
@@ -110,9 +110,9 @@ class ProviderSiteBookingController extends Controller
         // Load team member if specified
         $teamMember = $request->team_member_id
             ? TeamMember::where('id', $request->team_member_id)
-                ->where('provider_id', $provider->id)
-                ->active()
-                ->first()
+            ->where('provider_id', $provider->id)
+            ->active()
+            ->first()
             : null;
 
         try {
@@ -150,16 +150,13 @@ class ProviderSiteBookingController extends Controller
             );
 
             // Redirect to provider site confirmation or main platform dashboard
-            if ($request->user()) {
-                session()->put('booking_success_message', $this->getSuccessMessage($booking));
-                return inertia()->location(
-                    route('client.bookings.show', $booking->uuid)
-                );
-            }
+
+
+            session()->put('booking_success_message', $this->getSuccessMessage($booking));
 
             return redirect()
                 ->route('providersite.book.confirmation', [
-                    'provider' => $provider->slug,
+                    'provider' => $provider->domain,
                     'uuid' => $booking->uuid,
                 ])
                 ->with('success', $this->getSuccessMessage($booking));

@@ -8,7 +8,7 @@ const props = defineProps<ServicesPageProps>();
 
 const getServiceBookingUrl = (serviceId: number) => {
     return ProviderSiteBookingController.create({
-        provider: props.provider.slug,
+        provider: props.provider.domain,
         service: serviceId,
     }).url;
 };

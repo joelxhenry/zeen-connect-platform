@@ -170,6 +170,7 @@ export interface ProviderForHome extends ProviderBase {
     tagline?: string;
     bio?: string;
     avatar?: string;
+    domain?: string;
     cover_image?: string;
     website?: string;
     social_links?: Record<string, string>;

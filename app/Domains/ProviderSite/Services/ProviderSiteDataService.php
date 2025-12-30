@@ -166,6 +166,7 @@ class ProviderSiteDataService
             'id' => $provider->id,
             'uuid' => $provider->uuid,
             'slug' => $provider->slug,
+            'domain' => $provider->domain,
             'business_name' => $provider->business_name,
             'tagline' => $provider->tagline,
             'bio' => $provider->bio,

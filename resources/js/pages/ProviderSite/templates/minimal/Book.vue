@@ -32,6 +32,16 @@ const {
 const handleSubmit = () => {
     submit();
 };
+
+/**
+ * Format slot time to show only start time in 12-hour format.
+ */
+const formatSlotTime = (startTime: string): string => {
+    const [hours, minutes] = startTime.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+};
 </script>
 
 <template>
@@ -106,7 +116,7 @@ const handleSubmit = () => {
                                             class="time-slot"
                                             :class="{ 'is-selected': selectedSlot?.start_time === slot.start_time }"
                                             @click="selectedSlot = slot">
-                                            {{ slot.display }}
+                                            {{ formatSlotTime(slot.start_time) }}
                                         </button>
                                     </div>
                                 </div>

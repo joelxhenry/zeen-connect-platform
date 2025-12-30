@@ -34,6 +34,16 @@ const handleSubmit = () => {
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
+
+/**
+ * Format slot time to show only start time in 12-hour format.
+ */
+const formatSlotTime = (startTime: string): string => {
+    const [hours, minutes] = startTime.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+};
 </script>
 
 <template>
@@ -173,7 +183,7 @@ const getInitials = (name: string) => {
                                         :class="{ 'is-selected': selectedSlot?.start_time === slot.start_time }"
                                         @click="selectedSlot = slot"
                                     >
-                                        {{ slot.display }}
+                                        {{ formatSlotTime(slot.start_time) }}
                                     </button>
                                 </div>
                             </div>

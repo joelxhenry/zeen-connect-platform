@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { useToast } from 'primevue/usetoast';
 import { useApi } from '@/composables/useApi';
@@ -15,6 +15,35 @@ interface SlotsResponse {
 }
 
 /**
+ * Parse date query parameter from URL.
+ * Expects format: YYYY-MM-DD
+ */
+const getDateFromQuery = (): Date | null => {
+    if (typeof window === 'undefined') return null;
+
+    const params = new URLSearchParams(window.location.search);
+    const dateStr = params.get('date');
+
+    if (!dateStr) return null;
+
+    // Validate format YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateStr)) return null;
+
+    // Parse the date (add time to avoid timezone issues)
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    // Validate the date is real (e.g., not Feb 31)
+    if (isNaN(date.getTime())) return null;
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return null;
+    }
+
+    return date;
+};
+
+/**
  * Composable for provider site booking page logic.
  *
  * Handles all the complex reactive state, watchers, API calls, and form
@@ -29,6 +58,9 @@ export function useProviderSiteBooking(props: BookingPageProps) {
         ? props.services.find(s => s.id === props.preselectedService) || null
         : null;
 
+    // Check for preselected date from query params
+    const preselectedDate = getDateFromQuery();
+
     // Form state
     const selectedService = ref<ServiceForBooking | null>(preselectedServiceData);
     const selectedTeamMember = ref<TeamMemberForBooking | null>(null);
@@ -36,6 +68,7 @@ export function useProviderSiteBooking(props: BookingPageProps) {
     const selectedSlot = ref<Slot | null>(null);
     const availableSlots = ref<Slot[]>([]);
     const loadingSlots = ref(false);
+    const isInitialized = ref(false);
 
     // Inertia form for submission
     const form = useForm({
@@ -104,15 +137,44 @@ export function useProviderSiteBooking(props: BookingPageProps) {
         return true;
     });
 
+    /**
+     * Check if a date is available for booking.
+     */
+    const isDateAvailable = (date: Date): boolean => {
+        const dateStr = formatDateLocal(date);
+        return availableDatesSet.value.has(dateStr);
+    };
+
+    /**
+     * Initialize preselected date if available.
+     * Should be called after component mounts.
+     */
+    const initializePreselectedDate = () => {
+        if (isInitialized.value) return;
+        isInitialized.value = true;
+
+        // If we have a preselected date and service, and the date is available
+        if (preselectedDate && selectedService.value && isDateAvailable(preselectedDate)) {
+            selectedDate.value = preselectedDate;
+        }
+    };
+
     // Watchers for cascading updates
 
-    // When service changes, reset everything downstream
-    watch(selectedService, (service) => {
+    // When service changes, reset everything downstream (except on initial load with preselected date)
+    watch(selectedService, (service, oldService) => {
         form.service_id = service?.id ?? null;
         selectedTeamMember.value = null;
-        selectedDate.value = null;
         selectedSlot.value = null;
         availableSlots.value = [];
+
+        // Only reset date if this isn't the initial service selection with a preselected date
+        if (oldService !== null || !preselectedDate || !service) {
+            selectedDate.value = null;
+        } else if (preselectedDate && service && isDateAvailable(preselectedDate)) {
+            // Initial load with preselected date - set it
+            selectedDate.value = preselectedDate;
+        }
     });
 
     // When team member changes, refetch slots if date is selected
@@ -198,6 +260,13 @@ export function useProviderSiteBooking(props: BookingPageProps) {
             ...(options ?? {}),
         });
     };
+
+    // Initialize preselected date on mount if service is already selected
+    onMounted(() => {
+        if (preselectedDate && selectedService.value && isDateAvailable(preselectedDate)) {
+            selectedDate.value = preselectedDate;
+        }
+    });
 
     return {
         // State

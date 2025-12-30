@@ -369,6 +369,7 @@ const handleSubmit = () => {
 
 .calendar-wrapper {
     max-width: 320px;
+    overflow: hidden;
 }
 
 :deep(.minimal-calendar) {

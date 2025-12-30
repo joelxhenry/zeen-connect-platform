@@ -581,6 +581,7 @@ const getInitials = (name: string) => {
 
 .calendar-wrapper {
     max-width: 320px;
+    overflow: hidden;
 }
 
 :deep(.booking-calendar) {

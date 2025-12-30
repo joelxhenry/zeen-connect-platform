@@ -61,7 +61,7 @@ const {
                             :disabled="!selectedService">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Calendar -->
-                                <div>
+                                <div class="calendar-wrapper">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
                                     <Calendar v-model="selectedDate" inline :minDate="minDate" :maxDate="maxDate"
                                         :disabledDates="disabledDates" class="w-full" />
@@ -117,6 +117,10 @@ const {
 .page-header p {
     margin: 0;
     color: #6b7280;
+}
+
+.calendar-wrapper {
+    overflow: hidden;
 }
 
 /* Calendar branding overrides */

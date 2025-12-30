@@ -590,6 +590,7 @@ const getInitials = (name: string) => {
 
 .calendar-wrapper {
     max-width: 320px;
+    overflow: hidden;
 }
 
 /* Calendar Styling */

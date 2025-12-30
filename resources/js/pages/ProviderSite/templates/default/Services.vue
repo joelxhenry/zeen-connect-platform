@@ -119,7 +119,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 
 .page-header p {
     margin: 0;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 .categories-list {
@@ -129,10 +129,10 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 }
 
 .category-section {
-    background: white;
+    background: var(--provider-surface);
     border-radius: 0.75rem;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm);
 }
 
 .category-header {
@@ -140,8 +140,8 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     align-items: center;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
+    background: var(--provider-background);
+    border-bottom: 1px solid var(--provider-border);
 }
 
 .category-icon {
@@ -159,7 +159,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 
 .service-count {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle);
 }
 
 .services-list {
@@ -173,7 +173,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     align-items: flex-start;
     gap: 1.5rem;
     padding: 1.25rem;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--provider-border-light);
 }
 
 .service-item:last-child {
@@ -190,7 +190,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     flex-shrink: 0;
     border-radius: 0.5rem;
     overflow: hidden;
-    background: #f3f4f6;
+    background: var(--provider-background-alt);
 }
 
 .service-image img {
@@ -214,7 +214,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 .service-info .description {
     margin: 0 0 0.5rem 0;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--provider-text-muted);
     line-height: 1.4;
 }
 
@@ -228,7 +228,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     align-items: center;
     gap: 0.25rem;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle);
 }
 
 .service-actions {
@@ -258,14 +258,14 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    background: white;
+    background: var(--provider-surface);
     border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm);
 }
 
 .empty-state i {
     font-size: 3rem;
-    color: #d1d5db;
+    color: var(--provider-border);
     margin-bottom: 1rem;
 }
 
@@ -277,7 +277,7 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 
 .empty-state p {
     margin: 0;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 @media (max-width: 640px) {

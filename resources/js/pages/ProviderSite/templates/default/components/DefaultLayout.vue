@@ -216,6 +216,24 @@ const getBookingUrl = () => {
     --provider-info: #3B82F6;
     --provider-secondary: #6B7280;
 
+    /* Surface & Background colors */
+    --provider-surface: #ffffff;
+    --provider-background: #f9fafb;
+    --provider-background-alt: #f3f4f6;
+
+    /* Border colors */
+    --provider-border: #e5e7eb;
+    --provider-border-light: #f3f4f6;
+
+    /* Text variants */
+    --provider-text-muted: #6b7280;
+    --provider-text-subtle: #9ca3af;
+    --provider-text-body: #4b5563;
+
+    /* Shadows */
+    --provider-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --provider-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -245,8 +263,8 @@ const getBookingUrl = () => {
 }
 
 .header {
-    background-color: white;
-    border-bottom: 1px solid #e5e7eb;
+    background-color: var(--provider-surface);
+    border-bottom: 1px solid var(--provider-border);
     position: sticky;
     top: 0;
     z-index: 50;
@@ -290,7 +308,7 @@ const getBookingUrl = () => {
 
 .nav-link {
     padding: 0.5rem 1rem;
-    color: #6b7280;
+    color: var(--provider-text-muted);
     text-decoration: none;
     font-size: 0.875rem;
     border-radius: 0.375rem;
@@ -299,7 +317,7 @@ const getBookingUrl = () => {
 
 .nav-link:hover {
     color: var(--provider-text);
-    background-color: #f3f4f6;
+    background-color: var(--provider-background-alt);
 }
 
 .nav-link.active {
@@ -340,7 +358,7 @@ const getBookingUrl = () => {
 
 .main-content {
     flex: 1;
-    background-color: #f9fafb;
+    background-color: var(--provider-background);
 }
 
 .layout-banner {
@@ -349,7 +367,7 @@ const getBookingUrl = () => {
 
 .layout-banner__cover {
     height: 200px;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 50%, #d1d5db 100%);
+    background: linear-gradient(135deg, var(--provider-background-alt) 0%, var(--provider-border) 50%, var(--provider-border) 100%);
     background-size: cover;
     background-position: center;
     position: relative;
@@ -358,7 +376,21 @@ const getBookingUrl = () => {
 .layout-banner__overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, transparent 30%, rgba(249, 250, 251, 1) 100%);
+    background: linear-gradient(to bottom, transparent 30%, var(--provider-background) 100%);
+}
+
+/* PrimeVue Rating - Use provider primary color for stars */
+:deep(.p-rating) {
+    gap: 0.125rem;
+}
+
+:deep(.p-rating .p-rating-icon) {
+    color: var(--provider-border);
+    transition: color 0.15s;
+}
+
+:deep(.p-rating .p-rating-icon.p-rating-icon-active) {
+    color: var(--provider-primary);
 }
 
 /* Mobile responsiveness */

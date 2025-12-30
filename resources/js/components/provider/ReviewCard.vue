@@ -75,10 +75,10 @@ const getInitials = (name: string) => {
 
 <style scoped>
 .review-card {
-    background: white;
+    background: var(--provider-surface, #ffffff);
     padding: 1.25rem;
     border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
 }
 
 .review-card__header {
@@ -95,17 +95,17 @@ const getInitials = (name: string) => {
 
 .review-card__name {
     font-weight: 500;
-    color: var(--provider-text);
+    color: var(--provider-text, #0D1F1B);
 }
 
 .review-card__date {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle, #9ca3af);
 }
 
 .review-card__comment {
     margin: 0 0 0.75rem 0;
-    color: #4b5563;
+    color: var(--provider-text-body, #4b5563);
     font-size: 0.9375rem;
     line-height: 1.6;
 }
@@ -113,7 +113,7 @@ const getInitials = (name: string) => {
 .review-card__service {
     margin: 0;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle, #9ca3af);
     display: flex;
     align-items: center;
     gap: 0.375rem;
@@ -126,9 +126,9 @@ const getInitials = (name: string) => {
 .review-card__response {
     margin-top: 1rem;
     padding: 0.875rem;
-    background: var(--provider-primary-05);
+    background: var(--provider-primary-05, rgba(16, 107, 79, 0.05));
     border-radius: 0.5rem;
-    border-left: 3px solid var(--provider-primary);
+    border-left: 3px solid var(--provider-primary, #106B4F);
 }
 
 .review-card__response-header {
@@ -137,7 +137,7 @@ const getInitials = (name: string) => {
     gap: 0.5rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--provider-primary);
+    color: var(--provider-primary, #106B4F);
     margin-bottom: 0.5rem;
 }
 
@@ -148,7 +148,7 @@ const getInitials = (name: string) => {
 .review-card__response p {
     margin: 0;
     font-size: 0.875rem;
-    color: var(--provider-text);
+    color: var(--provider-text, #0D1F1B);
     line-height: 1.5;
 }
 </style>

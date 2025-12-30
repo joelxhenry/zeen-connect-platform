@@ -129,7 +129,7 @@ const {
 
 .about-section {
     padding: 3rem 0;
-    background: white;
+    background: var(--provider-surface);
 }
 
 .about-section h2 {
@@ -141,14 +141,14 @@ const {
 
 .bio {
     margin: 0;
-    color: #4b5563;
+    color: var(--provider-text-body);
     line-height: 1.7;
     max-width: 800px;
 }
 
 .services-section {
     padding: 3rem 0;
-    background: #f9fafb;
+    background: var(--provider-background);
 }
 
 .section-header {
@@ -187,7 +187,7 @@ const {
 
 .portfolio-section {
     padding: 3rem 0;
-    background: white;
+    background: var(--provider-surface);
 }
 
 .portfolio-section h2 {
@@ -199,7 +199,7 @@ const {
 
 .availability-section {
     padding: 3rem 0;
-    background: white;
+    background: var(--provider-surface);
 }
 
 .availability-section h2 {
@@ -211,7 +211,7 @@ const {
 
 .reviews-section {
     padding: 3rem 0;
-    background: #f9fafb;
+    background: var(--provider-background);
 }
 
 .reviews-section h2 {
@@ -227,7 +227,7 @@ const {
     gap: 0.5rem;
     margin-top: 0.5rem;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 .reviews-grid {
@@ -243,13 +243,13 @@ const {
 
 /* CTA button styling */
 :deep(.cta-button) {
-    background-color: white !important;
+    background-color: var(--provider-surface) !important;
     color: var(--provider-primary) !important;
-    border-color: white !important;
+    border-color: var(--provider-surface) !important;
 }
 
 :deep(.cta-button:hover) {
-    background-color: #f9fafb !important;
+    background-color: var(--provider-background) !important;
 }
 
 .cta-content {
@@ -262,7 +262,7 @@ const {
     margin: 0 0 0.5rem 0;
     font-size: 1.75rem;
     font-weight: 600;
-    color: white;
+    color: var(--provider-surface);
 }
 
 .cta-content p {

@@ -91,16 +91,16 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 
 .header-content p {
     margin: 0;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 .rating-summary-card {
-    background: white;
+    background: var(--provider-surface);
     border-radius: 0.75rem;
     padding: 1.5rem;
     display: flex;
     gap: 2rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm);
 }
 
 .average-rating {
@@ -109,7 +109,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
     align-items: center;
     gap: 0.5rem;
     padding-right: 2rem;
-    border-right: 1px solid #e5e7eb;
+    border-right: 1px solid var(--provider-border);
 }
 
 .rating-number {
@@ -121,7 +121,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 
 .rating-count {
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle);
     text-align: center;
 }
 
@@ -141,7 +141,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 .star-label {
     width: 50px;
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 .distribution-bar {
@@ -157,7 +157,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
     width: 30px;
     text-align: right;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle);
 }
 
 .reviews-list {
@@ -175,14 +175,14 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
-    background: white;
+    background: var(--provider-surface);
     border-radius: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm);
 }
 
 .empty-state i {
     font-size: 3rem;
-    color: #d1d5db;
+    color: var(--provider-border);
     margin-bottom: 1rem;
 }
 
@@ -194,7 +194,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
 
 .empty-state p {
     margin: 0;
-    color: #6b7280;
+    color: var(--provider-text-muted);
 }
 
 @media (max-width: 640px) {
@@ -206,7 +206,7 @@ const { getDistributionPercentage, hasMorePages, loadMore } = useProviderSiteRev
         padding-right: 0;
         padding-bottom: 1.5rem;
         border-right: none;
-        border-bottom: 1px solid #e5e7eb;
+        border-bottom: 1px solid var(--provider-border);
     }
 }
 </style>

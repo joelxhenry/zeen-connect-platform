@@ -100,10 +100,10 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
     display: grid;
     grid-template-columns: 280px 1fr;
     gap: 1.5rem;
-    background: white;
+    background: var(--provider-surface, #ffffff);
     border-radius: 1rem;
     padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
 }
 
 .business-hours__summary {
@@ -116,9 +116,9 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
     flex-direction: column;
     gap: 1.25rem;
     padding: 1.5rem;
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    background: var(--provider-primary-05, rgba(16, 107, 79, 0.05));
     border-radius: 0.75rem;
-    border: 1px solid #d1fae5;
+    border: 1px solid var(--provider-primary-10, rgba(16, 107, 79, 0.1));
     height: 100%;
 }
 
@@ -134,12 +134,12 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 }
 
 .business-hours__status-badge--open {
-    background: var(--provider-success);
+    background: var(--provider-primary);
     color: white;
 }
 
 .business-hours__status-badge--closed {
-    background: var(--provider-danger);
+    background: var(--provider-text-muted, #6b7280);
     color: white;
 }
 
@@ -173,7 +173,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 
 .business-hours__today-label {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--provider-text-muted, #6b7280);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -185,7 +185,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 }
 
 .business-hours__today-time--closed {
-    color: var(--provider-danger);
+    color: var(--provider-text-muted, #6b7280);
 }
 
 .business-hours__book-link {
@@ -201,7 +201,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
     margin: 0 0 1rem 0;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--provider-text-muted, #6b7280);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -218,21 +218,21 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
     align-items: center;
     padding: 0.875rem 1rem;
     border-radius: 0.5rem;
-    background: #f9fafb;
+    background: var(--provider-background, #f9fafb);
     transition: all 0.15s;
 }
 
 .business-hours__row:hover {
-    background: #f3f4f6;
+    background: var(--provider-background-alt, #f3f4f6);
 }
 
 .business-hours__row--today {
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-    border: 1px solid #bbf7d0;
+    background: var(--provider-primary-05, rgba(16, 107, 79, 0.05));
+    border: 1px solid var(--provider-primary-10, rgba(16, 107, 79, 0.1));
 }
 
 .business-hours__row--today:hover {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    background: var(--provider-primary-10, rgba(16, 107, 79, 0.1));
 }
 
 .business-hours__day-wrapper {
@@ -244,7 +244,7 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 .business-hours__today-indicator {
     width: 0.5rem;
     height: 0.5rem;
-    background: var(--provider-success);
+    background: var(--provider-primary);
     border-radius: 50%;
     animation: pulse 2s infinite;
 }
@@ -267,15 +267,15 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 }
 
 .business-hours__row--today .business-hours__day {
-    color: #166534;
+    color: var(--provider-primary);
     font-weight: 600;
 }
 
 .business-hours__today-tag {
     font-size: 0.6875rem;
     font-weight: 600;
-    color: #166534;
-    background: #bbf7d0;
+    color: var(--provider-primary);
+    background: var(--provider-primary-10, rgba(16, 107, 79, 0.1));
     padding: 0.125rem 0.5rem;
     border-radius: 9999px;
     text-transform: uppercase;
@@ -284,12 +284,12 @@ const isToday = (dayOfWeek: number) => dayOfWeek === today;
 
 .business-hours__time {
     font-size: 0.9375rem;
-    color: #4b5563;
+    color: var(--provider-text-body, #4b5563);
     font-variant-numeric: tabular-nums;
 }
 
 .business-hours__row--today .business-hours__time {
-    color: #15803d;
+    color: var(--provider-primary);
     font-weight: 600;
 }
 

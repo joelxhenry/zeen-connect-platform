@@ -63,18 +63,18 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .service-card {
-    background: white;
+    background: var(--provider-surface, #ffffff);
     border-radius: 0.75rem;
     text-decoration: none;
     display: flex;
     flex-direction: column;
     transition: box-shadow 0.15s, transform 0.15s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.08));
     overflow: hidden;
 }
 
 .service-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--provider-shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
     transform: translateY(-2px);
 }
 
@@ -82,7 +82,7 @@ withDefaults(defineProps<Props>(), {
     width: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: #f3f4f6;
+    background: var(--provider-background-alt, #f3f4f6);
 }
 
 .service-card__image img {
@@ -113,13 +113,13 @@ withDefaults(defineProps<Props>(), {
     margin: 0 0 0.25rem 0;
     font-size: 1rem;
     font-weight: 500;
-    color: var(--provider-text);
+    color: var(--provider-text, #0D1F1B);
 }
 
 .service-card__description {
     margin: 0 0 0.5rem 0;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--provider-text-muted, #6b7280);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -130,7 +130,7 @@ withDefaults(defineProps<Props>(), {
     display: flex;
     gap: 1rem;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: var(--provider-text-subtle, #9ca3af);
 }
 
 .service-card__duration {
@@ -145,7 +145,7 @@ withDefaults(defineProps<Props>(), {
 
 .service-card__category {
     padding: 0.125rem 0.5rem;
-    background: #f3f4f6;
+    background: var(--provider-background-alt, #f3f4f6);
     border-radius: 9999px;
     font-size: 0.6875rem;
     text-transform: uppercase;
@@ -154,7 +154,7 @@ withDefaults(defineProps<Props>(), {
 
 .service-card__price {
     font-weight: 600;
-    color: var(--provider-primary);
+    color: var(--provider-primary, #106B4F);
     white-space: nowrap;
     font-size: 1.125rem;
     display: flex;

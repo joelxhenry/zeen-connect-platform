@@ -587,7 +587,7 @@ const getInitials = (name: string) => {
 :deep(.booking-calendar) {
     background: var(--provider-surface, #ffffff);
     border: 1px solid var(--provider-border, #e5e0d8);
-    padding: 1.25rem;
+    padding: .75rem;
 }
 
 :deep(.booking-calendar .p-datepicker-header) {

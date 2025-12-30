@@ -532,13 +532,6 @@ const getInitials = (name: string) => {
     overflow: hidden;
 }
 
-:deep(.booking-calendar) {
-    background: var(--provider-surface, #fff);
-    border: 1px solid var(--provider-border, #ebe8e4);
-    border-radius: 0.75rem;
-    padding: 1rem;
-}
-
 :deep(.booking-calendar .p-datepicker-header) {
     background: transparent;
     border-bottom: 1px solid var(--provider-border, #ebe8e4);

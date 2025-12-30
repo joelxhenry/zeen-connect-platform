@@ -1,15 +1,32 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import Dialog from 'primevue/dialog';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 interface GalleryImage {
     url: string;
+    medium?: string;
+    large?: string;
     alt?: string;
 }
 
 interface GalleryVideo {
+    id: number;
+    platform: 'youtube' | 'vimeo';
+    video_id: string;
     url: string;
+    embed_url: string;
+    watch_url: string;
+    title?: string;
+    thumbnail_url?: string;
+    human_duration?: string;
+}
+
+interface GalleryItem {
+    type: 'image' | 'video';
+    url: string;
+    embedUrl?: string;
     thumbnail?: string;
+    alt?: string;
+    platform?: 'youtube' | 'vimeo';
 }
 
 const props = defineProps<{
@@ -21,18 +38,30 @@ const lightboxOpen = ref(false);
 const currentIndex = ref(0);
 
 // Combine images and videos into gallery items
-const galleryItems = computed(() => {
-    const items: Array<{ type: 'image' | 'video'; url: string; thumbnail?: string; alt?: string }> = [];
+const galleryItems = computed<GalleryItem[]>(() => {
+    const items: GalleryItem[] = [];
 
     if (props.images) {
         props.images.forEach(img => {
-            items.push({ type: 'image', url: img.url, alt: img.alt });
+            items.push({
+                type: 'image',
+                url: img.large || img.medium || img.url,
+                thumbnail: img.medium || img.url,
+                alt: img.alt
+            });
         });
     }
 
     if (props.videos) {
         props.videos.forEach(vid => {
-            items.push({ type: 'video', url: vid.url, thumbnail: vid.thumbnail });
+            items.push({
+                type: 'video',
+                url: vid.watch_url || vid.url,
+                embedUrl: vid.embed_url,
+                thumbnail: vid.thumbnail_url,
+                alt: vid.title,
+                platform: vid.platform
+            });
         });
     }
 
@@ -59,34 +88,55 @@ const getItemClass = (index: number) => {
 const openLightbox = (index: number) => {
     currentIndex.value = index;
     lightboxOpen.value = true;
+    document.body.style.overflow = 'hidden';
 };
 
 const closeLightbox = () => {
     lightboxOpen.value = false;
-};
-
-const prevImage = () => {
-    currentIndex.value = currentIndex.value > 0 ? currentIndex.value - 1 : galleryItems.value.length - 1;
-};
-
-const nextImage = () => {
-    currentIndex.value = currentIndex.value < galleryItems.value.length - 1 ? currentIndex.value + 1 : 0;
+    document.body.style.overflow = '';
 };
 
 const currentItem = computed(() => galleryItems.value[currentIndex.value]);
+const hasPrev = computed(() => currentIndex.value > 0);
+const hasNext = computed(() => currentIndex.value < galleryItems.value.length - 1);
+
+const goToPrev = () => {
+    if (hasPrev.value) {
+        currentIndex.value--;
+    }
+};
+
+const goToNext = () => {
+    if (hasNext.value) {
+        currentIndex.value++;
+    }
+};
 
 // Keyboard navigation
 const handleKeydown = (e: KeyboardEvent) => {
     if (!lightboxOpen.value) return;
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
-    if (e.key === 'Escape') closeLightbox();
+
+    switch (e.key) {
+        case 'Escape':
+            closeLightbox();
+            break;
+        case 'ArrowLeft':
+            goToPrev();
+            break;
+        case 'ArrowRight':
+            goToNext();
+            break;
+    }
 };
 
-// Listen for keyboard events
-if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', handleKeydown);
-}
+onMounted(() => {
+    document.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleKeydown);
+    document.body.style.overflow = '';
+});
 </script>
 
 <template>
@@ -99,17 +149,21 @@ if (typeof window !== 'undefined') {
             @click="openLightbox(index)"
         >
             <template v-if="item.type === 'image'">
-                <img :src="item.url" :alt="item.alt || 'Gallery image'" class="gallery-image" />
+                <img :src="item.thumbnail || item.url" :alt="item.alt || 'Gallery image'" class="gallery-image" />
             </template>
             <template v-else>
                 <div class="video-thumbnail">
                     <img
-                        :src="item.thumbnail || item.url"
-                        :alt="'Video thumbnail'"
+                        v-if="item.thumbnail"
+                        :src="item.thumbnail"
+                        :alt="item.alt || 'Video thumbnail'"
                         class="gallery-image"
                     />
+                    <div v-else class="video-placeholder">
+                        <i class="pi pi-video"></i>
+                    </div>
                     <div class="video-play-icon">
-                        <i class="pi pi-play-circle"></i>
+                        <i class="pi pi-play"></i>
                     </div>
                 </div>
             </template>
@@ -117,43 +171,66 @@ if (typeof window !== 'undefined') {
         </div>
     </div>
 
-    <!-- Lightbox -->
-    <Dialog
-        v-model:visible="lightboxOpen"
-        modal
-        :dismissableMask="true"
-        :showHeader="false"
-        :style="{ width: '95vw', maxWidth: '1200px' }"
-        class="masonry-lightbox"
-        @hide="closeLightbox"
-    >
-        <div class="lightbox-content" @click.stop>
-            <button class="lightbox-close" @click="closeLightbox">
-                <i class="pi pi-times"></i>
-            </button>
+    <!-- Lightbox (Teleport to body like classic template) -->
+    <Teleport to="body">
+        <Transition name="lightbox">
+            <div v-if="lightboxOpen" class="masonry-lightbox" @click.self="closeLightbox">
+                <!-- Close button -->
+                <button type="button" class="lightbox-close" @click="closeLightbox">
+                    <i class="pi pi-times"></i>
+                </button>
 
-            <button v-if="galleryItems.length > 1" class="lightbox-nav lightbox-nav--prev" @click="prevImage">
-                <i class="pi pi-chevron-left"></i>
-            </button>
+                <!-- Navigation -->
+                <button
+                    v-if="hasPrev"
+                    type="button"
+                    class="lightbox-nav lightbox-prev"
+                    @click.stop="goToPrev"
+                >
+                    <i class="pi pi-chevron-left"></i>
+                </button>
 
-            <div class="lightbox-media">
-                <template v-if="currentItem?.type === 'image'">
-                    <img :src="currentItem.url" :alt="currentItem.alt || 'Gallery image'" />
-                </template>
-                <template v-else-if="currentItem?.type === 'video'">
-                    <video :src="currentItem.url" controls autoplay class="lightbox-video"></video>
-                </template>
+                <button
+                    v-if="hasNext"
+                    type="button"
+                    class="lightbox-nav lightbox-next"
+                    @click.stop="goToNext"
+                >
+                    <i class="pi pi-chevron-right"></i>
+                </button>
+
+                <!-- Content -->
+                <div class="lightbox-content" @click.stop>
+                    <!-- Image -->
+                    <template v-if="currentItem?.type === 'image'">
+                        <img
+                            :src="currentItem.url"
+                            :alt="currentItem.alt || 'Gallery image'"
+                            class="lightbox-image"
+                        />
+                    </template>
+
+                    <!-- Video (YouTube/Vimeo embed) -->
+                    <template v-else-if="currentItem?.type === 'video'">
+                        <div class="lightbox-video">
+                            <iframe
+                                :key="currentItem.embedUrl"
+                                :src="currentItem.embedUrl + '?autoplay=1'"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Counter -->
+                <div v-if="galleryItems.length > 1" class="lightbox-counter">
+                    {{ currentIndex + 1 }} / {{ galleryItems.length }}
+                </div>
             </div>
-
-            <button v-if="galleryItems.length > 1" class="lightbox-nav lightbox-nav--next" @click="nextImage">
-                <i class="pi pi-chevron-right"></i>
-            </button>
-
-            <div v-if="galleryItems.length > 1" class="lightbox-counter">
-                {{ currentIndex + 1 }} / {{ galleryItems.length }}
-            </div>
-        </div>
-    </Dialog>
+        </Transition>
+    </Teleport>
 </template>
 
 <style scoped>
@@ -217,106 +294,54 @@ if (typeof window !== 'undefined') {
     height: 100%;
 }
 
-.video-play-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3rem;
-    color: rgba(255, 255, 255, 0.9);
-    transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.gallery-item:hover .video-play-icon {
-    transform: translate(-50%, -50%) scale(1.1);
-    color: #ffffff;
-}
-
-/* Lightbox Styles */
-:deep(.masonry-lightbox .p-dialog-content) {
-    background: #000;
-    padding: 0;
-    border-radius: 0;
-}
-
-.lightbox-content {
-    position: relative;
+.video-placeholder {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 70vh;
-    padding: 2rem;
+    background: linear-gradient(135deg, #27272a 0%, #18181b 100%);
 }
 
-.lightbox-close {
+.video-placeholder i {
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.video-play-icon {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: transparent;
-    border: none;
-    color: #fff;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.video-play-icon i {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 50%;
+    color: white;
+    font-size: 1.25rem;
+    padding-left: 3px;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.gallery-item--large .video-play-icon i {
+    width: 72px;
+    height: 72px;
     font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    z-index: 10;
-    transition: opacity 0.2s;
+    padding-left: 4px;
 }
 
-.lightbox-close:hover {
-    opacity: 0.7;
-}
-
-.lightbox-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 1rem;
-    transition: background 0.2s;
-    z-index: 10;
-}
-
-.lightbox-nav:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.lightbox-nav--prev {
-    left: 1rem;
-}
-
-.lightbox-nav--next {
-    right: 1rem;
-}
-
-.lightbox-media {
-    max-width: 100%;
-    max-height: 80vh;
-}
-
-.lightbox-media img {
-    max-width: 100%;
-    max-height: 80vh;
-    object-fit: contain;
-}
-
-.lightbox-video {
-    max-width: 100%;
-    max-height: 80vh;
-}
-
-.lightbox-counter {
-    position: absolute;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255, 255, 255, 0.7);
-    font-family: var(--font-body, 'Montserrat', sans-serif);
-    font-size: 0.875rem;
-    letter-spacing: 0.1em;
+.gallery-item:hover .video-play-icon i {
+    transform: scale(1.1);
+    background: rgba(0, 0, 0, 0.75);
 }
 
 /* Responsive */
@@ -352,13 +377,151 @@ if (typeof window !== 'undefined') {
         grid-column: span 2;
     }
 
-    .video-play-icon {
-        font-size: 2rem;
+    .video-play-icon i {
+        width: 48px;
+        height: 48px;
+        font-size: 1rem;
+    }
+}
+</style>
+
+<!-- Non-scoped styles for Teleported lightbox content -->
+<style>
+.masonry-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.masonry-lightbox .lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    border-radius: 50%;
+    transition: color 0.2s, background 0.2s;
+}
+
+.masonry-lightbox .lightbox-close:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.masonry-lightbox .lightbox-close i {
+    font-size: 1.25rem;
+}
+
+.masonry-lightbox .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.masonry-lightbox .lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.masonry-lightbox .lightbox-nav i {
+    font-size: 1.25rem;
+}
+
+.masonry-lightbox .lightbox-prev {
+    left: 16px;
+}
+
+.masonry-lightbox .lightbox-next {
+    right: 16px;
+}
+
+.masonry-lightbox .lightbox-content {
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.masonry-lightbox .lightbox-image {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.masonry-lightbox .lightbox-video {
+    width: 90vw;
+    max-width: 1000px;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.masonry-lightbox .lightbox-video iframe {
+    width: 100%;
+    height: 100%;
+}
+
+.masonry-lightbox .lightbox-counter {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--font-body, 'Montserrat', sans-serif);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+}
+
+/* Lightbox transitions */
+.lightbox-enter-active,
+.lightbox-leave-active {
+    transition: opacity 0.25s ease;
+}
+
+.lightbox-enter-from,
+.lightbox-leave-to {
+    opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .masonry-lightbox .lightbox-nav {
+        width: 40px;
+        height: 40px;
     }
 
-    .lightbox-nav {
-        padding: 0.75rem;
-        font-size: 1.25rem;
+    .masonry-lightbox .lightbox-prev {
+        left: 8px;
+    }
+
+    .masonry-lightbox .lightbox-next {
+        right: 8px;
     }
 }
 </style>

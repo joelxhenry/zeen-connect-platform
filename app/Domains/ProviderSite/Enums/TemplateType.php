@@ -49,7 +49,7 @@ enum TemplateType: string
     {
         return match ($this) {
             self::DEFAULT => SubscriptionTier::STARTER,
-            self::MINIMAL => SubscriptionTier::PREMIUM,
+            self::MINIMAL => SubscriptionTier::STARTER,
             self::ARCHITECT_BOLD => SubscriptionTier::PREMIUM,
             self::SHOWCASE => SubscriptionTier::PREMIUM,
             self::BOUTIQUE => SubscriptionTier::PREMIUM,
@@ -81,7 +81,7 @@ enum TemplateType: string
      */
     public static function allWithMetadata(): array
     {
-        return array_map(fn (self $template) => [
+        return array_map(fn(self $template) => [
             'value' => $template->value,
             'label' => $template->label(),
             'description' => $template->description(),

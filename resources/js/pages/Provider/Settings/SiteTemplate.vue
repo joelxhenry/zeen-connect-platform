@@ -2,12 +2,8 @@
 import { computed, ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
-import {
-    ConsolePageHeader,
-    ConsoleFormCard,
-} from '@/components/console';
+import { ConsolePageHeader } from '@/components/console';
 import Button from 'primevue/button';
-import Message from 'primevue/message';
 import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 import provider from '@/routes/provider';
@@ -94,17 +90,37 @@ const getTierSeverity = (tier: string): 'success' | 'info' | 'warn' | 'danger' |
         default: return 'secondary';
     }
 };
+
+// Preview gradient colors for templates without images
+const getPreviewGradient = (templateValue: string): string => {
+    const gradients: Record<string, string> = {
+        default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        minimalist: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        barber_delux: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+        architect_bold: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%)',
+        grand_horizon: 'linear-gradient(135deg, #b8860b 0%, #8b6914 100%)',
+    };
+    return gradients[templateValue] || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+};
 </script>
 
 <template>
     <ConsoleLayout title="Site Template">
-        <div class="w-full max-w-5xl mx-auto">
-            <!-- Page Header -->
+        <div class="template-page">
+            <!-- Sticky Page Header with Save Button -->
             <ConsolePageHeader
                 title="Site Template"
-                subtitle="Choose a visual template for your public storefront and customize site content."
+                subtitle="Choose the look for your public storefront"
+                :sticky="true"
             >
                 <template #actions>
+                    <Button
+                        label="Save Changes"
+                        icon="pi pi-check"
+                        :loading="isProcessing"
+                        :disabled="!hasChanges"
+                        @click="submit"
+                    />
                     <Button
                         label="Preview Site"
                         icon="pi pi-external-link"
@@ -115,135 +131,157 @@ const getTierSeverity = (tier: string): 'success' | 'info' | 'warn' | 'danger' |
                 </template>
             </ConsolePageHeader>
 
-            <form @submit.prevent="submit" class="space-y-6">
-                <ConsoleFormCard title="Available Templates" icon="pi pi-palette">
-                    <p class="text-sm text-gray-500 m-0 mb-6">
-                        Select a template that best represents your brand. Different templates are available based on your subscription tier.
-                    </p>
+            <!-- Template Grid -->
+            <div class="template-grid">
+                <div
+                    v-for="template in templates"
+                    :key="template.value"
+                    class="template-card"
+                    :class="{
+                        'template-card--selected': selectedTemplate === template.value,
+                        'template-card--unavailable': !template.is_available,
+                    }"
+                    @click="selectTemplateCard(template)"
+                >
+                    <!-- Large Preview Area -->
+                    <div
+                        class="template-preview"
+                        :style="{ background: getPreviewGradient(template.value) }"
+                    >
+                        <img
+                            v-if="template.preview_image"
+                            :src="template.preview_image"
+                            :alt="template.label"
+                            class="template-preview-image"
+                        />
+                        <div v-else class="template-preview-placeholder">
+                            <span class="template-name-overlay">{{ template.label }}</span>
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div
-                            v-for="template in templates"
-                            :key="template.value"
-                            class="template-card"
-                            :class="{
-                                'template-card--selected': selectedTemplate === template.value,
-                                'template-card--unavailable': !template.is_available,
-                            }"
-                            @click="selectTemplateCard(template)"
-                        >
-                            <!-- Template Preview Image -->
-                            <div class="template-preview">
-                                <div class="template-preview-placeholder">
-                                    <i class="pi pi-image text-4xl text-gray-300"></i>
-                                    <span class="text-sm text-gray-400 mt-2">{{ template.label }}</span>
-                                </div>
-                                <!-- Selection Indicator -->
-                                <div v-if="selectedTemplate === template.value" class="template-selected-badge">
-                                    <i class="pi pi-check"></i>
-                                </div>
-                            </div>
+                        <!-- Floating Tier Badge -->
+                        <Tag
+                            v-if="template.required_tier !== 'starter'"
+                            :value="template.required_tier_label"
+                            :severity="getTierSeverity(template.required_tier)"
+                            class="tier-badge"
+                        />
 
-                            <!-- Template Info -->
-                            <div class="template-info">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h3 class="text-base font-semibold text-gray-900 m-0">
-                                        {{ template.label }}
-                                    </h3>
-                                    <div class="flex items-center gap-2">
-                                        <Tag
-                                            v-if="template.required_tier !== 'starter'"
-                                            :value="template.required_tier_label"
-                                            :severity="getTierSeverity(template.required_tier)"
-                                            class="text-xs"
-                                        />
-                                        <Tag
-                                            v-if="template.is_selected"
-                                            value="Current"
-                                            severity="success"
-                                            class="text-xs"
-                                        />
-                                    </div>
-                                </div>
-                                <p class="text-sm text-gray-500 m-0">
-                                    {{ template.description }}
-                                </p>
-
-                                <!-- Upgrade Prompt -->
-                                <div v-if="!template.is_available" class="mt-3 pt-3 border-t border-gray-200">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs text-gray-500">
-                                            Requires {{ template.required_tier_label }} plan
-                                        </span>
-                                        <Button
-                                            label="Upgrade"
-                                            icon="pi pi-arrow-up"
-                                            size="small"
-                                            text
-                                            @click.stop="goToSubscription"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Selected Indicator -->
+                        <div v-if="selectedTemplate === template.value" class="selected-indicator">
+                            <i class="pi pi-check"></i>
                         </div>
                     </div>
-                </ConsoleFormCard>
 
-                <!-- Info Message -->
-                <Message severity="info" :closable="false">
-                    <div class="flex items-center gap-2">
-                        <i class="pi pi-info-circle"></i>
-                        <span>Changing your template will update the look of your public storefront immediately. Your content and settings will remain the same.</span>
+                    <!-- Card Footer -->
+                    <div class="template-footer">
+                        <div class="template-header">
+                            <h3 class="template-title">{{ template.label }}</h3>
+                            <Tag
+                                v-if="template.is_selected"
+                                value="Current"
+                                severity="success"
+                                class="current-tag"
+                            />
+                        </div>
+                        <p class="template-description">{{ template.description }}</p>
+
+                        <!-- Upgrade Prompt for Unavailable Templates -->
+                        <div v-if="!template.is_available" class="upgrade-prompt">
+                            <span class="upgrade-text">
+                                Requires {{ template.required_tier_label }} plan
+                            </span>
+                            <Button
+                                label="Upgrade"
+                                icon="pi pi-arrow-up"
+                                size="small"
+                                text
+                                @click.stop="goToSubscription"
+                            />
+                        </div>
                     </div>
-                </Message>
-
-                <!-- Form Actions -->
-                <div class="flex justify-end gap-3">
-                    <Button
-                        label="Save Changes"
-                        icon="pi pi-check"
-                        type="submit"
-                        :loading="isProcessing"
-                        :disabled="!hasChanges"
-                    />
                 </div>
-            </form>
+            </div>
         </div>
     </ConsoleLayout>
 </template>
 
 <style scoped>
+.template-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 3-column responsive grid */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+@media (max-width: 1024px) {
+    .template-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .template-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* Modern card styling */
 .template-card {
-    border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s;
     background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 2px solid transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .template-card:hover:not(.template-card--unavailable) {
-    border-color: #9ca3af;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
 }
 
 .template-card--selected {
-    border-color: var(--p-primary-color, #106B4F) !important;
-    box-shadow: 0 0 0 1px var(--p-primary-color, #106B4F);
+    border-color: var(--p-primary-color, #106B4F);
+    box-shadow: 0 0 0 4px rgba(16, 107, 79, 0.1);
+}
+
+.template-card--selected:hover {
+    box-shadow: 0 0 0 4px rgba(16, 107, 79, 0.1), 0 12px 24px -8px rgba(0, 0, 0, 0.15);
 }
 
 .template-card--unavailable {
-    opacity: 0.6;
+    opacity: 0.65;
     cursor: not-allowed;
 }
 
+.template-card--unavailable:hover {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Larger preview area */
 .template-preview {
     position: relative;
-    height: 160px;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+}
+
+.template-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .template-preview-placeholder {
@@ -251,24 +289,119 @@ const getTierSeverity = (tier: string): 'success' | 'info' | 'warn' | 'danger' |
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
-.template-selected-badge {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    background: var(--p-primary-color, #106B4F);
+.template-name-overlay {
+    font-size: 1.5rem;
+    font-weight: 600;
     color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.05em;
+}
+
+/* Floating tier badge */
+.tier-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Floating selected checkmark */
+.selected-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2rem;
+    height: 2rem;
+    background: var(--p-primary-color, #106B4F);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    color: white;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: scaleIn 0.2s ease;
 }
 
-.template-info {
-    padding: 1rem;
+@keyframes scaleIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Card footer */
+.template-footer {
+    padding: 1.25rem;
+}
+
+.template-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.template-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.current-tag {
+    font-size: 0.6875rem;
+    flex-shrink: 0;
+}
+
+.template-description {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* Upgrade prompt */
+.upgrade-prompt {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.upgrade-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .template-preview {
+        height: 180px;
+    }
+
+    .template-name-overlay {
+        font-size: 1.25rem;
+    }
+
+    .template-footer {
+        padding: 1rem;
+    }
+
+    .template-title {
+        font-size: 1rem;
+    }
 }
 </style>

@@ -220,4 +220,108 @@ enum SubscriptionTier: string
     {
         return $this !== self::STARTER;
     }
+
+    // =========================================================================
+    // Annual Pricing Methods
+    // =========================================================================
+
+    /**
+     * Get the annual subscription price for this tier (JMD).
+     * Annual pricing offers 2 months free (10 months price for 12 months).
+     */
+    public function annualPrice(): float
+    {
+        return match ($this) {
+            self::STARTER => 0,
+            self::PREMIUM => (float) SystemSetting::get('premium_annual_price', 40000),
+            self::ENTERPRISE => (float) SystemSetting::get('enterprise_annual_price', 150000),
+        };
+    }
+
+    /**
+     * Get the price for the specified billing cycle.
+     */
+    public function price(string $cycle = 'monthly'): float
+    {
+        return $cycle === 'annual' ? $this->annualPrice() : $this->monthlyPrice();
+    }
+
+    /**
+     * Get the savings when paying annually vs monthly.
+     */
+    public function annualSavings(): float
+    {
+        return ($this->monthlyPrice() * 12) - $this->annualPrice();
+    }
+
+    /**
+     * Get the annual savings as a percentage.
+     */
+    public function annualSavingsPercentage(): float
+    {
+        $yearlyTotal = $this->monthlyPrice() * 12;
+        if ($yearlyTotal === 0.0) {
+            return 0;
+        }
+
+        return round(($this->annualSavings() / $yearlyTotal) * 100);
+    }
+
+    /**
+     * Get the formatted price display for the specified cycle.
+     */
+    public function priceDisplay(string $cycle = 'monthly'): string
+    {
+        $price = $this->price($cycle);
+
+        return '$' . number_format($price, 0);
+    }
+
+    /**
+     * Get the monthly price display.
+     */
+    public function monthlyPriceDisplay(): string
+    {
+        return $this->priceDisplay('monthly');
+    }
+
+    /**
+     * Get the annual price display.
+     */
+    public function annualPriceDisplay(): string
+    {
+        return $this->priceDisplay('annual');
+    }
+
+    /**
+     * Get the effective monthly cost when paying annually.
+     */
+    public function effectiveMonthlyPrice(): float
+    {
+        return $this->annualPrice() / 12;
+    }
+
+    /**
+     * Get the effective monthly price display when paying annually.
+     */
+    public function effectiveMonthlyPriceDisplay(): string
+    {
+        return '$' . number_format($this->effectiveMonthlyPrice(), 0);
+    }
+
+    /**
+     * Check if this tier is free.
+     */
+    public function isFree(): bool
+    {
+        return $this === self::STARTER;
+    }
+
+    /**
+     * Check if this tier is a paid tier.
+     */
+    public function isPaid(): bool
+    {
+        return ! $this->isFree();
+    }
 }

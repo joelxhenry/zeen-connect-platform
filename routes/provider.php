@@ -17,6 +17,7 @@ use App\Domains\Provider\Controllers\SiteTemplateController;
 use App\Domains\Provider\Controllers\TeamMemberAvailabilityController;
 use App\Domains\Provider\Controllers\TeamMemberController;
 use App\Domains\Review\Controllers\ProviderReviewController;
+use App\Domains\Subscription\Controllers\SubscriptionBillingController;
 use App\Domains\Subscription\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
@@ -155,7 +156,30 @@ Route::prefix('team')->name('provider.team.')->group(function () {
 });
 
 // Subscription management
-Route::get('/subscription', [SubscriptionController::class, 'index'])->name('provider.subscription.index');
+Route::prefix('subscription')->name('provider.subscription.')->group(function () {
+    Route::get('/', [SubscriptionController::class, 'index'])->name('index');
+
+    // Upgrade flow
+    Route::get('/upgrade', [SubscriptionBillingController::class, 'upgrade'])->name('upgrade');
+    Route::post('/upgrade', [SubscriptionBillingController::class, 'processUpgrade'])->name('upgrade.process');
+    Route::get('/upgrade/callback', [SubscriptionBillingController::class, 'upgradeCallback'])->name('upgrade.callback');
+
+    // Trial
+    Route::post('/trial/start', [SubscriptionBillingController::class, 'startTrial'])->name('trial.start');
+
+    // Cancel & Reactivate
+    Route::post('/cancel', [SubscriptionBillingController::class, 'cancel'])->name('cancel');
+    Route::post('/reactivate', [SubscriptionBillingController::class, 'reactivate'])->name('reactivate');
+
+    // Billing history
+    Route::get('/billing', [SubscriptionBillingController::class, 'invoices'])->name('billing');
+    Route::get('/billing/{invoice}/download', [SubscriptionBillingController::class, 'downloadInvoice'])->name('billing.download');
+
+    // Payment method
+    Route::get('/payment-method', [SubscriptionBillingController::class, 'editPaymentMethod'])->name('payment-method.edit');
+    Route::post('/payment-method', [SubscriptionBillingController::class, 'updatePaymentMethod'])->name('payment-method.update');
+    Route::get('/payment-method/callback', [SubscriptionBillingController::class, 'paymentMethodCallback'])->name('payment-method.callback');
+});
 
 // Media management
 Route::prefix('media')->name('provider.media.')->group(function () {

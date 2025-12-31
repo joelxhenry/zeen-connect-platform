@@ -49,16 +49,15 @@ const mainMenuItems = computed(() => [
         icon: 'pi pi-th-large',
         route: provider.services.index.url()
     },
-    {
-        label: 'Categories',
-        icon: 'pi pi-folder',
-        route: provider.categories.index.url()
-    },
+
     {
         label: 'Events',
         icon: 'pi pi-calendar-plus',
-        route: '#',
-        badge: 'Soon'
+        route: provider.events.index.url()
+    }, {
+        label: 'Categories',
+        icon: 'pi pi-folder',
+        route: provider.categories.index.url()
     },
     {
         label: 'Customers',
@@ -148,6 +147,7 @@ const copySiteUrl = async () => {
 </script>
 
 <template>
+
     <Head :title="title" />
     <FlashMessages />
 
@@ -169,18 +169,10 @@ const copySiteUrl = async () => {
             <nav class="sidebar-nav">
                 <!-- Main Menu Section -->
                 <div class="nav-section">
-                    <AppLink
-                        v-for="item in mainMenuItems"
-                        :key="item.label"
-                        :href="item.route"
-                        class="nav-item"
-                        :class="{
-                            active: isActiveRoute(item.route),
-                            disabled: item.badge === 'Soon'
-                        }"
-                        :title="sidebarCollapsed ? item.label : undefined"
-                        @click="closeSidebar"
-                    >
+                    <AppLink v-for="item in mainMenuItems" :key="item.label" :href="item.route" class="nav-item" :class="{
+                        active: isActiveRoute(item.route),
+                        disabled: item.badge === 'Soon'
+                    }" :title="sidebarCollapsed ? item.label : undefined" @click="closeSidebar">
                         <i :class="item.icon" class="nav-icon"></i>
                         <span class="nav-label">{{ item.label }}</span>
                         <span v-if="item.badge" class="nav-badge">
@@ -193,7 +185,8 @@ const copySiteUrl = async () => {
             <!-- Sidebar Footer -->
             <div class="sidebar-footer">
                 <!-- Copy Site URL Button -->
-                <button class="footer-action-btn" @click="copySiteUrl" :title="sidebarCollapsed ? 'Copy site URL' : undefined">
+                <button class="footer-action-btn" @click="copySiteUrl"
+                    :title="sidebarCollapsed ? 'Copy site URL' : undefined">
                     <i class="pi pi-external-link"></i>
                     <span class="footer-btn-label">Copy Site URL</span>
                 </button>
@@ -213,13 +206,15 @@ const copySiteUrl = async () => {
                 </div>
 
                 <!-- Logout Button -->
-                <button class="footer-action-btn logout-btn" @click="handleLogout" :title="sidebarCollapsed ? 'Log out' : undefined">
+                <button class="footer-action-btn logout-btn" @click="handleLogout"
+                    :title="sidebarCollapsed ? 'Log out' : undefined">
                     <i class="pi pi-sign-out"></i>
                     <span class="footer-btn-label">Log Out</span>
                 </button>
 
                 <!-- Collapse Toggle Button -->
-                <button class="collapse-btn" @click="toggleCollapse" :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+                <button class="collapse-btn" @click="toggleCollapse"
+                    :title="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
                     <i class="pi" :class="sidebarCollapsed ? 'pi-angle-double-right' : 'pi-angle-double-left'"></i>
                     <span class="collapse-label">{{ sidebarCollapsed ? 'Expand' : 'Collapse' }}</span>
                 </button>
@@ -246,12 +241,8 @@ const copySiteUrl = async () => {
                     <!-- Profile -->
                     <div class="profile-section">
                         <button class="profile-btn" @click="toggleProfileMenu">
-                            <Avatar
-                                :image="user?.avatar"
-                                :label="user?.name?.charAt(0).toUpperCase()"
-                                shape="circle"
-                                class="profile-avatar"
-                            />
+                            <Avatar :image="user?.avatar" :label="user?.name?.charAt(0).toUpperCase()" shape="circle"
+                                class="profile-avatar" />
                             <div class="profile-info">
                                 <span class="profile-name">{{ user?.name }}</span>
                                 <span class="profile-email">{{ user?.email }}</span>

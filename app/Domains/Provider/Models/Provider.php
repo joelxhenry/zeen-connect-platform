@@ -2,6 +2,7 @@
 
 namespace App\Domains\Provider\Models;
 
+use App\Domains\Event\Models\Event;
 use App\Domains\Industry\Models\Industry;
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
@@ -186,6 +187,14 @@ class Provider extends Model
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Get all events offered by this provider.
+     */
+    public function events(): HasMany
+    {
+        return $this->hasMany(Event::class);
     }
 
     /**

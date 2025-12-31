@@ -11,6 +11,8 @@ use App\Domains\Provider\Controllers\BankingInfoController;
 use App\Domains\Provider\Controllers\BrandingController;
 use App\Domains\Provider\Controllers\CategoryController;
 use App\Domains\Provider\Controllers\DashboardController;
+use App\Domains\Provider\Controllers\EventController;
+use App\Domains\Provider\Controllers\EventOccurrenceController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
 use App\Domains\Provider\Controllers\SettingsController;
@@ -51,6 +53,30 @@ Route::resource('services', ServiceController::class)->except(['show'])->names([
     'destroy' => 'provider.services.destroy',
 ]);
 Route::post('/services/{service}/toggle-active', [ServiceController::class, 'toggleActive'])->name('provider.services.toggle-active');
+
+// Event management
+Route::prefix('events')->name('provider.events.')->group(function () {
+    Route::get('/', [EventController::class, 'index'])->name('index');
+    Route::get('/create', [EventController::class, 'create'])->name('create');
+    Route::post('/', [EventController::class, 'store'])->name('store');
+    Route::get('/{event:uuid}/edit', [EventController::class, 'edit'])->name('edit');
+    Route::put('/{event:uuid}', [EventController::class, 'update'])->name('update');
+    Route::delete('/{event:uuid}', [EventController::class, 'destroy'])->name('destroy');
+    Route::post('/{event:uuid}/publish', [EventController::class, 'publish'])->name('publish');
+    Route::post('/{event:uuid}/cancel', [EventController::class, 'cancel'])->name('cancel');
+    Route::post('/{event:uuid}/toggle-active', [EventController::class, 'toggleActive'])->name('toggle-active');
+
+    // Event occurrences
+    Route::get('/{event:uuid}/occurrences', [EventOccurrenceController::class, 'index'])->name('occurrences.index');
+    Route::post('/{event:uuid}/occurrences/generate', [EventOccurrenceController::class, 'generate'])->name('occurrences.generate');
+});
+
+// Event occurrence management (separate routes for direct occurrence access)
+Route::prefix('occurrences')->name('provider.occurrences.')->group(function () {
+    Route::post('/{occurrence:uuid}/cancel', [EventOccurrenceController::class, 'cancel'])->name('cancel');
+    Route::post('/{occurrence:uuid}/complete', [EventOccurrenceController::class, 'complete'])->name('complete');
+    Route::put('/{occurrence:uuid}/capacity', [EventOccurrenceController::class, 'updateCapacity'])->name('capacity');
+});
 
 // Category management
 Route::prefix('categories')->name('provider.categories.')->group(function () {
@@ -202,6 +228,10 @@ Route::prefix('media')->name('provider.media.')->group(function () {
     Route::post('/services/{service}', [MediaController::class, 'uploadSingleServiceMedia'])->name('service.upload');
     Route::post('/services/{service}/multiple', [MediaController::class, 'uploadServiceMedia'])->name('service.upload-multiple');
 
+    // Event media
+    Route::post('/events/{event:uuid}', [MediaController::class, 'uploadSingleEventMedia'])->name('event.upload');
+    Route::post('/events/{event:uuid}/multiple', [MediaController::class, 'uploadEventMedia'])->name('event.upload-multiple');
+
     // Generic operations
     Route::delete('/{media}', [MediaController::class, 'destroy'])->name('destroy');
     Route::post('/reorder', [MediaController::class, 'reorder'])->name('reorder');
@@ -215,6 +245,9 @@ Route::prefix('videos')->name('provider.videos.')->group(function () {
 
     // Service videos
     Route::post('/services/{service}', [VideoEmbedController::class, 'addServiceVideo'])->name('service.add');
+
+    // Event videos
+    Route::post('/events/{event:uuid}', [VideoEmbedController::class, 'addEventVideo'])->name('event.add');
 
     // Generic operations
     Route::put('/{video}', [VideoEmbedController::class, 'update'])->name('update');

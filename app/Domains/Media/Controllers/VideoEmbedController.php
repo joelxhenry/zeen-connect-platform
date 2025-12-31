@@ -2,6 +2,7 @@
 
 namespace App\Domains\Media\Controllers;
 
+use App\Domains\Event\Models\Event;
 use App\Domains\Media\Models\VideoEmbed;
 use App\Domains\Media\Requests\AddVideoEmbedRequest;
 use App\Domains\Media\Services\VideoEmbedService;
@@ -55,6 +56,29 @@ class VideoEmbedController extends Controller
 
         try {
             $video = $this->addVideo($service, $request);
+
+            return response()->json([
+                'success' => true,
+                'video' => $video->toVideoArray(),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Add a video embed to an event.
+     */
+    public function addEventVideo(AddVideoEmbedRequest $request, Event $event): JsonResponse
+    {
+        $provider = Auth::user()->provider;
+
+        if (!$provider || $event->provider_id !== $provider->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $video = $this->addVideo($event, $request);
 
             return response()->json([
                 'success' => true,
@@ -187,6 +211,7 @@ class VideoEmbedController extends Controller
         return match (get_class($model)) {
             Provider::class => $user->provider?->id === $model->id,
             Service::class => $user->provider?->id === $model->provider_id,
+            Event::class => $user->provider?->id === $model->provider_id,
             default => false,
         };
     }

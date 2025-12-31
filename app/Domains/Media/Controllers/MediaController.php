@@ -2,6 +2,7 @@
 
 namespace App\Domains\Media\Controllers;
 
+use App\Domains\Event\Models\Event;
 use App\Domains\Media\Models\Media;
 use App\Domains\Media\Requests\ReorderMediaRequest;
 use App\Domains\Media\Requests\UploadMediaRequest;
@@ -135,6 +136,54 @@ class MediaController extends Controller
     }
 
     /**
+     * Upload multiple media items to an event.
+     */
+    public function uploadEventMedia(UploadMultipleMediaRequest $request, Event $event): JsonResponse
+    {
+        $provider = Auth::user()->provider;
+
+        if (!$provider || $event->provider_id !== $provider->id) {
+            return ApiResponse::forbidden();
+        }
+
+        try {
+            $media = $this->mediaService->uploadMultiple(
+                $event,
+                $request->file('files'),
+                $request->input('collection', 'gallery')
+            );
+
+            return ApiResponse::success(['media' => array_map(fn ($m) => $m->toMediaArray(), $media)]);
+        } catch (\InvalidArgumentException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+    }
+
+    /**
+     * Upload single media item to an event.
+     */
+    public function uploadSingleEventMedia(UploadMediaRequest $request, Event $event): JsonResponse
+    {
+        $provider = Auth::user()->provider;
+
+        if (!$provider || $event->provider_id !== $provider->id) {
+            return ApiResponse::forbidden();
+        }
+
+        try {
+            $media = $this->mediaService->upload(
+                $event,
+                $request->file('file'),
+                $request->input('collection', 'gallery')
+            );
+
+            return ApiResponse::success(['media' => $media->toMediaArray()]);
+        } catch (\InvalidArgumentException $e) {
+            return ApiResponse::error($e->getMessage(), 422);
+        }
+    }
+
+    /**
      * Upload media to a review.
      */
     public function uploadReviewMedia(UploadMultipleMediaRequest $request, Review $review): JsonResponse
@@ -239,6 +288,7 @@ class MediaController extends Controller
         return match (get_class($model)) {
             Provider::class => $user->provider?->id === $model->id,
             Service::class => $user->provider?->id === $model->provider_id,
+            Event::class => $user->provider?->id === $model->provider_id,
             Review::class => $user->id === $model->user_id,
             default => false,
         };
@@ -252,6 +302,7 @@ class MediaController extends Controller
         return match ($type) {
             'provider' => Provider::find($id),
             'service' => Service::find($id),
+            'event' => Event::find($id),
             'review' => Review::find($id),
             default => null,
         };

@@ -28,6 +28,11 @@ class UpdateServiceAction
             'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
         ]);
 
+        // Sync team members if provided
+        if (array_key_exists('team_member_ids', $data)) {
+            $service->teamMembers()->sync($data['team_member_ids'] ?? []);
+        }
+
         return $service->fresh('category');
     }
 }

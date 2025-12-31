@@ -11,7 +11,7 @@ class CreateServiceAction
     {
         $useDefaults = $data['use_provider_defaults'] ?? true;
 
-        return $provider->services()->create([
+        $service = $provider->services()->create([
             'category_id' => $data['category_id'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
@@ -28,5 +28,12 @@ class CreateServiceAction
             'advance_booking_days' => $useDefaults ? null : ($data['advance_booking_days'] ?? null),
             'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
         ]);
+
+        // Sync team members if provided
+        if (isset($data['team_member_ids'])) {
+            $service->teamMembers()->sync($data['team_member_ids']);
+        }
+
+        return $service;
     }
 }

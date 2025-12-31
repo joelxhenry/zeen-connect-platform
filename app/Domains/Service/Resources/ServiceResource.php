@@ -19,6 +19,7 @@ class ServiceResource extends JsonResource
     protected bool $includeFees = false;
     protected bool $includeBookingSettings = false;
     protected bool $includeCounts = false;
+    protected bool $includeTeamMembers = false;
 
     /**
      * Include category information.
@@ -81,6 +82,16 @@ class ServiceResource extends JsonResource
     }
 
     /**
+     * Include team members assigned to this service.
+     */
+    public function withTeamMembers(bool $include = true): self
+    {
+        $this->includeTeamMembers = $include;
+
+        return $this;
+    }
+
+    /**
      * Transform the resource into an array.
      *
      * @return array<string, mixed>
@@ -122,6 +133,10 @@ class ServiceResource extends JsonResource
 
         if ($this->includeCounts) {
             $data = array_merge($data, $this->formatCounts());
+        }
+
+        if ($this->includeTeamMembers) {
+            $data['team_member_ids'] = $this->formatTeamMemberIds();
         }
 
         return $data;
@@ -239,5 +254,17 @@ class ServiceResource extends JsonResource
         return [
             'total_bookings' => $this->total_bookings ?? $this->bookings()->count(),
         ];
+    }
+
+    /**
+     * Format team member IDs.
+     */
+    protected function formatTeamMemberIds(): array
+    {
+        if (! $this->relationLoaded('teamMembers')) {
+            return [];
+        }
+
+        return $this->teamMembers->pluck('id')->toArray();
     }
 }

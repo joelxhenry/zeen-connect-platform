@@ -4,6 +4,7 @@ namespace App\Domains\Provider\Controllers;
 
 use App\Domains\Provider\Actions\CreateServiceAction;
 use App\Domains\Provider\Actions\UpdateServiceAction;
+use App\Domains\Provider\Enums\TeamMemberStatus;
 use App\Domains\Provider\Requests\StoreServiceRequest;
 use App\Domains\Provider\Requests\UpdateServiceRequest;
 use App\Domains\Service\Models\Category;
@@ -58,10 +59,21 @@ class ServiceController extends Controller
         $provider = Auth::user()->provider;
         $categories = Category::active()->ordered()->get();
 
+        // Get active team members for assignment
+        $teamMembers = $provider->teamMembers()
+            ->where('status', TeamMemberStatus::ACTIVE)
+            ->get()
+            ->map(fn ($tm) => [
+                'id' => $tm->id,
+                'name' => $tm->display_name,
+                'avatar' => $tm->avatar,
+            ]);
+
         return Inertia::render('Provider/Services/Create', [
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
+            'teamMembers' => $teamMembers,
         ]);
     }
 
@@ -87,18 +99,31 @@ class ServiceController extends Controller
 
         $categories = Category::active()->ordered()->get();
 
-        // Load media relationships
-        $service->load(['category', 'media', 'videoEmbeds']);
+        // Load media relationships and team members
+        $service->load(['category', 'media', 'videoEmbeds', 'teamMembers']);
+
+        // Get active team members for assignment
+        $teamMembers = $provider->teamMembers()
+            ->where('status', TeamMemberStatus::ACTIVE)
+            ->get()
+            ->map(fn ($tm) => [
+                'id' => $tm->id,
+                'name' => $tm->display_name,
+                'avatar' => $tm->avatar,
+            ]);
 
         return Inertia::render('Provider/Services/Edit', [
             'service' => (new ServiceResource($service))
                 ->withCategory()
                 ->withMedia()
                 ->withBookingSettings()
+                ->withTeamMembers()
                 ->resolve(),
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
             'tierRestrictions' => $this->subscriptionService->getTierRestrictions($provider),
+            'providerSubdomain' => $provider->subdomain,
+            'teamMembers' => $teamMembers,
         ]);
     }
 

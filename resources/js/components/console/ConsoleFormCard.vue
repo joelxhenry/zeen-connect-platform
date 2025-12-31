@@ -12,14 +12,17 @@ withDefaults(defineProps<Props>(), {
 
 <template>
     <div class="form-card" :class="{ 'no-padding': noPadding }">
-        <div v-if="title || $slots['header-actions']" class="card-header">
-            <div class="header-title-row">
-                <i v-if="icon" :class="icon" class="header-icon"></i>
-                <h2 v-if="title" class="card-title">{{ title }}</h2>
-            </div>
-            <div v-if="$slots['header-actions']" class="header-actions">
-                <slot name="header-actions" />
-            </div>
+        <div v-if="title || $slots.header || $slots['header-actions']" class="card-header">
+            <slot v-if="$slots.header" name="header" />
+            <template v-else>
+                <div class="header-title-row">
+                    <i v-if="icon" :class="icon" class="header-icon"></i>
+                    <h2 v-if="title" class="card-title">{{ title }}</h2>
+                </div>
+                <div v-if="$slots['header-actions']" class="header-actions">
+                    <slot name="header-actions" />
+                </div>
+            </template>
         </div>
         <div v-if="!noPadding" class="card-body">
             <slot />

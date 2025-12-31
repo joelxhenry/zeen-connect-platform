@@ -7,10 +7,12 @@ use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Models\Provider;
+use App\Domains\Provider\Models\TeamMember;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -102,6 +104,15 @@ class Service extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Get the team members assigned to this service.
+     */
+    public function teamMembers(): BelongsToMany
+    {
+        return $this->belongsToMany(TeamMember::class, 'service_team_member')
+            ->withTimestamps();
     }
 
     public function scopeActive($query)

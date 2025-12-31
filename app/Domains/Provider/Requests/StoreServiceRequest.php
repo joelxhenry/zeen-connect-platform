@@ -32,6 +32,9 @@ class StoreServiceRequest extends FormRequest
             'cancellation_policy' => ['nullable', 'in:flexible,moderate,strict'],
             'advance_booking_days' => ['nullable', 'integer', 'min:1', 'max:365'],
             'min_booking_notice_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
+            // Team member assignment
+            'team_member_ids' => ['nullable', 'array'],
+            'team_member_ids.*' => ['integer', 'exists:team_members,id'],
         ];
     }
 

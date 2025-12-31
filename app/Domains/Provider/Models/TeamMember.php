@@ -5,10 +5,12 @@ namespace App\Domains\Provider\Models;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Enums\TeamMemberStatus;
 use App\Domains\Provider\Enums\TeamPermission;
+use App\Domains\Service\Models\Service;
 use App\Models\User;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
@@ -85,6 +87,15 @@ class TeamMember extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Get the services this team member is assigned to.
+     */
+    public function services(): BelongsToMany
+    {
+        return $this->belongsToMany(Service::class, 'service_team_member')
+            ->withTimestamps();
     }
 
     /**

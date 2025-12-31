@@ -11,7 +11,6 @@ class UpdateServiceAction
         $useDefaults = $data['use_provider_defaults'] ?? true;
 
         $service->update([
-            'category_id' => $data['category_id'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'duration_minutes' => $data['duration_minutes'],
@@ -28,11 +27,16 @@ class UpdateServiceAction
             'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
         ]);
 
+        // Sync categories if provided (multiple via polymorphic relationship)
+        if (array_key_exists('category_ids', $data)) {
+            $service->syncCategories($data['category_ids'] ?? []);
+        }
+
         // Sync team members if provided
         if (array_key_exists('team_member_ids', $data)) {
             $service->teamMembers()->sync($data['team_member_ids'] ?? []);
         }
 
-        return $service->fresh('category');
+        return $service->fresh('categories');
     }
 }

@@ -7,7 +7,6 @@ use App\Domains\Provider\Actions\UpdateServiceAction;
 use App\Domains\Provider\Enums\TeamMemberStatus;
 use App\Domains\Provider\Requests\StoreServiceRequest;
 use App\Domains\Provider\Requests\UpdateServiceRequest;
-use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
 use App\Domains\Service\Resources\CategoryResource;
 use App\Domains\Service\Resources\ServiceResource;
@@ -30,7 +29,7 @@ class ServiceController extends Controller
     {
         $provider = Auth::user()->provider;
         $services = $provider->services()
-            ->with(['category', 'media'])
+            ->with(['categories', 'media'])
             ->withCount(['bookings as total_bookings'])
             ->ordered()
             ->get();
@@ -42,11 +41,11 @@ class ServiceController extends Controller
             'inactive' => $services->where('is_active', false)->count(),
         ];
 
-        // Get categories for filtering
-        $categories = Category::active()->ordered()->get();
+        // Get provider's service categories for filtering
+        $categories = $provider->serviceCategories()->active()->ordered()->get();
 
         return Inertia::render('Provider/Services/Index', [
-            'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategory()->withMedia()->withCounts()->resolve()),
+            'services' => $services->map(fn ($s) => (new ServiceResource($s))->withCategories()->withMedia()->withCounts()->resolve()),
             'stats' => $stats,
             'categories' => $categories->map(fn ($c) => (new CategoryResource($c))->resolve()),
             'providerDefaults' => $this->subscriptionService->getEffectiveBookingSettings($provider),
@@ -57,7 +56,9 @@ class ServiceController extends Controller
     public function create(): Response
     {
         $provider = Auth::user()->provider;
-        $categories = Category::active()->ordered()->get();
+
+        // Get provider's service categories
+        $categories = $provider->serviceCategories()->active()->ordered()->get();
 
         // Get active team members for assignment
         $teamMembers = $provider->teamMembers()
@@ -97,10 +98,11 @@ class ServiceController extends Controller
             abort(403);
         }
 
-        $categories = Category::active()->ordered()->get();
+        // Get provider's service categories
+        $categories = $provider->serviceCategories()->active()->ordered()->get();
 
         // Load media relationships and team members
-        $service->load(['category', 'media', 'videoEmbeds', 'teamMembers']);
+        $service->load(['categories', 'media', 'videoEmbeds', 'teamMembers']);
 
         // Get active team members for assignment
         $teamMembers = $provider->teamMembers()
@@ -114,7 +116,7 @@ class ServiceController extends Controller
 
         return Inertia::render('Provider/Services/Edit', [
             'service' => (new ServiceResource($service))
-                ->withCategory()
+                ->withCategories()
                 ->withMedia()
                 ->withBookingSettings()
                 ->withTeamMembers()

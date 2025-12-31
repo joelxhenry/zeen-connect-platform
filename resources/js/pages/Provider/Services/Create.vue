@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import { ConsoleButton, ConsoleFormCard } from '@/components/console';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 import InputNumber from 'primevue/inputnumber';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Checkbox from 'primevue/checkbox';
@@ -45,7 +46,7 @@ const props = defineProps<Props>();
 const form = useForm({
     name: '',
     description: '',
-    category_id: null as number | null,
+    category_ids: [] as number[],
     duration_minutes: 60,
     price: 0,
     is_active: true,
@@ -90,10 +91,6 @@ const cancellationPolicyOptions = [
     { label: 'Non-refundable', value: 'non_refundable' },
 ];
 
-const categoryOptions = computed(() => [
-    { id: null, name: 'Select a category' },
-    ...props.categories,
-]);
 
 const submit = () => {
     form.post(resolveUrl(providerRoutes.services.store.url()), {
@@ -140,19 +137,21 @@ const cancel = () => {
                         </div>
 
                         <div class="form-field">
-                            <label for="category" class="form-label">Category</label>
-                            <Select
-                                id="category"
-                                v-model="form.category_id"
-                                :options="categoryOptions"
+                            <label for="categories" class="form-label">Categories</label>
+                            <MultiSelect
+                                id="categories"
+                                v-model="form.category_ids"
+                                :options="categories"
                                 optionLabel="name"
                                 optionValue="id"
-                                placeholder="Select a category"
+                                placeholder="Select categories"
+                                display="chip"
                                 class="form-input"
-                                :class="{ 'p-invalid': form.errors.category_id }"
+                                :class="{ 'p-invalid': form.errors.category_ids }"
                             />
-                            <small v-if="form.errors.category_id" class="p-error">{{
-                                form.errors.category_id
+                            <small class="form-hint">Optional - organize your services</small>
+                            <small v-if="form.errors.category_ids" class="p-error">{{
+                                form.errors.category_ids
                             }}</small>
                         </div>
 

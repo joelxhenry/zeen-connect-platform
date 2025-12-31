@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Domains\Service\Resources;
+namespace App\Domains\Industry\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CategoryResource extends JsonResource
+class IndustryResource extends JsonResource
 {
     protected bool $includeCounts = false;
 
@@ -31,14 +31,14 @@ class CategoryResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'slug' => $this->slug,
+            'icon' => $this->icon,
             'description' => $this->description,
-            'type' => $this->type?->value,
             'is_active' => (bool) $this->is_active,
             'sort_order' => (int) $this->sort_order,
         ];
 
         if ($this->includeCounts) {
-            $data['services_count'] = $this->services_count ?? $this->services()->count();
+            $data['providers_count'] = $this->providers_count ?? $this->providers()->count();
         }
 
         return $data;

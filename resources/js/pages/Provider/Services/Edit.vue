@@ -8,6 +8,7 @@ import GalleryUpload from '@/components/media/GalleryUpload.vue';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 import InputNumber from 'primevue/inputnumber';
 import ToggleSwitch from 'primevue/toggleswitch';
 import Checkbox from 'primevue/checkbox';
@@ -65,7 +66,8 @@ interface Service {
     price_display: string;
     is_active: boolean;
     sort_order: number;
-    category: Category | null;
+    categories?: Category[];
+    category_ids?: number[];
     cover_url?: string;
     cover_thumbnail?: string;
     cover?: MediaItem | null;
@@ -105,7 +107,7 @@ const confirm = useConfirm();
 const form = useForm({
     name: props.service.name,
     description: props.service.description || '',
-    category_id: props.service.category?.id ?? null,
+    category_ids: props.service.category_ids || [],
     duration_minutes: props.service.duration_minutes,
     price: props.service.price,
     is_active: props.service.is_active,
@@ -175,11 +177,6 @@ const cancellationPolicyOptions = [
     { label: 'Strict (7 days)', value: 'strict' },
     { label: 'Non-refundable', value: 'non_refundable' },
 ];
-
-const categoryOptions = computed(() => [
-    { id: null, name: 'No category' },
-    ...props.categories,
-]);
 
 // Media upload URLs
 const coverUploadUrl = computed(() =>
@@ -286,19 +283,21 @@ const openLiveBooking = () => {
                         </div>
 
                         <div class="form-field">
-                            <label for="category" class="form-label">Category</label>
-                            <Select
-                                id="category"
-                                v-model="form.category_id"
-                                :options="categoryOptions"
+                            <label for="categories" class="form-label">Categories</label>
+                            <MultiSelect
+                                id="categories"
+                                v-model="form.category_ids"
+                                :options="categories"
                                 optionLabel="name"
                                 optionValue="id"
-                                placeholder="Select a category"
+                                placeholder="Select categories"
+                                display="chip"
                                 class="form-input"
-                                :class="{ 'p-invalid': form.errors.category_id }"
+                                :class="{ 'p-invalid': form.errors.category_ids }"
                             />
-                            <small v-if="form.errors.category_id" class="p-error">{{
-                                form.errors.category_id
+                            <small class="form-hint">Optional - organize your services</small>
+                            <small v-if="form.errors.category_ids" class="p-error">{{
+                                form.errors.category_ids
                             }}</small>
                         </div>
 

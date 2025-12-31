@@ -17,7 +17,8 @@ class StoreServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'category_id' => ['required', 'exists:categories,id'],
+            'category_ids' => ['nullable', 'array'],
+            'category_ids.*' => ['integer', 'exists:categories,id'],
             'name' => ['required', 'string', 'min:2', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
             'duration_minutes' => ['required', 'integer', 'min:15', 'max:480'],
@@ -84,8 +85,7 @@ class StoreServiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'category_id.required' => 'Please select a category.',
-            'category_id.exists' => 'Please select a valid category.',
+            'category_ids.*.exists' => 'One or more selected categories are invalid.',
             'name.required' => 'Please enter a service name.',
             'name.min' => 'Service name must be at least 2 characters.',
             'name.max' => 'Service name cannot exceed 100 characters.',

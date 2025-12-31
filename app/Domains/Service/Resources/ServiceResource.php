@@ -13,7 +13,7 @@ class ServiceResource extends JsonResource
 {
     use HasDisplayValues;
 
-    protected bool $includeCategory = false;
+    protected bool $includeCategories = false;
     protected bool $includeProvider = false;
     protected bool $includeMedia = false;
     protected bool $includeFees = false;
@@ -22,11 +22,11 @@ class ServiceResource extends JsonResource
     protected bool $includeTeamMembers = false;
 
     /**
-     * Include category information.
+     * Include categories information.
      */
-    public function withCategory(bool $include = true): self
+    public function withCategories(bool $include = true): self
     {
-        $this->includeCategory = $include;
+        $this->includeCategories = $include;
 
         return $this;
     }
@@ -111,8 +111,9 @@ class ServiceResource extends JsonResource
             'sort_order' => (int) $this->sort_order,
         ];
 
-        if ($this->includeCategory) {
-            $data['category'] = $this->formatCategory();
+        if ($this->includeCategories) {
+            $data['categories'] = $this->formatCategories();
+            $data['category_ids'] = $this->formatCategoryIds();
         }
 
         if ($this->includeProvider) {
@@ -143,21 +144,33 @@ class ServiceResource extends JsonResource
     }
 
     /**
-     * Format category data.
+     * Format categories data (multiple categories via polymorphic relationship).
      */
-    protected function formatCategory(): ?array
+    protected function formatCategories(): array
     {
-        if (! $this->relationLoaded('category') || ! $this->category) {
-            return null;
+        if (! $this->relationLoaded('categories')) {
+            return [];
         }
 
-        return [
-            'id' => $this->category->id,
-            'uuid' => $this->category->uuid,
-            'name' => $this->category->name,
-            'slug' => $this->category->slug,
-            'icon' => $this->category->icon,
-        ];
+        return $this->categories->map(fn ($category) => [
+            'id' => $category->id,
+            'uuid' => $category->uuid,
+            'name' => $category->name,
+            'slug' => $category->slug,
+            'icon' => $category->icon,
+        ])->toArray();
+    }
+
+    /**
+     * Format category IDs for form binding.
+     */
+    protected function formatCategoryIds(): array
+    {
+        if (! $this->relationLoaded('categories')) {
+            return [];
+        }
+
+        return $this->categories->pluck('id')->toArray();
     }
 
     /**

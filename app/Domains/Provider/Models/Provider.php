@@ -2,6 +2,7 @@
 
 namespace App\Domains\Provider\Models;
 
+use App\Domains\Industry\Models\Industry;
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Payment\Models\LedgerEntry;
@@ -9,6 +10,7 @@ use App\Domains\Payment\Models\ProviderGatewayConfig;
 use App\Domains\Payment\Models\ScheduledPayout;
 use App\Domains\Payment\Services\LedgerService;
 use App\Domains\Review\Models\Review;
+use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
 use App\Domains\Subscription\Enums\SubscriptionTier;
 use App\Domains\Subscription\Models\Subscription;
@@ -31,6 +33,7 @@ class Provider extends Model
 
     protected $fillable = [
         'user_id',
+        'industry_id',
         'business_name',
         'slug',
         'domain',
@@ -170,11 +173,43 @@ class Provider extends Model
     }
 
     /**
+     * Get the industry this provider belongs to.
+     */
+    public function industry(): BelongsTo
+    {
+        return $this->belongsTo(Industry::class);
+    }
+
+    /**
      * Get all services offered by this provider.
      */
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Get all categories owned by this provider.
+     */
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Get service categories for this provider.
+     */
+    public function serviceCategories(): HasMany
+    {
+        return $this->categories()->forServices();
+    }
+
+    /**
+     * Get event categories for this provider.
+     */
+    public function eventCategories(): HasMany
+    {
+        return $this->categories()->forEvents();
     }
 
     /**

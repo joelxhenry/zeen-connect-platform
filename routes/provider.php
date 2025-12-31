@@ -9,6 +9,7 @@ use App\Domains\Payment\Controllers\ProviderRefundController;
 use App\Domains\Provider\Controllers\AvailabilityController;
 use App\Domains\Provider\Controllers\BankingInfoController;
 use App\Domains\Provider\Controllers\BrandingController;
+use App\Domains\Provider\Controllers\CategoryController;
 use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
@@ -50,6 +51,16 @@ Route::resource('services', ServiceController::class)->except(['show'])->names([
     'destroy' => 'provider.services.destroy',
 ]);
 Route::post('/services/{service}/toggle-active', [ServiceController::class, 'toggleActive'])->name('provider.services.toggle-active');
+
+// Category management
+Route::prefix('categories')->name('provider.categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/list', [CategoryController::class, 'list'])->name('list');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/reorder', [CategoryController::class, 'reorder'])->name('reorder');
+});
 
 // Settings management
 Route::prefix('settings')->name('provider.settings.')->group(function () {

@@ -50,6 +50,11 @@ const mainMenuItems = computed(() => [
         route: provider.services.index.url()
     },
     {
+        label: 'Categories',
+        icon: 'pi pi-folder',
+        route: provider.categories.index.url()
+    },
+    {
         label: 'Events',
         icon: 'pi pi-calendar-plus',
         route: '#',

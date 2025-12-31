@@ -98,6 +98,7 @@ const navItems: NavItem[] = [
             { label: 'Management', icon: 'pi pi-list', route: '/admin/providers' },
         ],
     },
+    { label: 'Industries', icon: 'pi pi-building', route: admin.industries.index.url() },
     { label: 'Bookings', icon: 'pi pi-calendar', route: admin.bookings.index.url() },
     {
         label: 'Subscriptions',

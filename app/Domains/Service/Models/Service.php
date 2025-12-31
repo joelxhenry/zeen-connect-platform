@@ -8,6 +8,7 @@ use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
+use App\Domains\Service\Traits\HasCategories;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,11 +19,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
-    use HasFactory, HasMedia, HasUuid, HasVideoEmbeds, SoftDeletes;
+    use HasFactory, HasCategories, HasMedia, HasUuid, HasVideoEmbeds, SoftDeletes;
 
     protected $fillable = [
         'provider_id',
-        'category_id',
         'name',
         'description',
         'duration_minutes',
@@ -96,11 +96,6 @@ class Service extends Model
         return $this->belongsTo(Provider::class);
     }
 
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
-
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
@@ -130,9 +125,14 @@ class Service extends Model
         return $query->where('provider_id', $providerId);
     }
 
-    public function scopeInCategory($query, int $categoryId)
+    /**
+     * Scope to filter services by category IDs (using polymorphic relationship).
+     */
+    public function scopeInCategories($query, array $categoryIds)
     {
-        return $query->where('category_id', $categoryId);
+        return $query->whereHas('categories', function ($q) use ($categoryIds) {
+            $q->whereIn('categories.id', $categoryIds);
+        });
     }
 
     public function getDurationDisplayAttribute(): string

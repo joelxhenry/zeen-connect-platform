@@ -4,13 +4,10 @@ namespace App\Domains\Provider\Controllers;
 
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Booking\Models\Booking;
-use App\Domains\Payment\Enums\PaymentStatus;
-use App\Domains\Payment\Enums\PayoutStatus;
-use App\Domains\Payment\Models\Payment;
-use App\Domains\Payment\Models\Payout;
-use App\Domains\Review\Models\Review;
+use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,104 +19,188 @@ class DashboardController extends Controller
         $user = $request->user();
         $provider = $user->provider;
 
-        // Get stats
-        $stats = [
-            'total_earnings' => Payment::where('provider_id', $provider->id)
-                ->where('status', PaymentStatus::COMPLETED)
-                ->sum('provider_amount') / 100, // Convert from cents
-            'pending_payout' => Payment::where('provider_id', $provider->id)
-                ->where('status', PaymentStatus::COMPLETED)
-                ->whereNull('payout_id')
-                ->sum('provider_amount') / 100,
-            'completed_bookings' => Booking::where('provider_id', $provider->id)
+        // Filter parameters
+        $status = $request->get('status');
+        $serviceId = $request->get('service_id');
+        $categoryId = $request->get('category_id');
+        $teamMemberId = $request->get('team_member_id');
+        $search = $request->get('search');
+        $dateRange = $request->get('date_range', 'upcoming');
+
+        // Build booking query
+        $query = Booking::with(['client', 'service.category', 'teamMember'])
+            ->where('provider_id', $provider->id);
+
+        // Apply status filter
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        // Apply date range filter
+        $today = now()->toDateString();
+        switch ($dateRange) {
+            case 'today':
+                $query->whereDate('booking_date', $today);
+                break;
+            case 'week':
+                $query->whereBetween('booking_date', [
+                    now()->startOfWeek()->toDateString(),
+                    now()->endOfWeek()->toDateString()
+                ]);
+                break;
+            case 'month':
+                $query->whereBetween('booking_date', [
+                    now()->startOfMonth()->toDateString(),
+                    now()->endOfMonth()->toDateString()
+                ]);
+                break;
+            case 'upcoming':
+            default:
+                $query->where('booking_date', '>=', $today);
+                break;
+        }
+
+        // Apply service filter
+        if ($serviceId) {
+            $query->where('service_id', $serviceId);
+        }
+
+        // Apply category filter
+        if ($categoryId) {
+            $query->whereHas('service', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+        }
+
+        // Apply team member filter
+        if ($teamMemberId) {
+            $query->where('team_member_id', $teamMemberId);
+        }
+
+        // Apply search filter (client name, guest name, service name, or category name)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('client', function ($clientQuery) use ($search) {
+                    $clientQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhere('guest_name', 'like', "%{$search}%")
+                ->orWhereHas('service', function ($serviceQuery) use ($search) {
+                    $serviceQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('service.category', function ($categoryQuery) use ($search) {
+                    $categoryQuery->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Order by date and time
+        $query->orderBy('booking_date')
+            ->orderBy('start_time');
+
+        // Paginate results
+        $bookings = $query->paginate(20)->through(fn($booking) => [
+            'uuid' => $booking->uuid,
+            'client' => [
+                'name' => $booking->client?->name ?? $booking->guest_name,
+                'email' => $booking->client?->email ?? $booking->guest_email,
+                'phone' => $booking->client?->phone ?? $booking->guest_phone,
+                'avatar' => $booking->client?->avatar,
+            ],
+            'service' => [
+                'id' => $booking->service->id,
+                'name' => $booking->service->name,
+                'duration' => $booking->service->duration_minutes,
+                'category' => $booking->service->category?->name,
+                'category_id' => $booking->service->category_id,
+            ],
+            'team_member' => $booking->teamMember ? [
+                'id' => $booking->teamMember->id,
+                'name' => $booking->teamMember->name,
+            ] : null,
+            'booking_date' => $booking->booking_date->toDateString(),
+            'date' => $booking->booking_date->format('l, M j'),
+            'date_short' => $booking->booking_date->format('M j'),
+            'time' => $booking->start_time->format('g:i A'),
+            'end_time' => $booking->end_time->format('g:i A'),
+            'total_amount' => $booking->total_display,
+            'service_price' => $booking->service_price,
+            'deposit_amount' => $booking->deposit_amount,
+            'deposit_paid' => $booking->deposit_paid,
+            'status' => $booking->status->value,
+            'status_label' => $booking->status->label(),
+            'status_color' => $booking->status->color(),
+            'provider_notes' => $booking->provider_notes,
+            'client_notes' => $booking->client_notes,
+            'created_at' => $booking->created_at->format('M j, Y g:i A'),
+        ]);
+
+        // Group bookings by date for display
+        $groupedBookings = collect($bookings->items())->groupBy('booking_date')->map(function ($items, $date) {
+            $carbonDate = Carbon::parse($date);
+            $isToday = $carbonDate->isToday();
+            $isTomorrow = $carbonDate->isTomorrow();
+
+            return [
+                'date' => $date,
+                'label' => $isToday ? 'Today' : ($isTomorrow ? 'Tomorrow' : $carbonDate->format('l, M j')),
+                'is_today' => $isToday,
+                'is_tomorrow' => $isTomorrow,
+                'bookings' => $items->values(),
+            ];
+        })->values();
+
+        // Status counts for tabs
+        $baseQuery = Booking::where('provider_id', $provider->id)
+            ->where('booking_date', '>=', $today);
+
+        $statusCounts = [
+            'all' => (clone $baseQuery)->count(),
+            'pending' => (clone $baseQuery)->where('status', BookingStatus::PENDING)->count(),
+            'confirmed' => (clone $baseQuery)->where('status', BookingStatus::CONFIRMED)->count(),
+            'completed' => Booking::where('provider_id', $provider->id)
                 ->where('status', BookingStatus::COMPLETED)
                 ->count(),
-            'active_services' => Service::where('provider_id', $provider->id)
-                ->where('is_active', true)
-                ->count(),
-            'pending_bookings' => Booking::where('provider_id', $provider->id)
-                ->where('status', BookingStatus::PENDING)
+            'cancelled' => Booking::where('provider_id', $provider->id)
+                ->where('status', BookingStatus::CANCELLED)
                 ->count(),
         ];
 
-        // Get upcoming bookings (next 7 days)
-        $upcomingBookings = Booking::with(['client', 'service'])
-            ->where('provider_id', $provider->id)
-            ->whereIn('status', [BookingStatus::PENDING, BookingStatus::CONFIRMED])
-            ->where('booking_date', '>=', now()->toDateString())
-            ->where('booking_date', '<=', now()->addDays(7)->toDateString())
-            ->orderBy('booking_date')
-            ->orderBy('start_time')
-            ->limit(5)
-            ->get()
-            ->map(fn($booking) => [
-                'uuid' => $booking->uuid,
-                'client' => [
-                    'name' => $booking->client?->name ?? $booking->guest_name,
-                    'avatar' => $booking->client?->avatar,
-                ],
-                'service' => [
-                    'name' => $booking->service->name,
-                ],
-                'date' => $booking->booking_date->format('l, M j'),
-                'time' => $booking->start_time->format('g:i A'),
-                'total_amount' => $booking->total_display,
-                'status' => $booking->status->value,
-                'status_label' => $booking->status->label(),
-                'status_color' => $booking->status->color(),
-            ]);
+        // Get services for filter dropdown
+        $services = Service::where('provider_id', $provider->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
-        // Get recent payments (last 5 completed)
-        $recentPayments = Payment::with(['booking.service'])
-            ->where('provider_id', $provider->id)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($payment) => [
-                'uuid' => $payment->uuid,
-                'amount' => number_format($payment->provider_amount / 100, 2),
-                'service_name' => $payment->booking->service->name ?? 'Service',
-                'date' => $payment->created_at->format('M j, Y'),
-            ]);
+        // Get categories for filter dropdown
+        $categories = Category::whereHas('services', function ($query) use ($provider) {
+            $query->where('provider_id', $provider->id)->where('is_active', true);
+        })->orderBy('name')->get(['id', 'name']);
 
-        // Get recent reviews (last 5)
-        $recentReviews = Review::with(['client', 'service'])
-            ->where('provider_id', $provider->id)
-            ->where('is_visible', true)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($review) => [
-                'uuid' => $review->uuid,
-                'rating' => $review->rating,
-                'comment' => $review->comment,
-                'client' => [
-                    'name' => $review->client->name,
-                ],
-                'service_name' => $review->service->name ?? null,
-                'date' => $review->created_at->format('M j, Y'),
-                'has_response' => $review->provider_response !== null,
-            ]);
-
-        // Count unresponded reviews
-        $unrespondedReviewsCount = Review::where('provider_id', $provider->id)
-            ->where('is_visible', true)
-            ->whereNull('provider_response')
-            ->count();
+        // Get team members if provider has team feature
+        $teamMembers = $provider->teamMembers()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('Provider/Dashboard', [
             'provider' => [
                 'business_name' => $provider->business_name,
-                'tagline' => $provider->tagline,
-                'rating_avg' => $provider->rating_avg,
-                'rating_count' => $provider->rating_count,
+                'slug' => $provider->slug,
             ],
-            'stats' => $stats,
-            'upcoming_bookings' => $upcomingBookings,
-            'recent_payments' => $recentPayments,
-            'recent_reviews' => $recentReviews,
-            'unresponded_reviews_count' => $unrespondedReviewsCount,
+            'bookings' => $bookings,
+            'grouped_bookings' => $groupedBookings,
+            'status_counts' => $statusCounts,
+            'filters' => [
+                'status' => $status,
+                'service_id' => $serviceId,
+                'category_id' => $categoryId,
+                'team_member_id' => $teamMemberId,
+                'search' => $search,
+                'date_range' => $dateRange,
+            ],
+            'services' => $services,
+            'categories' => $categories,
+            'team_members' => $teamMembers,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Domains\Auth\Controllers\LoginController;
 use App\Domains\Auth\Controllers\RegisterController;
+use App\Domains\Auth\Controllers\SocialAccountController;
 use App\Domains\Auth\Controllers\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,14 @@ Route::middleware('guest')->group(function () {
         Route::get('/register/provider', [RegisterController::class, 'showProvider'])->name('register.provider');
         Route::post('/register/provider', [RegisterController::class, 'storeProvider']);
     });
+
+
+
+    Route::prefix('social')->group(function () {
+        Route::get('{provider}/redirect', [LoginController::class, 'redirectToProvider'])->name('social.redirect');
+        Route::get('{provider}/callback', [LoginController::class, 'handleProviderCallback'])->name('social.callback');
+    });
+
 });
 
 /*
@@ -67,4 +76,10 @@ Route::post('/team/invite/{token}', [TeamInvitationController::class, 'accept'])
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // Social account linking/unlinking (authenticated users)
+    Route::prefix('social')->group(function () {
+        Route::get('{provider}/link', [SocialAccountController::class, 'link'])->name('social.link');
+        Route::delete('{provider}/unlink', [SocialAccountController::class, 'unlink'])->name('social.unlink');
+    });
 });

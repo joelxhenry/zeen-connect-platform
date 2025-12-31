@@ -46,6 +46,38 @@ return [
     |
     */
 
+/*
+    |--------------------------------------------------------------------------
+    | OAuth Providers - Social Login
+    |--------------------------------------------------------------------------
+    */
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/social/google/callback'),
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => env('APPLE_REDIRECT_URI', '/auth/social/apple/callback'),
+        'team_id' => env('APPLE_TEAM_ID'),
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key' => env('APPLE_PRIVATE_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Gateway - WiPay
+    |--------------------------------------------------------------------------
+    |
+    | WiPay is the sole payment gateway. Supports both split payments
+    | (instant payouts to provider's WiPay account) and escrow mode
+    | (platform collects, then pays out to provider's bank account).
+    |
+    */
+
     'wipay' => [
         // Platform credentials for collecting payments
         'platform_account_id' => env('WIPAY_PLATFORM_ACCOUNT_ID', '1234567890'),

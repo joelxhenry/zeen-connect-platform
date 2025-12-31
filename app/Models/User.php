@@ -32,6 +32,11 @@ class User extends Authenticatable
         'is_active',
         'preferred_location_id',
         'notification_preferences',
+        // Social auth fields
+        'google_id',
+        'google_linked_at',
+        'apple_id',
+        'apple_linked_at',
     ];
 
     /**
@@ -58,6 +63,9 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'is_active' => 'boolean',
             'notification_preferences' => 'array',
+            // Social auth timestamps
+            'google_linked_at' => 'datetime',
+            'apple_linked_at' => 'datetime',
         ];
     }
 
@@ -143,6 +151,56 @@ class User extends Authenticatable
 
         $this->favoriteProviders()->attach($provider->id);
         return true;
+    }
+
+    // =========================================================================
+    // Social Authentication Methods
+    // =========================================================================
+
+    /**
+     * Check if user registered via social login (has no password).
+     */
+    public function isSocialOnlyUser(): bool
+    {
+        return is_null($this->password);
+    }
+
+    /**
+     * Check if user has a social account linked.
+     */
+    public function hasSocialAccountLinked(string $provider): bool
+    {
+        return match ($provider) {
+            'google' => ! is_null($this->google_id),
+            'apple' => ! is_null($this->apple_id),
+            default => false,
+        };
+    }
+
+    /**
+     * Get all linked social providers.
+     *
+     * @return array<array{provider: string, linked_at: \Illuminate\Support\Carbon|null}>
+     */
+    public function getLinkedSocialProviders(): array
+    {
+        $providers = [];
+
+        if ($this->google_id) {
+            $providers[] = [
+                'provider' => 'google',
+                'linked_at' => $this->google_linked_at,
+            ];
+        }
+
+        if ($this->apple_id) {
+            $providers[] = [
+                'provider' => 'apple',
+                'linked_at' => $this->apple_linked_at,
+            ];
+        }
+
+        return $providers;
     }
 
     // =========================================================================

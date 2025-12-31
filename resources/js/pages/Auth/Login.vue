@@ -8,6 +8,9 @@ import Checkbox from 'primevue/checkbox';
 import LoginController from '@/actions/App/Domains/Auth/Controllers/LoginController';
 import { register, login } from '@/routes';
 import { useRoute } from '@/composables/useRoute';
+import { resolveUrl } from '@/utils/url';
+import social from '@/routes/social';
+
 
 
 
@@ -27,7 +30,8 @@ const submit = () => {
 };
 
 const socialAuth = (provider: string) => {
-    window.location.href = `/auth/${provider}`;
+
+    window.location.href = resolveUrl(resolve(social.redirect({ provider }).url));
 };
 </script>
 

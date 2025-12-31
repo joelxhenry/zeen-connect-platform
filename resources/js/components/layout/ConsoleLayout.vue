@@ -77,9 +77,9 @@ const mainMenuItems = computed(() => [
         badge: 'Soon'
     },
     {
-        label: 'Settings',
+        label: 'More',
         icon: 'pi pi-cog',
-        route: provider.settings.edit.url()
+        route: provider.more.index.url()
     },
 ]);
 
@@ -92,9 +92,9 @@ const profileMenuItems = ref([
         command: () => router.get(resolveUrl(provider.profile.edit.url())),
     },
     {
-        label: 'Account Settings',
+        label: 'Settings',
         icon: 'pi pi-cog',
-        command: () => router.get(resolveUrl(provider.settings.edit.url())),
+        command: () => router.get(resolveUrl(provider.more.index.url())),
     },
     { separator: true },
     {

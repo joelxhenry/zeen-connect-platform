@@ -511,6 +511,14 @@ class Provider extends Model
     }
 
     /**
+     * Get the color mode (light, dark, or system).
+     */
+    public function getColorModeAttribute(): string
+    {
+        return $this->getBrandingValue('color_mode', 'system');
+    }
+
+    /**
      * Get the brand primary color as RGB values (for opacity support).
      */
     public function getBrandPrimaryRgbAttribute(): ?string

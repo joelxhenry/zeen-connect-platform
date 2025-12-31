@@ -24,12 +24,8 @@ class UpdateBrandingSettingsRequest extends FormRequest
 
         return [
             'primary_color' => $hexColorRule,
-            'text_color' => $hexColorRule,
-            'success_color' => $hexColorRule,
-            'warning_color' => $hexColorRule,
-            'danger_color' => $hexColorRule,
-            'info_color' => $hexColorRule,
             'secondary_color' => $hexColorRule,
+            'color_mode' => ['nullable', 'in:light,dark,system'],
         ];
     }
 
@@ -37,6 +33,7 @@ class UpdateBrandingSettingsRequest extends FormRequest
     {
         return [
             '*.regex' => 'Each color must be a valid hex color (e.g., #3B82F6).',
+            'color_mode.in' => 'Color mode must be light, dark, or system.',
         ];
     }
 }

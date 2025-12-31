@@ -12,6 +12,7 @@ use App\Domains\Provider\Controllers\BrandingController;
 use App\Domains\Provider\Controllers\CategoryController;
 use App\Domains\Provider\Controllers\DashboardController;
 use App\Domains\Provider\Controllers\EventController;
+use App\Domains\Provider\Controllers\MoreController;
 use App\Domains\Provider\Controllers\EventOccurrenceController;
 use App\Domains\Provider\Controllers\ProfileController;
 use App\Domains\Provider\Controllers\ServiceController;
@@ -37,10 +38,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', DashboardController::class)->name('provider.dashboard');
 
-// Profile management
+// Settings hub (More page)
+Route::get('/more', MoreController::class)->name('provider.more.index');
+
+// Profile management (User/Team Member data)
 Route::prefix('profile')->name('provider.profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'edit'])->name('edit');
     Route::put('/', [ProfileController::class, 'update'])->name('update');
+    Route::put('/availability', [ProfileController::class, 'updateAvailability'])->name('availability');
+    Route::post('/breaks', [ProfileController::class, 'addBreak'])->name('breaks.add');
+    Route::delete('/breaks', [ProfileController::class, 'removeBreak'])->name('breaks.remove');
+    Route::post('/blocked-dates', [ProfileController::class, 'blockDate'])->name('blocked-dates.add');
+    Route::delete('/blocked-dates', [ProfileController::class, 'unblockDate'])->name('blocked-dates.remove');
 });
 
 // Service management
@@ -98,6 +107,10 @@ Route::prefix('settings')->name('provider.settings.')->group(function () {
 Route::prefix('branding')->name('provider.branding.')->group(function () {
     Route::get('/', [BrandingController::class, 'edit'])->name('edit');
     Route::put('/', [BrandingController::class, 'update'])->name('update');
+    Route::put('/content', [BrandingController::class, 'updateContent'])->name('content');
+    Route::put('/template', [BrandingController::class, 'updateTemplate'])->name('template');
+    Route::put('/domain', [BrandingController::class, 'updateDomain'])->name('domain');
+    Route::get('/check-domain', [BrandingController::class, 'checkDomain'])->name('check-domain');
 });
 
 // Site template management

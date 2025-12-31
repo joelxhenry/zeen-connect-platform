@@ -3,7 +3,6 @@
 namespace App\Domains\Provider\Actions;
 
 use App\Domains\Provider\Models\Provider;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class UpdateProviderProfileAction
@@ -14,18 +13,10 @@ class UpdateProviderProfileAction
     public function execute(Provider $provider, array $data): Provider
     {
         return DB::transaction(function () use ($provider, $data) {
-            // Update user phone if provided
-            if (isset($data['phone'])) {
-                $provider->user->update(['phone' => $data['phone']]);
-            }
-
-            // Prepare provider data
+            // Prepare provider data (only profile-specific fields)
+            // Note: bio, tagline, address, and domain are now managed via Branding
             $providerData = [
                 'business_name' => $data['business_name'],
-                'tagline' => $data['tagline'] ?? null,
-                'bio' => $data['bio'] ?? null,
-                'address' => $data['address'] ?? null,
-                'domain' => $data['domain'],
                 'social_links' => $this->filterSocialLinks($data['social_links'] ?? []),
             ];
 

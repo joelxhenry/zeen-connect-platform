@@ -24,6 +24,7 @@ class TeamMember extends Model
         'user_id',
         'email',
         'name',
+        'title',
         'permissions',
         'status',
         'invitation_token',

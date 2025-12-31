@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Domains\Media\Traits\HasMedia;
 use App\Domains\User\Enums\UserRole;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,7 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasUuid, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasMedia, HasUuid, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

@@ -10,14 +10,8 @@ class UpdateServiceAction
     {
         $useDefaults = $data['use_provider_defaults'] ?? true;
 
-        $service->update([
-            'name' => $data['name'],
-            'description' => $data['description'] ?? null,
-            'duration_minutes' => $data['duration_minutes'],
-            'price' => $data['price'],
-            'is_active' => $data['is_active'] ?? true,
-            'sort_order' => $data['sort_order'] ?? $service->sort_order,
-            // Booking settings
+        // Build settings JSON
+        $settings = [
             'use_provider_defaults' => $useDefaults,
             'requires_approval' => $useDefaults ? null : ($data['requires_approval'] ?? null),
             'deposit_type' => $useDefaults ? null : ($data['deposit_type'] ?? null),
@@ -25,6 +19,17 @@ class UpdateServiceAction
             'cancellation_policy' => $useDefaults ? null : ($data['cancellation_policy'] ?? null),
             'advance_booking_days' => $useDefaults ? null : ($data['advance_booking_days'] ?? null),
             'min_booking_notice_hours' => $useDefaults ? null : ($data['min_booking_notice_hours'] ?? null),
+            'buffer_minutes' => $data['buffer_minutes'] ?? null,
+        ];
+
+        $service->update([
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'duration_minutes' => $data['duration_minutes'],
+            'price' => $data['price'],
+            'is_active' => $data['is_active'] ?? true,
+            'sort_order' => $data['sort_order'] ?? $service->sort_order,
+            'settings' => $settings,
         ]);
 
         // Sync categories if provided (multiple via polymorphic relationship)

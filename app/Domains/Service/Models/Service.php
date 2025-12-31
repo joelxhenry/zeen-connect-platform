@@ -9,6 +9,7 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Service\Traits\HasCategories;
+use App\Support\Traits\HasSettings;
 use App\Support\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
-    use HasFactory, HasCategories, HasMedia, HasUuid, HasVideoEmbeds, SoftDeletes;
+    use HasFactory, HasCategories, HasMedia, HasSettings, HasUuid, HasVideoEmbeds, SoftDeletes;
 
     protected $fillable = [
         'provider_id',
@@ -29,14 +30,7 @@ class Service extends Model
         'price',
         'is_active',
         'sort_order',
-        'use_provider_defaults',
-        'requires_approval',
-        'deposit_type',
-        'deposit_amount',
-        'cancellation_policy',
-        'advance_booking_days',
-        'min_booking_notice_hours',
-        'buffer_minutes',
+        'settings',
     ];
 
     // Note: cover is not in $appends - use ServiceResource->withMedia() when needed
@@ -48,13 +42,16 @@ class Service extends Model
             'price' => 'decimal:2',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
-            'use_provider_defaults' => 'boolean',
-            'requires_approval' => 'boolean',
-            'deposit_amount' => 'decimal:2',
-            'advance_booking_days' => 'integer',
-            'min_booking_notice_hours' => 'integer',
-            'buffer_minutes' => 'integer',
+            'settings' => 'array',
         ];
+    }
+
+    /**
+     * Check if service uses provider defaults for booking settings.
+     */
+    public function usesProviderDefaults(): bool
+    {
+        return $this->getSetting('use_provider_defaults', true);
     }
 
     /**
@@ -62,17 +59,18 @@ class Service extends Model
      */
     public function getEffectiveBookingSettings(): array
     {
-        if ($this->use_provider_defaults) {
+        if ($this->usesProviderDefaults()) {
             return $this->provider->getBookingSettings();
         }
 
         return [
-            'requires_approval' => $this->requires_approval ?? false,
-            'deposit_type' => $this->deposit_type ?? 'none',
-            'deposit_amount' => $this->deposit_amount,
-            'cancellation_policy' => $this->cancellation_policy ?? 'flexible',
-            'advance_booking_days' => $this->advance_booking_days ?? 30,
-            'min_booking_notice_hours' => $this->min_booking_notice_hours ?? 24,
+            'requires_approval' => $this->getSetting('requires_approval', false),
+            'deposit_type' => $this->getSetting('deposit_type', 'none'),
+            'deposit_amount' => $this->getSetting('deposit_amount'),
+            'cancellation_policy' => $this->getSetting('cancellation_policy', 'flexible'),
+            'advance_booking_days' => $this->getSetting('advance_booking_days', 30),
+            'min_booking_notice_hours' => $this->getSetting('min_booking_notice_hours', 24),
+            'buffer_minutes' => $this->getSetting('buffer_minutes'),
         ];
     }
 
@@ -83,12 +81,23 @@ class Service extends Model
     public function getEffectiveBufferMinutes(): int
     {
         // Service-level buffer takes precedence if set
-        if ($this->buffer_minutes !== null) {
-            return $this->buffer_minutes;
+        $bufferMinutes = $this->getSetting('buffer_minutes');
+        if ($bufferMinutes !== null) {
+            return (int) $bufferMinutes;
         }
 
         // Fall back to provider buffer
         return $this->provider->getBufferMinutes();
+    }
+
+    /**
+     * Get buffer minutes for this service.
+     */
+    public function getBufferMinutes(): ?int
+    {
+        $buffer = $this->getSetting('buffer_minutes');
+
+        return $buffer !== null ? (int) $buffer : null;
     }
 
     public function provider(): BelongsTo

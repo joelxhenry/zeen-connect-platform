@@ -157,7 +157,6 @@ class ServiceResource extends JsonResource
             'uuid' => $category->uuid,
             'name' => $category->name,
             'slug' => $category->slug,
-            'icon' => $category->icon,
         ])->toArray();
     }
 
@@ -248,14 +247,21 @@ class ServiceResource extends JsonResource
      */
     protected function formatBookingSettings(): array
     {
+        $requiresApproval = $this->getSetting('requires_approval');
+        $depositAmount = $this->getSetting('deposit_amount');
+        $advanceBookingDays = $this->getSetting('advance_booking_days');
+        $minBookingNoticeHours = $this->getSetting('min_booking_notice_hours');
+        $bufferMinutes = $this->getSetting('buffer_minutes');
+
         return [
-            'use_provider_defaults' => (bool) $this->use_provider_defaults,
-            'requires_approval' => $this->requires_approval !== null ? (bool) $this->requires_approval : null,
-            'deposit_type' => $this->deposit_type,
-            'deposit_amount' => $this->deposit_amount !== null ? (float) $this->deposit_amount : null,
-            'cancellation_policy' => $this->cancellation_policy,
-            'advance_booking_days' => $this->advance_booking_days !== null ? (int) $this->advance_booking_days : null,
-            'min_booking_notice_hours' => $this->min_booking_notice_hours !== null ? (int) $this->min_booking_notice_hours : null,
+            'use_provider_defaults' => $this->getSetting('use_provider_defaults', true),
+            'requires_approval' => $requiresApproval !== null ? (bool) $requiresApproval : null,
+            'deposit_type' => $this->getSetting('deposit_type'),
+            'deposit_amount' => $depositAmount !== null ? (float) $depositAmount : null,
+            'cancellation_policy' => $this->getSetting('cancellation_policy'),
+            'advance_booking_days' => $advanceBookingDays !== null ? (int) $advanceBookingDays : null,
+            'min_booking_notice_hours' => $minBookingNoticeHours !== null ? (int) $minBookingNoticeHours : null,
+            'buffer_minutes' => $bufferMinutes !== null ? (int) $bufferMinutes : null,
         ];
     }
 

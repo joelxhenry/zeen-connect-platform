@@ -1,0 +1,70 @@
+# Dependencies - rebuilt in container
+node_modules/
+vendor/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files - passed as env vars
+.env
+.env.*
+!.env.example
+
+# IDE and editor configs
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs and cache
+storage/logs/*
+!storage/logs/.gitignore
+storage/framework/cache/*
+!storage/framework/cache/.gitignore
+storage/framework/sessions/*
+!storage/framework/sessions/.gitignore
+storage/framework/views/*
+!storage/framework/views/.gitignore
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+
+# Docker files (avoid recursion)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# Tests (not needed in production)
+tests/
+phpunit.xml
+.phpunit.result.cache
+pest.php
+
+# Development tools
+.editorconfig
+.prettierrc
+.eslintrc*
+eslint.config.js
+*.config.js
+!vite.config.ts
+!tailwind.config.js
+!postcss.config.js
+
+# Build artifacts
+public/build/
+public/hot
+
+# SQLite database (use external DB in production)
+database/*.sqlite
+
+# NPM/Yarn
+npm-debug.log
+yarn-error.log

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->string('email');
             $table->string('name')->nullable();
-            $table->json('permissions')->default('[]');
+            $table->json('permissions')->nullable();
             $table->enum('status', ['pending', 'active', 'suspended'])->default('pending');
             $table->string('invitation_token')->nullable()->unique();
             $table->timestamp('invited_at')->nullable();

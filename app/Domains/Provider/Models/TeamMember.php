@@ -19,6 +19,10 @@ class TeamMember extends Model
 {
     use HasUuid;
 
+    protected $attributes = [
+        'permissions' => '[]',
+    ];
+
     protected $fillable = [
         'provider_id',
         'user_id',

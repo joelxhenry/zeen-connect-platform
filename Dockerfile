@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: Build (PHP + Node.js for wayfinder plugin)
 # =============================================================================
-FROM php:8.2-cli-alpine AS build
+FROM php:8.3-cli-alpine AS build
 
 # Install Node.js and build dependencies
 RUN apk add --no-cache \
@@ -69,7 +69,7 @@ RUN composer install \
 # =============================================================================
 # Stage 2: Production Runtime
 # =============================================================================
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.3-fpm-alpine AS production
 
 # Install system dependencies
 RUN apk add --no-cache \

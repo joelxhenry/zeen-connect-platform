@@ -1,0 +1,30 @@
+{
+    "name": "Zeen Connect Dev",
+    "dockerComposeFile": "../docker-compose.dev.yml",
+    "service": "app",
+    "workspaceFolder": "/var/www/html",
+    "shutdownAction": "none",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Vue.volar",
+                "bmewburn.vscode-intelephense-client",
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "bradlc.vscode-tailwindcss",
+                "mikestead.dotenv",
+                "EditorConfig.EditorConfig"
+            ],
+            "settings": {
+                "php.validate.executablePath": "/usr/local/bin/php",
+                "editor.formatOnSave": true,
+                "editor.defaultFormatter": "esbenp.prettier-vscode",
+                "[php]": {
+                    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+                }
+            }
+        }
+    },
+    "forwardPorts": [80, 5173],
+    "postAttachCommand": "echo 'Dev container ready! Laravel: http://localhost, Vite HMR active.'"
+}

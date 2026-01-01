@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    expose:
+      - "80"
+    volumes:
+      # Mount source code for live sync
+      - .:/var/www/html
+      # Preserve dependencies (don't overwrite with empty host folders)
+      - vendor:/var/www/html/vendor
+      - node_modules:/var/www/html/node_modules
+    environment:
+      # App
+      APP_NAME: ${APP_NAME:-Zeen}
+      APP_ENV: ${APP_ENV:-local}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL}
+
+      # Vite HMR
+      VITE_HMR_HOST: ${VITE_HMR_HOST}
+
+      # Domains
+      MAIN_DOMAIN: ${MAIN_DOMAIN}
+      AUTH_DOMAIN: ${AUTH_DOMAIN}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
+      CONSOLE_DOMAIN: ${CONSOLE_DOMAIN}
+      PAYMENTS_DOMAIN: ${PAYMENTS_DOMAIN}
+
+      # Database (external service)
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # Redis (external service)
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+
+      # Cache & Queue
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+
+volumes:
+  vendor:
+    driver: local
+  node_modules:
+    driver: local

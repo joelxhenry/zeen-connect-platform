@@ -19,7 +19,8 @@ RUN apk add --no-cache \
     libzip \
     icu-libs \
     oniguruma \
-    postgresql-libs
+    postgresql-libs \
+    sqlite-libs
 
 # Install PHP extension build dependencies and compile extensions
 RUN apk add --no-cache --virtual .build-deps \
@@ -31,6 +32,7 @@ RUN apk add --no-cache --virtual .build-deps \
     icu-dev \
     oniguruma-dev \
     postgresql-dev \
+    sqlite-dev \
     linux-headers \
     $PHPIZE_DEPS \
     && docker-php-ext-configure gd \

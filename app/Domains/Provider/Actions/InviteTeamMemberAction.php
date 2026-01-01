@@ -14,7 +14,7 @@ class InviteTeamMemberAction
     /**
      * Invite a new team member via email.
      *
-     * @param  array{email: string, name?: string, permissions: array<string>}  $data
+     * @param  array{email: string, name?: string, title?: string, permissions: array<string>}  $data
      */
     public function execute(Provider $provider, array $data): TeamMember
     {
@@ -25,6 +25,7 @@ class InviteTeamMemberAction
         $teamMember = $provider->teamMembers()->create([
             'email' => $data['email'],
             'name' => $data['name'] ?? null,
+            'title' => $data['title'] ?? null,
             'permissions' => $permissions,
             'status' => TeamMemberStatus::PENDING,
         ]);

@@ -8,12 +8,18 @@ use App\Domains\Provider\Models\TeamMember;
 class UpdateTeamMemberPermissionsAction
 {
     /**
-     * Update a team member's permissions.
+     * Update a team member's permissions and title.
      *
-     * @param  array{permissions: array<string>}  $data
+     * @param  array{title?: string, permissions: array<string>}  $data
      */
     public function execute(TeamMember $teamMember, array $data): TeamMember
     {
+        // Update title if provided
+        if (array_key_exists('title', $data)) {
+            $teamMember->title = $data['title'];
+            $teamMember->save();
+        }
+
         // Validate and set permissions
         $permissions = TeamPermission::validate($data['permissions'] ?? []);
         $teamMember->setPermissions($permissions);

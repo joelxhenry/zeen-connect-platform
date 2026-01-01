@@ -26,6 +26,7 @@ class UpdateTeamMemberRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'title' => ['nullable', 'string', 'max:100'],
             'permissions' => ['required', 'array', 'min:1'],
             'permissions.*' => ['string', Rule::in(TeamPermission::keys())],
         ];

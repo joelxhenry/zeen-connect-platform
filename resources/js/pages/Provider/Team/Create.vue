@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
-import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
@@ -48,6 +48,7 @@ const selectedPreset = ref<string | null>(null);
 const form = useForm({
     email: '',
     name: '',
+    title: '',
     permissions: [...props.defaultPermissions],
 });
 
@@ -87,7 +88,7 @@ const cancel = () => {
 </script>
 
 <template>
-    <ConsoleLayout title="Add Team Member">
+    <SettingsLayout title="Add Team Member">
         <div class="create-page">
             <!-- Extra Charge Warning -->
             <Message v-if="hasExtraCharge" severity="warn" :closable="false">
@@ -146,6 +147,18 @@ const cancel = () => {
                             class="w-full"
                         />
                         <small v-if="form.errors.name" class="p-error">{{ form.errors.name }}</small>
+                    </div>
+
+                    <div v-if="mode === 'create'" class="form-field">
+                        <label for="title" class="form-label">Title / Role</label>
+                        <InputText
+                            id="title"
+                            v-model="form.title"
+                            :class="{ 'p-invalid': form.errors.title }"
+                            placeholder="e.g., Senior Stylist"
+                            class="w-full"
+                        />
+                        <small v-if="form.errors.title" class="p-error">{{ form.errors.title }}</small>
                     </div>
 
                     <div class="form-field">
@@ -247,7 +260,7 @@ const cancel = () => {
                 />
             </div>
         </div>
-    </ConsoleLayout>
+    </SettingsLayout>
 </template>
 
 <style scoped>

@@ -36,6 +36,7 @@ class CreateTeamMemberDirectRequest extends FormRequest
                     ->where('provider_id', $provider->id),
             ],
             'name' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:100'],
             'permissions' => ['required', 'array', 'min:1'],
             'permissions.*' => ['string', Rule::in(TeamPermission::keys())],
             'send_credentials' => ['boolean'],

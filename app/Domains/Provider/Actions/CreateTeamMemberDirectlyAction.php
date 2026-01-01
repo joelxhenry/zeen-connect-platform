@@ -16,7 +16,7 @@ class CreateTeamMemberDirectlyAction
     /**
      * Create a team member directly with a new user account.
      *
-     * @param  array{email: string, name: string, permissions: array<string>, send_credentials?: bool}  $data
+     * @param  array{email: string, name: string, title?: string, permissions: array<string>, send_credentials?: bool}  $data
      * @return array{team_member: TeamMember, user: User, temporary_password: string|null}
      */
     public function execute(Provider $provider, array $data): array
@@ -32,6 +32,7 @@ class CreateTeamMemberDirectlyAction
             $teamMember = $provider->teamMembers()->create([
                 'email' => $data['email'],
                 'name' => $existingUser->name,
+                'title' => $data['title'] ?? null,
                 'user_id' => $existingUser->id,
                 'permissions' => $permissions,
                 'status' => TeamMemberStatus::ACTIVE,
@@ -60,6 +61,7 @@ class CreateTeamMemberDirectlyAction
         $teamMember = $provider->teamMembers()->create([
             'email' => $data['email'],
             'name' => $data['name'],
+            'title' => $data['title'] ?? null,
             'user_id' => $user->id,
             'permissions' => $permissions,
             'status' => TeamMemberStatus::ACTIVE,

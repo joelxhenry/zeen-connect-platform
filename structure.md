@@ -1,16 +1,55 @@
-Zeen Revised Business Structure & Loophole Fixes 
+Zeen: Tiered Feature & Pricing Structure
+1. Starter Tier (The Entry Level)
+Best for solo providers or those testing the digital market.
 
-1. Tiered Pricing Model 
+Cost: $0 Monthly / 5% Commission per booking.
 
-- Free Tier: $0 JMD/mo, 8% platform fee + trans fees, Compulsory Deposit. 
-- Premium Tier: $3,500 JMD/mo, 4% platform fee + trans fees, Up to 3  additinal providers at $800 per user per month, Branding colors and theming. 
-- Enterprise Tier: $20,000 JMD/mo, 0% platform fee (trans fees only), Unlimited providers, Custom templates, APIs, Widgets. 
+Booking Security: Compulsory $250 minimum deposit for all client bookings (helps eliminate "no-shows").
 
+Core Features:
 
-2. Strategic Loophole Fixes 
+Single user access.
 
-- Minimum Deposit (Free Tier): Mandatory $500 JMD minimum deposit to prevent $0 service price evasion. 
-- Provider Validation (Premium Tier): Unique Email/Phone and individual calendar sync per provider to prevent seat sharing. 
-- Transparent Fee Labels: Clearly distinguish "Platform Fee" from "Card Processing Fee" so Zeen doesn't eat bank costs. 
-- No-Show Protection: Automatic splitting of deposits on no-shows to incentivize platform usage over cash. 
-- Transaction-Based Ranking: Provider search rankings tied to in-app transaction volume for better visibility.
+Digital storefront and public booking link.
+
+Automated email notifications.
+
+Basic client database.
+
+2. Premium Tier (The Growth Level)
+Best for established professionals and small teams.
+
+Cost: [Monthly Fee] / 3% Commission per booking.
+
+Booking Security: Compulsory $150 minimum deposit (lower deposit barrier for clients of established pros).
+
+Team Features:
+
+Includes up to 3 team members.
+
+Scalable: Add additional members for $1,000/month per person.
+
+Advanced Features:
+
+WhatsApp notification integration.
+
+Priority listing in the Zeen directory.
+
+3. Enterprise Tier (The Professional Level)
+Best for large agencies, franchises, and tech-forward businesses.
+
+Cost: [Higher Monthly Fee] / 0% Commission.
+
+Booking Security: Customizable deposit amounts (no platform minimum).
+
+Scalability:
+
+Unlimited team members included at no extra cost.
+
+Power Tools:
+
+Widgets: Embed the Zeen booking engine directly into your own website.
+
+APIs: Full access to integrate Zeen with external CRMs, accounting software, or custom apps.
+
+White-labeling: Options to remove Zeen branding.

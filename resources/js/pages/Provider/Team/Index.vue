@@ -17,6 +17,7 @@ interface TeamMember {
     uuid: string;
     email: string;
     name: string;
+    title: string | null;
     avatar: string | null;
     permissions: string[];
     permissions_summary: string;
@@ -69,6 +70,15 @@ const getMemberMenuItems = (member: TeamMember) => {
         icon: 'pi pi-pencil',
         command: () => router.visit(resolveUrl(provider.team.edit.url({ member: member.id.toString() }))),
     });
+
+    // Edit schedule (only for active members)
+    if (member.status === 'active') {
+        items.push({
+            label: 'Edit Schedule',
+            icon: 'pi pi-clock',
+            command: () => router.visit(resolveUrl(provider.team.availability.edit.url({ member: member.id.toString() }))),
+        });
+    }
 
     // Pending member actions
     if (member.status === 'pending') {
@@ -229,6 +239,7 @@ const confirmDelete = (member: TeamMember) => {
                                     class="status-tag"
                                 />
                             </div>
+                            <span v-if="member.title" class="member-title">{{ member.title }}</span>
                             <span class="member-email">{{ member.email }}</span>
                             <span class="member-permissions">{{ member.permissions_summary }}</span>
                         </div>
@@ -363,6 +374,12 @@ const confirmDelete = (member: TeamMember) => {
 
 .status-tag {
     font-size: 0.625rem;
+}
+
+.member-title {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-slate-600, #475569);
 }
 
 .member-email {

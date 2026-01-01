@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
-import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
+import SettingsLayout from '@/components/layout/SettingsLayout.vue';
+import InputText from 'primevue/inputtext';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
@@ -27,6 +28,7 @@ interface TeamMember {
     uuid: string;
     email: string;
     name: string;
+    title: string | null;
     avatar: string | null;
     permissions: string[];
     status: string;
@@ -47,6 +49,7 @@ const props = defineProps<{
 const selectedPreset = ref<string | null>(null);
 
 const form = useForm({
+    title: props.member.title || '',
     permissions: [...props.member.permissions],
 });
 
@@ -84,6 +87,7 @@ const save = () => {
         preserveScroll: true,
         onSuccess: () => {
             form.defaults({
+                title: form.title,
                 permissions: [...form.permissions],
             });
             form.reset();
@@ -113,7 +117,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <ConsoleLayout :title="'Edit ' + member.name">
+    <SettingsLayout :title="'Edit ' + member.name">
         <div class="edit-page">
             <!-- Member Info Card -->
             <ConsoleFormCard>
@@ -145,6 +149,23 @@ onBeforeUnmount(() => {
                             </span>
                         </div>
                     </div>
+                </div>
+            </ConsoleFormCard>
+
+            <!-- Title / Role -->
+            <ConsoleFormCard title="Title / Role">
+                <p class="section-description">
+                    Set a title or role for this team member (e.g., "Senior Stylist", "Assistant").
+                </p>
+                <div class="title-field">
+                    <InputText
+                        id="title"
+                        v-model="form.title"
+                        :class="{ 'p-invalid': form.errors.title }"
+                        placeholder="e.g., Senior Stylist"
+                        class="w-full"
+                    />
+                    <small v-if="form.errors.title" class="p-error">{{ form.errors.title }}</small>
                 </div>
             </ConsoleFormCard>
 
@@ -238,7 +259,7 @@ onBeforeUnmount(() => {
                 </div>
             </Transition>
         </div>
-    </ConsoleLayout>
+    </SettingsLayout>
 </template>
 
 <style scoped>
@@ -441,11 +462,7 @@ onBeforeUnmount(() => {
 
 @media (min-width: 1024px) {
     .floating-save {
-        left: 260px;
-    }
-
-    .sidebar-collapsed .floating-save {
-        left: 72px;
+        left: 280px; /* Settings sidebar width */
     }
 }
 
@@ -486,5 +503,13 @@ onBeforeUnmount(() => {
 .slide-up-leave-to {
     opacity: 0;
     transform: translateY(20px);
+}
+
+.title-field {
+    max-width: 400px;
+}
+
+.w-full {
+    width: 100%;
 }
 </style>

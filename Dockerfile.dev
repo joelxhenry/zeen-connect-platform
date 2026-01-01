@@ -57,6 +57,9 @@ RUN apk add --no-cache --virtual .build-deps \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Install Claude Code CLI globally
+RUN npm install -g @anthropic-ai/claude-code
+
 # Set working directory
 WORKDIR /var/www/html
 

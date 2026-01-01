@@ -12,11 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('services', function (Blueprint $table) {
-            // Drop the index first
+            // Drop the foreign key constraint first (MySQL requires this before dropping index)
+            $table->dropForeign(['category_id']);
+        });
+
+        Schema::table('services', function (Blueprint $table) {
+            // Now drop the index
             $table->dropIndex(['category_id', 'is_active']);
 
-            // Drop the foreign key constraint and column
-            $table->dropForeign(['category_id']);
+            // Drop the column
             $table->dropColumn('category_id');
         });
     }

@@ -1,50 +1,73 @@
 # =============================================================================
-# Stage 1: Frontend Build
+# Stage 1: Build (PHP + Node.js for wayfinder plugin)
 # =============================================================================
-FROM node:22-alpine AS frontend
+FROM php:8.2-cli-alpine AS build
+
+# Install Node.js and build dependencies
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    git \
+    unzip \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    libzip-dev \
+    icu-dev \
+    oniguruma-dev \
+    postgresql-dev \
+    $PHPIZE_DEPS \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        pdo_pgsql \
+        gd \
+        zip \
+        intl \
+        bcmath \
+        mbstring
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package.json package-lock.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy frontend source files
-COPY resources/ resources/
-COPY vite.config.ts tsconfig.json ./
-COPY public/ public/
-
-# Build frontend assets
-RUN npm run build
-
-# =============================================================================
-# Stage 2: Composer Dependencies
-# =============================================================================
-FROM composer:2 AS vendor
-
-WORKDIR /app
-
-# Copy composer files
+# Copy composer files first for caching
 COPY composer.json composer.lock ./
 
-# Install dependencies without dev packages
+# Install PHP dependencies (including dev for build)
+RUN composer install \
+    --no-interaction \
+    --no-scripts \
+    --prefer-dist
+
+# Copy package files for npm caching
+COPY package.json package-lock.json ./
+
+# Install npm dependencies
+RUN npm ci
+
+# Copy entire application
+COPY . .
+
+# Generate autoloader
+RUN composer dump-autoload --optimize
+
+# Build frontend assets (wayfinder plugin can now run php artisan)
+RUN npm run build
+
+# Remove dev dependencies after build
 RUN composer install \
     --no-dev \
     --no-interaction \
-    --no-scripts \
-    --no-autoloader \
-    --prefer-dist
-
-# Copy application code for autoloader optimization
-COPY . .
-
-# Generate optimized autoloader
-RUN composer dump-autoload --optimize --no-dev
+    --optimize-autoloader
 
 # =============================================================================
-# Stage 3: Production Runtime
+# Stage 2: Production Runtime
 # =============================================================================
 FROM php:8.2-fpm-alpine AS production
 
@@ -62,7 +85,7 @@ RUN apk add --no-cache \
     oniguruma \
     postgresql-libs
 
-# Install PHP extension build dependencies and compile extensions
+# Install PHP extensions
 RUN apk add --no-cache --virtual .build-deps \
     libpng-dev \
     libjpeg-turbo-dev \
@@ -92,7 +115,6 @@ RUN apk add --no-cache --virtual .build-deps \
     && docker-php-ext-enable redis \
     && apk del .build-deps
 
-# Set working directory
 WORKDIR /var/www/html
 
 # Copy nginx configuration
@@ -104,14 +126,11 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Copy PHP configuration
 COPY docker/php.ini /usr/local/etc/php/conf.d/app.ini
 
-# Copy application code
-COPY --chown=www-data:www-data . .
+# Copy built application from build stage
+COPY --from=build --chown=www-data:www-data /app /var/www/html
 
-# Copy vendor from composer stage
-COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
-
-# Copy built frontend assets
-COPY --from=frontend --chown=www-data:www-data /app/public/build ./public/build
+# Remove node_modules (not needed in production)
+RUN rm -rf node_modules
 
 # Create necessary directories and set permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} \

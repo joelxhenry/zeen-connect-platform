@@ -16,7 +16,7 @@ return new class extends Migration
         });
 
         Schema::table('services', function (Blueprint $table) {
-            $table->unsignedSmallInteger('buffer_minutes')->nullable()->after('max_advance_days');
+            $table->unsignedSmallInteger('buffer_minutes')->nullable()->after('min_booking_notice_hours');
         });
     }
 

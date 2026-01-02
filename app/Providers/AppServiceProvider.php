@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Apple\AppleExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
@@ -22,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS scheme when behind a proxy (Traefik/Dokploy)
+        if ($this->app->environment('production') || request()->header('X-Forwarded-Proto') === 'https') {
+            URL::forceScheme('https');
+        }
+
         // Register Apple Socialite provider
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);

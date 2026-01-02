@@ -52,6 +52,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust all proxies (for Docker/Traefik/Dokploy)
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO);
+
         $middleware->web(prepend: [
             SetAdminSessionCookie::class,
             HandleCors::class,

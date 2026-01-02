@@ -19,6 +19,7 @@ services:
 
       # Vite HMR
       VITE_HMR_HOST: ${VITE_HMR_HOST}
+      VITE_DEV_SERVER_URL: ${APP_URL}
 
       # Domains
       MAIN_DOMAIN: ${MAIN_DOMAIN}

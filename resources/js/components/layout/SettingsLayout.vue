@@ -46,15 +46,9 @@ const menuSections = computed(() => [
             },
             {
                 label: 'Booking Settings',
-                description: 'Policies, confirmations',
+                description: 'Policies, buffer time',
                 icon: 'pi pi-sliders-h',
                 route: provider.settings.edit.url(),
-            },
-            {
-                label: 'Availability',
-                description: 'Business hours, time off',
-                icon: 'pi pi-clock',
-                route: provider.availability.edit.url(),
             },
         ],
     },
@@ -63,7 +57,7 @@ const menuSections = computed(() => [
         items: [
             {
                 label: 'Your Profile',
-                description: 'Personal info, schedule',
+                description: 'Info, availability, schedule',
                 icon: 'pi pi-user',
                 route: provider.profile.edit.url(),
             },
@@ -112,7 +106,6 @@ const isActiveRoute = (route: string) => {
         <div class="settings-layout" :class="{ 'menu-collapsed': menuCollapsed }">
             <!-- Mobile Menu Toggle -->
             <button class="mobile-menu-toggle" @click="toggleMobileMenu">
-                <i class="pi pi-bars"></i>
                 <span>Settings Menu</span>
                 <i class="pi" :class="mobileMenuOpen ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
             </button>
@@ -252,7 +245,7 @@ const isActiveRoute = (route: string) => {
 
     /* Mobile: fixed positioning below the topbar */
     position: fixed;
-    top: 57px; /* Height of mobile topbar */
+    top: 5em; /* Height of mobile topbar */
     left: 0;
     bottom: 0;
     z-index: 45; /* Below the main topbar (z-index: 50) */

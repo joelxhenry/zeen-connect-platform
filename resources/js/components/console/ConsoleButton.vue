@@ -3,14 +3,18 @@ import { computed } from 'vue';
 import AppLink from '@/components/common/AppLink.vue';
 
 interface Props {
-    label: string;
+    label?: string;
     icon?: string;
     href?: string;
-    variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+    variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'text' | 'outlined';
     size?: 'small' | 'default' | 'large';
     disabled?: boolean;
     loading?: boolean;
     type?: 'button' | 'submit';
+    rounded?: boolean;
+    iconOnly?: boolean;
+    severity?: 'danger' | 'secondary';
+    iconPos?: 'left' | 'right';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -19,11 +23,17 @@ const props = withDefaults(defineProps<Props>(), {
     disabled: false,
     loading: false,
     type: 'button',
+    rounded: false,
+    iconOnly: false,
+    iconPos: 'left',
 });
 
 const emit = defineEmits<{
     click: [event: MouseEvent];
 }>();
+
+// Auto-detect icon-only mode when no label provided
+const isIconOnly = computed(() => props.iconOnly || (!props.label && props.icon));
 
 const buttonClasses = computed(() => [
     'console-btn',
@@ -32,6 +42,10 @@ const buttonClasses = computed(() => [
     {
         'is-disabled': props.disabled,
         'is-loading': props.loading,
+        'is-rounded': props.rounded,
+        'is-icon-only': isIconOnly.value,
+        'icon-right': props.iconPos === 'right',
+        [`severity-${props.severity}`]: props.severity,
     },
 ]);
 
@@ -51,9 +65,20 @@ const handleClick = (event: MouseEvent) => {
         :disabled="disabled || loading"
         @click="handleClick"
     >
-        <i v-if="loading" class="pi pi-spin pi-spinner btn-icon"></i>
-        <i v-else-if="icon" :class="icon" class="btn-icon"></i>
-        <span class="btn-label">{{ label }}</span>
+        <!-- Icon left (default) -->
+        <template v-if="iconPos === 'left'">
+            <i v-if="loading" class="pi pi-spin pi-spinner btn-icon"></i>
+            <i v-else-if="icon" :class="icon" class="btn-icon"></i>
+        </template>
+
+        <!-- Label (hidden for icon-only) -->
+        <span v-if="label && !isIconOnly" class="btn-label">{{ label }}</span>
+
+        <!-- Icon right -->
+        <template v-if="iconPos === 'right'">
+            <i v-if="loading" class="pi pi-spin pi-spinner btn-icon"></i>
+            <i v-else-if="icon" :class="icon" class="btn-icon"></i>
+        </template>
     </component>
 </template>
 
@@ -132,6 +157,61 @@ const handleClick = (event: MouseEvent) => {
     background-color: var(--color-slate-100, #f1f5f9);
 }
 
+.variant-text {
+    background-color: transparent;
+    color: #106B4F;
+    border-color: transparent;
+}
+
+.variant-text:hover:not(.is-disabled) {
+    background-color: rgba(16, 107, 79, 0.08);
+}
+
+.variant-text.severity-danger {
+    color: #DC2626;
+}
+
+.variant-text.severity-danger:hover:not(.is-disabled) {
+    background-color: rgba(220, 38, 38, 0.08);
+}
+
+.variant-text.severity-secondary {
+    color: var(--color-slate-600, #475569);
+}
+
+.variant-text.severity-secondary:hover:not(.is-disabled) {
+    background-color: var(--color-slate-100, #f1f5f9);
+}
+
+.variant-outlined {
+    background-color: transparent;
+    color: #106B4F;
+    border-color: #106B4F;
+}
+
+.variant-outlined:hover:not(.is-disabled) {
+    background-color: rgba(16, 107, 79, 0.08);
+}
+
+.variant-outlined.severity-danger {
+    color: #DC2626;
+    border-color: #DC2626;
+}
+
+.variant-outlined.severity-danger:hover:not(.is-disabled) {
+    background-color: rgba(220, 38, 38, 0.08);
+}
+
+.variant-outlined.severity-secondary {
+    color: var(--color-slate-600, #475569);
+    border-color: var(--color-slate-200, #e2e8f0);
+}
+
+.variant-outlined.severity-secondary:hover:not(.is-disabled) {
+    background-color: var(--color-slate-50, #f8fafc);
+    border-color: var(--color-slate-300, #cbd5e1);
+}
+
 /* States */
 .is-disabled {
     opacity: 0.5;
@@ -140,6 +220,30 @@ const handleClick = (event: MouseEvent) => {
 
 .is-loading {
     cursor: wait;
+}
+
+/* Rounded modifier */
+.is-rounded {
+    border-radius: 9999px;
+}
+
+/* Icon-only modifier */
+.is-icon-only {
+    aspect-ratio: 1;
+    padding: 0.5rem;
+}
+
+.is-icon-only.size-small {
+    padding: 0.375rem;
+}
+
+.is-icon-only.size-large {
+    padding: 0.625rem;
+}
+
+/* Icon right positioning */
+.icon-right {
+    flex-direction: row-reverse;
 }
 
 /* Icon */

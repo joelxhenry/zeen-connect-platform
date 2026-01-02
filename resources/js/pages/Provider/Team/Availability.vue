@@ -3,10 +3,10 @@ import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
+import { ConsoleButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
 import InputSwitch from 'primevue/inputswitch';
-import Button from 'primevue/button';
 import Calendar from 'primevue/calendar';
 import InputText from 'primevue/inputtext';
 import Checkbox from 'primevue/checkbox';
@@ -229,17 +229,19 @@ const goBack = () => {
                         <p class="member-email">{{ teamMember.email }}</p>
                     </div>
                     <div class="header-actions">
-                        <Button
+                        <ConsoleButton
                             label="Reset to Defaults"
                             icon="pi pi-refresh"
-                            text
+                            variant="text"
+                            severity="secondary"
                             size="small"
                             @click="resetToDefaults"
                         />
-                        <Button
+                        <ConsoleButton
                             label="Back to Team"
                             icon="pi pi-arrow-left"
-                            text
+                            variant="text"
+                            severity="secondary"
                             size="small"
                             @click="goBack"
                         />
@@ -250,9 +252,10 @@ const goBack = () => {
             <!-- Weekly Schedule -->
             <ConsoleFormCard title="Working Hours">
                 <template #header-actions>
-                    <Button
+                    <ConsoleButton
                         v-if="scheduleForm.isDirty"
                         label="Save"
+                        variant="primary"
                         size="small"
                         :loading="scheduleForm.processing"
                         @click="saveSchedule"
@@ -312,19 +315,20 @@ const goBack = () => {
             <!-- Breaks -->
             <ConsoleFormCard title="Breaks">
                 <template #header-actions>
-                    <Button
+                    <ConsoleButton
                         v-if="breaksForm.isDirty"
                         label="Save"
+                        variant="primary"
                         size="small"
                         :loading="breaksForm.processing"
                         @click="saveBreaks"
                         class="mr-2"
                     />
-                    <Button
+                    <ConsoleButton
                         label="Add Break"
                         icon="pi pi-plus"
+                        variant="text"
                         size="small"
-                        text
                         @click="showAddBreak = true"
                     />
                 </template>
@@ -348,11 +352,11 @@ const goBack = () => {
                             {{ breakItem.start_time }} - {{ breakItem.end_time }}
                         </div>
                         <div class="break-label">{{ breakItem.label || 'Break' }}</div>
-                        <Button
+                        <ConsoleButton
                             icon="pi pi-trash"
-                            text
-                            rounded
+                            variant="text"
                             severity="danger"
+                            rounded
                             size="small"
                             @click="removeBreak(index)"
                         />
@@ -377,14 +381,16 @@ const goBack = () => {
                         />
                     </div>
                     <div class="form-actions">
-                        <Button
+                        <ConsoleButton
                             label="Cancel"
-                            text
+                            variant="text"
+                            severity="secondary"
                             size="small"
                             @click="showAddBreak = false"
                         />
-                        <Button
+                        <ConsoleButton
                             label="Add"
+                            variant="primary"
                             size="small"
                             @click="addBreak"
                         />
@@ -395,9 +401,10 @@ const goBack = () => {
             <!-- Blocked Dates -->
             <ConsoleFormCard title="Time Off">
                 <template #header-actions>
-                    <Button
+                    <ConsoleButton
                         v-if="blockedDatesForm.isDirty"
                         label="Save"
+                        variant="primary"
                         size="small"
                         :loading="blockedDatesForm.processing"
                         @click="saveBlockedDates"
@@ -422,9 +429,10 @@ const goBack = () => {
                         placeholder="Reason (optional)"
                         class="reason-input"
                     />
-                    <Button
+                    <ConsoleButton
                         label="Add"
                         icon="pi pi-plus"
+                        variant="primary"
                         size="small"
                         :disabled="!newBlockedDate"
                         @click="addBlockedDate"
@@ -439,11 +447,11 @@ const goBack = () => {
                     >
                         <div class="blocked-date">{{ formatDate(blocked.date) }}</div>
                         <div class="blocked-reason">{{ blocked.reason || 'No reason' }}</div>
-                        <Button
+                        <ConsoleButton
                             icon="pi pi-trash"
-                            text
-                            rounded
+                            variant="text"
                             severity="danger"
+                            rounded
                             size="small"
                             @click="removeBlockedDate(index)"
                         />

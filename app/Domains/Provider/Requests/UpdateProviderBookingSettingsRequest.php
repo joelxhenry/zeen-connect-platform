@@ -23,6 +23,7 @@ class UpdateProviderBookingSettingsRequest extends FormRequest
             'cancellation_policy' => ['required', 'in:flexible,moderate,strict'],
             'advance_booking_days' => ['required', 'integer', 'min:1', 'max:365'],
             'min_booking_notice_hours' => ['required', 'integer', 'min:1', 'max:168'],
+            'buffer_minutes' => ['required', 'integer', 'min:0', 'max:120'],
             'fee_payer' => ['sometimes', 'in:provider,client'],
         ];
     }

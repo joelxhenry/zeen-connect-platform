@@ -108,6 +108,7 @@ class Provider extends Model
             'cancellation_policy' => $this->cancellation_policy ?? 'flexible',
             'advance_booking_days' => $this->advance_booking_days ?? 30,
             'min_booking_notice_hours' => $this->min_booking_notice_hours ?? 24,
+            'buffer_minutes' => $this->buffer_minutes ?? 0,
         ];
     }
 

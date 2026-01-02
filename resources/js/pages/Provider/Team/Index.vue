@@ -3,9 +3,9 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleEmptyState from '@/components/console/ConsoleEmptyState.vue';
+import { ConsoleButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
-import Button from 'primevue/button';
 import Avatar from 'primevue/avatar';
 import Tag from 'primevue/tag';
 import Menu from 'primevue/menu';
@@ -168,9 +168,10 @@ const confirmDelete = (member: TeamMember) => {
 <template>
     <SettingsLayout title="Team">
         <template #header-actions>
-            <Button
+            <ConsoleButton
                 label="Add Team Member"
                 icon="pi pi-plus"
+                variant="primary"
                 @click="router.visit(resolveUrl(provider.team.create.url()))"
             />
         </template>
@@ -206,9 +207,10 @@ const confirmDelete = (member: TeamMember) => {
                 description="Invite team members to help manage your business. They can handle bookings, services, and more based on the permissions you assign."
             >
                 <template #actions>
-                    <Button
+                    <ConsoleButton
                         label="Add Your First Team Member"
                         icon="pi pi-plus"
+                        variant="primary"
                         @click="router.visit(resolveUrl(provider.team.create.url()))"
                     />
                 </template>
@@ -249,12 +251,12 @@ const confirmDelete = (member: TeamMember) => {
                         <div v-if="member.status === 'pending'" class="pending-info">
                             <span class="pending-label">Invited {{ member.invited_at }}</span>
                         </div>
-                        <Button
+                        <ConsoleButton
                             icon="pi pi-ellipsis-v"
-                            text
+                            variant="text"
+                            severity="secondary"
                             rounded
                             @click="toggleMenu($event, member)"
-                            aria-label="Member actions"
                         />
                         <Menu
                             :ref="(el: any) => menuRef[member.id] = el"

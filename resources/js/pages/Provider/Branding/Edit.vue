@@ -5,17 +5,16 @@ import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
 import SingleImageUpload from '@/components/media/SingleImageUpload.vue';
 import GalleryUpload from '@/components/media/GalleryUpload.vue';
+import { ConsoleButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
-import TabView from 'primevue/tabview';
-import TabPanel from 'primevue/tabpanel';
-import ColorPicker from 'primevue/colorpicker';
 import InputText from 'primevue/inputtext';
+import ColorPicker from 'primevue/colorpicker';
 import Textarea from 'primevue/textarea';
 import Select from 'primevue/select';
-import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Tag from 'primevue/tag';
+import Dialog from 'primevue/dialog';
 import ProgressSpinner from 'primevue/progressspinner';
 
 interface MediaItem {
@@ -26,18 +25,6 @@ interface MediaItem {
     medium: string;
     large: string;
     filename: string;
-    order: number;
-}
-
-interface VideoEmbed {
-    id: number;
-    uuid: string;
-    platform: string;
-    video_id: string;
-    url: string;
-    embed_url: string;
-    title: string | null;
-    thumbnail_url: string | null;
     order: number;
 }
 
@@ -103,13 +90,23 @@ const props = defineProps<{
     siteUrl: string;
 }>();
 
+// ============================================
+// SECTION NAVIGATION
+// ============================================
+type Section = 'visuals' | 'content' | 'domain' | 'preview';
+const activeSection = ref<Section>('visuals');
+
+const sections = [
+    { key: 'visuals' as Section, label: 'Visuals', icon: 'pi pi-palette' },
+    { key: 'content' as Section, label: 'Content', icon: 'pi pi-file-edit' },
+    { key: 'domain' as Section, label: 'Domain', icon: 'pi pi-globe' },
+    { key: 'preview' as Section, label: 'Preview', icon: 'pi pi-eye' },
+];
+
 // Reactive media state
 const logoMedia = ref<MediaItem | null>(props.logo);
 const coverMedia = ref<MediaItem | null>(props.cover);
 const galleryMedia = ref<MediaItem[]>(props.gallery || []);
-
-// Active tab
-const activeTab = ref(0);
 
 // ============================================
 // VISUALS TAB - Colors Form
@@ -164,6 +161,8 @@ const resetColorsToDefaults = () => {
 // Template Selection
 const selectedTemplate = ref(props.currentTemplate);
 const templateSaving = ref(false);
+const previewTemplate = ref<Template | null>(null);
+const showTemplatePreview = ref(false);
 
 const selectTemplate = async (template: Template) => {
     if (!template.is_available || templateSaving.value) return;
@@ -179,6 +178,19 @@ const selectTemplate = async (template: Template) => {
             templateSaving.value = false;
         },
     });
+};
+
+const openTemplatePreview = (template: Template, event: Event) => {
+    event.stopPropagation();
+    previewTemplate.value = template;
+    showTemplatePreview.value = true;
+};
+
+const selectAndClosePreview = () => {
+    if (previewTemplate.value && previewTemplate.value.is_available) {
+        selectTemplate(previewTemplate.value);
+        showTemplatePreview.value = false;
+    }
 };
 
 // Media handlers
@@ -311,7 +323,6 @@ const saveDomain = () => {
 // ============================================
 // PREVIEW TAB
 // ============================================
-const previewDevice = ref<'mobile' | 'desktop'>('desktop');
 const previewKey = ref(0);
 
 const previewUrl = computed(() => {
@@ -361,483 +372,533 @@ onBeforeUnmount(() => {
                             <p>You're currently on the {{ currentTierLabel }} plan. Upgrade to customize your brand.</p>
                         </div>
                     </div>
-                    <Button
+                    <ConsoleButton
                         label="Upgrade Plan"
                         icon="pi pi-arrow-up-right"
+                        variant="primary"
                         size="small"
                         @click="router.visit(resolveUrl(provider.subscription.index.url()))"
                     />
                 </div>
             </Message>
 
-            <!-- Tab Navigation -->
-            <TabView v-model:activeIndex="activeTab" class="branding-tabs">
-                <!-- ================================ -->
-                <!-- VISUALS TAB -->
-                <!-- ================================ -->
-                <TabPanel value="0" header="Visuals">
-                    <div class="tab-content">
-                        <!-- Logo -->
-                        <ConsoleFormCard title="Logo">
-                            <div class="media-section">
-                                <SingleImageUpload
-                                    v-model="logoMedia"
-                                    :uploadUrl="resolveUrl(provider.media.upload.url())"
-                                    collection="logo"
-                                    shape="square"
-                                    placeholder="Upload Logo"
-                                    @uploaded="handleLogoUploaded"
-                                />
-                                <div class="media-hints">
-                                    <p>Your logo appears in your booking site header and email communications.</p>
-                                    <ul>
-                                        <li>Recommended size: 200x200 pixels</li>
-                                        <li>Formats: PNG, JPG, WebP</li>
-                                        <li>Maximum file size: 2MB</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </ConsoleFormCard>
+            <!-- Section Toggle Navigation -->
+            <div class="section-nav">
+                <button
+                    v-for="section in sections"
+                    :key="section.key"
+                    type="button"
+                    class="section-btn"
+                    :class="{ active: activeSection === section.key }"
+                    @click="activeSection = section.key"
+                >
+                    <i :class="section.icon"></i>
+                    <span>{{ section.label }}</span>
+                </button>
+            </div>
 
-                        <!-- Cover Photo -->
-                        <ConsoleFormCard title="Cover Photo">
-                            <div class="cover-section">
-                                <SingleImageUpload
-                                    v-model="coverMedia"
-                                    :uploadUrl="resolveUrl(provider.media.upload.url())"
-                                    collection="cover"
-                                    shape="cover"
-                                    placeholder="Upload Cover Photo"
-                                    @uploaded="handleCoverUploaded"
-                                />
-                                <p class="media-hint">
-                                    Recommended size: 1200x400 pixels. This appears at the top of your booking site.
-                                </p>
-                            </div>
-                        </ConsoleFormCard>
-
-                        <!-- Gallery -->
-                        <ConsoleFormCard title="Gallery">
-                            <p class="section-description">
-                                Showcase your work with up to 6 images and 3 videos. Drag to reorder.
-                            </p>
-                            <GalleryUpload
-                                v-model="galleryMedia"
-                                :uploadUrl="resolveUrl(provider.media.uploadMultiple.url())"
-                                :videoAddUrl="resolveUrl(provider.videos.provider.add.url())"
-                                collection="gallery"
-                                :maxFiles="6"
-                                :maxVideos="3"
-                                :showVideos="true"
-                                @uploaded="handleGalleryUpdated"
-                                @deleted="handleGalleryUpdated"
-                            />
-                        </ConsoleFormCard>
-
-                        <!-- Brand Colors -->
-                        <ConsoleFormCard title="Brand Colors">
-                            <template #header-actions>
-                                <Button
-                                    label="Reset"
-                                    icon="pi pi-refresh"
-                                    text
-                                    size="small"
-                                    :disabled="!canAccess"
-                                    @click="resetColorsToDefaults"
-                                />
-                            </template>
-
-                            <p class="section-description">
-                                Choose your brand colors. The system will generate a complete palette based on these.
-                            </p>
-
-                            <div class="color-section" :class="{ disabled: !canAccess }">
-                                <div class="color-pickers-row">
-                                    <div v-for="field in colorFields" :key="field.key" class="color-picker-field">
-                                        <ColorPicker
-                                            :id="field.key"
-                                            :modelValue="toPickerValue((colorForm as any)[field.key])"
-                                            @update:modelValue="(colorForm as any)[field.key] = fromPickerValue($event as string)"
-                                            format="hex"
-                                            :disabled="!canAccess"
-                                            class="color-picker-circle"
-                                        />
-                                        <div class="color-picker-info">
-                                            <label :for="field.key" class="color-picker-label">{{ field.label }}</label>
-                                            <small class="color-picker-desc">{{ field.description }}</small>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Color Mode Toggle -->
-                                <div class="color-mode-section">
-                                    <label class="color-mode-label">Site Theme</label>
-                                    <div class="color-mode-toggle">
-                                        <button
-                                            v-for="mode in colorModeOptions"
-                                            :key="mode.value"
-                                            type="button"
-                                            class="color-mode-btn"
-                                            :class="{ active: colorForm.color_mode === mode.value }"
-                                            :disabled="!canAccess"
-                                            @click="colorForm.color_mode = mode.value"
-                                        >
-                                            <i :class="mode.icon"></i>
-                                            <span>{{ mode.label }}</span>
-                                        </button>
-                                    </div>
-                                    <small class="color-mode-hint">
-                                        Choose how your site appears: always light, always dark, or match visitor's system preference.
-                                    </small>
-                                </div>
-                            </div>
-
-                            <div v-if="colorForm.isDirty && canAccess" class="form-actions">
-                                <Button
-                                    label="Discard"
-                                    severity="secondary"
-                                    text
-                                    @click="colorForm.reset()"
-                                />
-                                <Button
-                                    label="Save Colors"
-                                    :loading="colorForm.processing"
-                                    @click="saveColors"
-                                />
-                            </div>
-                        </ConsoleFormCard>
-
-                        <!-- Template Selection -->
-                        <ConsoleFormCard title="Site Template">
-                            <p class="section-description">
-                                Choose a template design for your booking site.
-                            </p>
-                            <div class="template-grid">
-                                <div
-                                    v-for="template in templates"
-                                    :key="template.value"
-                                    class="template-card"
-                                    :class="{
-                                        selected: selectedTemplate === template.value,
-                                        unavailable: !template.is_available,
-                                    }"
-                                    @click="selectTemplate(template)"
-                                >
-                                    <div class="template-preview">
-                                        <div v-if="template.thumbnail" class="template-thumb">
-                                            <img :src="template.thumbnail" :alt="template.label" />
-                                        </div>
-                                        <div v-else class="template-thumb placeholder">
-                                            <i class="pi pi-palette"></i>
-                                        </div>
-                                        <div v-if="selectedTemplate === template.value && templateSaving" class="template-loading">
-                                            <ProgressSpinner style="width: 24px; height: 24px" strokeWidth="3" />
-                                        </div>
-                                    </div>
-                                    <div class="template-info">
-                                        <div class="template-header">
-                                            <span class="template-name">{{ template.label }}</span>
-                                            <Tag
-                                                v-if="!template.is_available && template.required_tier"
-                                                :value="template.required_tier"
-                                                severity="warn"
-                                                class="template-tier"
-                                            />
-                                            <i
-                                                v-if="selectedTemplate === template.value"
-                                                class="pi pi-check-circle template-check"
-                                            ></i>
-                                        </div>
-                                        <p class="template-description">{{ template.description }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </ConsoleFormCard>
-                    </div>
-                </TabPanel>
-
-                <!-- ================================ -->
-                <!-- CONTENT TAB -->
-                <!-- ================================ -->
-                <TabPanel value="1" header="Content">
-                    <div class="tab-content">
-                        <ConsoleFormCard title="Business Identity">
-                            <div class="form-grid">
-                                <div class="form-field">
-                                    <label for="business_name" class="form-label">Business Name *</label>
-                                    <InputText
-                                        id="business_name"
-                                        v-model="contentForm.business_name"
-                                        placeholder="Your business name"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.business_name }"
-                                        maxlength="100"
-                                    />
-                                    <small v-if="contentForm.errors.business_name" class="p-error">
-                                        {{ contentForm.errors.business_name }}
-                                    </small>
-                                </div>
-
-                                <div class="form-field">
-                                    <label for="industry" class="form-label">Industry</label>
-                                    <Select
-                                        id="industry"
-                                        v-model="contentForm.industry_id"
-                                        :options="industries"
-                                        optionLabel="name"
-                                        optionValue="id"
-                                        placeholder="Select your industry"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.industry_id }"
-                                    />
-                                    <small v-if="contentForm.errors.industry_id" class="p-error">
-                                        {{ contentForm.errors.industry_id }}
-                                    </small>
-                                </div>
-
-                                <div class="form-field">
-                                    <label for="tagline" class="form-label">Tagline</label>
-                                    <InputText
-                                        id="tagline"
-                                        v-model="contentForm.tagline"
-                                        placeholder="A short phrase that captures your business"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.tagline }"
-                                        maxlength="150"
-                                    />
-                                    <div class="field-footer">
-                                        <small v-if="contentForm.errors.tagline" class="p-error">
-                                            {{ contentForm.errors.tagline }}
-                                        </small>
-                                        <small class="char-count">{{ contentForm.tagline?.length || 0 }}/150</small>
-                                    </div>
-                                </div>
-
-                                <div class="form-field full-width">
-                                    <label for="bio" class="form-label">About / Bio</label>
-                                    <Textarea
-                                        id="bio"
-                                        v-model="contentForm.bio"
-                                        rows="5"
-                                        placeholder="Tell clients about your business, experience, and what makes you unique..."
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.bio }"
-                                        maxlength="1000"
-                                    />
-                                    <div class="field-footer">
-                                        <small v-if="contentForm.errors.bio" class="p-error">
-                                            {{ contentForm.errors.bio }}
-                                        </small>
-                                        <small class="char-count">{{ contentForm.bio?.length || 0 }}/1000</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </ConsoleFormCard>
-
-                        <ConsoleFormCard title="Contact Information">
-                            <div class="form-grid">
-                                <div class="form-field">
-                                    <label for="address" class="form-label">Address</label>
-                                    <InputText
-                                        id="address"
-                                        v-model="contentForm.address"
-                                        placeholder="Your business address"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.address }"
-                                    />
-                                    <small v-if="contentForm.errors.address" class="p-error">
-                                        {{ contentForm.errors.address }}
-                                    </small>
-                                </div>
-
-                                <div class="form-field">
-                                    <label for="website" class="form-label">Website</label>
-                                    <InputText
-                                        id="website"
-                                        v-model="contentForm.website"
-                                        type="url"
-                                        placeholder="https://yourwebsite.com"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': contentForm.errors.website }"
-                                    />
-                                    <small v-if="contentForm.errors.website" class="p-error">
-                                        {{ contentForm.errors.website }}
-                                    </small>
-                                </div>
-                            </div>
-                        </ConsoleFormCard>
-
-                        <ConsoleFormCard title="Social Links">
-                            <p class="section-description">
-                                Connect your social media profiles to help clients find you online.
-                            </p>
-                            <div class="social-links-grid">
-                                <div v-for="platform in socialPlatforms" :key="platform.key" class="social-field">
-                                    <label :for="`social_${platform.key}`" class="form-label">
-                                        <i :class="platform.icon"></i>
-                                        {{ platform.label }}
-                                    </label>
-                                    <InputText
-                                        :id="`social_${platform.key}`"
-                                        v-model="(contentForm.social_links as any)[platform.key]"
-                                        :placeholder="platform.placeholder"
-                                        class="w-full"
-                                        :class="{ 'p-invalid': (contentForm.errors as any)[`social_links.${platform.key}`] }"
-                                    />
-                                    <small v-if="(contentForm.errors as any)[`social_links.${platform.key}`]" class="p-error">
-                                        {{ (contentForm.errors as any)[`social_links.${platform.key}`] }}
-                                    </small>
-                                </div>
-                            </div>
-                        </ConsoleFormCard>
-
-                        <div v-if="contentForm.isDirty" class="form-actions sticky-actions">
-                            <Button
-                                label="Discard"
-                                severity="secondary"
-                                text
-                                @click="contentForm.reset()"
-                            />
-                            <Button
-                                label="Save Content"
-                                :loading="contentForm.processing"
-                                @click="saveContent"
-                            />
+            <!-- ================================ -->
+            <!-- VISUALS SECTION -->
+            <!-- ================================ -->
+            <template v-if="activeSection === 'visuals'">
+                <!-- Logo -->
+                <ConsoleFormCard title="Logo">
+                    <div class="media-section">
+                        <SingleImageUpload
+                            v-model="logoMedia"
+                            :uploadUrl="resolveUrl(provider.media.upload.url())"
+                            collection="logo"
+                            shape="square"
+                            placeholder="Upload Logo"
+                            @uploaded="handleLogoUploaded"
+                        />
+                        <div class="media-hints">
+                            <p>Your logo appears in your booking site header and email communications.</p>
+                            <ul>
+                                <li>Recommended size: 200x200 pixels</li>
+                                <li>Formats: PNG, JPG, WebP</li>
+                                <li>Maximum file size: 2MB</li>
+                            </ul>
                         </div>
                     </div>
-                </TabPanel>
+                </ConsoleFormCard>
 
-                <!-- ================================ -->
-                <!-- DOMAIN TAB -->
-                <!-- ================================ -->
-                <TabPanel value="2" header="Domain">
-                    <div class="tab-content">
-                        <ConsoleFormCard title="Your Booking Site URL">
-                            <p class="section-description">
-                                Customize your booking site's subdomain. This is the URL your clients will use to book with you.
-                            </p>
-
-                            <div class="domain-editor">
-                                <div class="domain-input-wrapper">
-                                    <InputText
-                                        v-model="domainForm.domain"
-                                        placeholder="your-business"
-                                        class="domain-input"
-                                        :class="{
-                                            'p-invalid': domainForm.errors.domain || domainAvailable === false,
-                                            'is-valid': domainAvailable === true,
-                                        }"
-                                    />
-                                    <span class="domain-suffix">.zeenconnect.com</span>
-                                    <div v-if="domainChecking" class="domain-status checking">
-                                        <ProgressSpinner style="width: 16px; height: 16px" strokeWidth="4" />
-                                    </div>
-                                    <div v-else-if="domainAvailable === true" class="domain-status available">
-                                        <i class="pi pi-check-circle"></i>
-                                    </div>
-                                    <div v-else-if="domainAvailable === false" class="domain-status unavailable">
-                                        <i class="pi pi-times-circle"></i>
-                                    </div>
-                                </div>
-
-                                <div class="domain-preview">
-                                    <span class="preview-label">Your URL:</span>
-                                    <span class="preview-url">https://{{ domainPreview }}</span>
-                                </div>
-
-                                <small v-if="domainForm.errors.domain" class="p-error">
-                                    {{ domainForm.errors.domain }}
-                                </small>
-                                <small v-else-if="domainAvailable === false" class="p-error">
-                                    This domain is already taken. Please choose another.
-                                </small>
-
-                                <Message v-if="domainForm.isDirty && domainForm.domain !== domain" severity="warn" :closable="false" class="domain-warning">
-                                    <i class="pi pi-exclamation-triangle"></i>
-                                    <span>Changing your domain will break any existing links to your booking site.</span>
-                                </Message>
-                            </div>
-
-                            <div class="domain-rules">
-                                <h4>Domain Requirements</h4>
-                                <ul>
-                                    <li>3-30 characters long</li>
-                                    <li>Lowercase letters, numbers, and hyphens only</li>
-                                    <li>Cannot start or end with a hyphen</li>
-                                </ul>
-                            </div>
-
-                            <div v-if="domainForm.isDirty" class="form-actions">
-                                <Button
-                                    label="Discard"
-                                    severity="secondary"
-                                    text
-                                    @click="domainForm.reset(); domainAvailable = null"
-                                />
-                                <Button
-                                    label="Save Domain"
-                                    :loading="domainForm.processing"
-                                    :disabled="domainAvailable === false || domainChecking"
-                                    @click="saveDomain"
-                                />
-                            </div>
-                        </ConsoleFormCard>
-                    </div>
-                </TabPanel>
-
-                <!-- ================================ -->
-                <!-- PREVIEW TAB -->
-                <!-- ================================ -->
-                <TabPanel value="3" header="Preview">
-                    <div class="tab-content preview-tab">
-                        <div class="preview-controls">
-                            <div class="device-toggle">
-                                <button
-                                    type="button"
-                                    class="device-btn"
-                                    :class="{ active: previewDevice === 'mobile' }"
-                                    @click="previewDevice = 'mobile'"
-                                >
-                                    <i class="pi pi-mobile"></i>
-                                    Mobile
-                                </button>
-                                <button
-                                    type="button"
-                                    class="device-btn"
-                                    :class="{ active: previewDevice === 'desktop' }"
-                                    @click="previewDevice = 'desktop'"
-                                >
-                                    <i class="pi pi-desktop"></i>
-                                    Desktop
-                                </button>
-                            </div>
-                            <Button
-                                label="Refresh"
-                                icon="pi pi-refresh"
-                                text
-                                size="small"
-                                @click="refreshPreview"
-                            />
-                        </div>
-
-                        <div class="preview-container" :class="previewDevice">
-                            <div class="preview-frame">
-                                <iframe
-                                    :key="previewKey"
-                                    :src="previewUrl"
-                                    class="preview-iframe"
-                                    title="Site Preview"
-                                />
-                            </div>
-                        </div>
-
-                        <p class="preview-hint">
-                            <i class="pi pi-info-circle"></i>
-                            This is a live preview of your booking site. Changes you make will appear after saving.
+                <!-- Cover Photo -->
+                <ConsoleFormCard title="Cover Photo">
+                    <div class="cover-section">
+                        <SingleImageUpload
+                            v-model="coverMedia"
+                            :uploadUrl="resolveUrl(provider.media.upload.url())"
+                            collection="cover"
+                            shape="cover"
+                            placeholder="Upload Cover Photo"
+                            @uploaded="handleCoverUploaded"
+                        />
+                        <p class="media-hint">
+                            Recommended size: 1200x400 pixels. This appears at the top of your booking site.
                         </p>
                     </div>
-                </TabPanel>
-            </TabView>
+                </ConsoleFormCard>
+
+                <!-- Gallery -->
+                <ConsoleFormCard title="Gallery">
+                    <p class="section-description">
+                        Showcase your work with up to 6 images and 3 videos. Drag to reorder.
+                    </p>
+                    <GalleryUpload
+                        v-model="galleryMedia"
+                        :uploadUrl="resolveUrl(provider.media.uploadMultiple.url())"
+                        :videoAddUrl="resolveUrl(provider.videos.provider.add.url())"
+                        collection="gallery"
+                        :maxFiles="6"
+                        :maxVideos="3"
+                        :showVideos="true"
+                        @uploaded="handleGalleryUpdated"
+                        @deleted="handleGalleryUpdated"
+                    />
+                </ConsoleFormCard>
+
+                <!-- Brand Colors -->
+                <ConsoleFormCard title="Brand Colors">
+                    <template #header-actions>
+                        <ConsoleButton
+                            label="Reset"
+                            icon="pi pi-refresh"
+                            variant="text"
+                            severity="secondary"
+                            size="small"
+                            :disabled="!canAccess"
+                            @click="resetColorsToDefaults"
+                        />
+                    </template>
+
+                    <p class="section-description">
+                        Choose your brand colors. The system will generate a complete palette based on these.
+                    </p>
+
+                    <div class="color-section" :class="{ disabled: !canAccess }">
+                        <div class="color-pickers-row">
+                            <div v-for="field in colorFields" :key="field.key" class="color-picker-field">
+                                <ColorPicker
+                                    :id="field.key"
+                                    :modelValue="toPickerValue((colorForm as any)[field.key])"
+                                    @update:modelValue="(colorForm as any)[field.key] = fromPickerValue($event as string)"
+                                    format="hex"
+                                    :disabled="!canAccess"
+                                    class="color-picker-circle"
+                                />
+                                <div class="color-picker-info">
+                                    <label :for="field.key" class="color-picker-label">{{ field.label }}</label>
+                                    <small class="color-picker-desc">{{ field.description }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Mode Toggle -->
+                        <div class="color-mode-section">
+                            <label class="color-mode-label">Site Theme</label>
+                            <div class="color-mode-toggle">
+                                <button
+                                    v-for="mode in colorModeOptions"
+                                    :key="mode.value"
+                                    type="button"
+                                    class="color-mode-btn"
+                                    :class="{ active: colorForm.color_mode === mode.value }"
+                                    :disabled="!canAccess"
+                                    @click="colorForm.color_mode = mode.value"
+                                >
+                                    <i :class="mode.icon"></i>
+                                    <span>{{ mode.label }}</span>
+                                </button>
+                            </div>
+                            <small class="color-mode-hint">
+                                Choose how your site appears: always light, always dark, or match visitor's system preference.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div v-if="colorForm.isDirty && canAccess" class="form-actions">
+                        <ConsoleButton
+                            label="Discard"
+                            variant="text"
+                            severity="secondary"
+                            @click="colorForm.reset()"
+                        />
+                        <ConsoleButton
+                            label="Save Colors"
+                            variant="primary"
+                            :loading="colorForm.processing"
+                            @click="saveColors"
+                        />
+                    </div>
+                </ConsoleFormCard>
+
+                <!-- Template Selection -->
+                <ConsoleFormCard title="Site Template">
+                    <p class="section-description">
+                        Choose a template design for your booking site.
+                    </p>
+                    <div class="template-grid">
+                        <div
+                            v-for="template in templates"
+                            :key="template.value"
+                            class="template-card"
+                            :class="{
+                                selected: selectedTemplate === template.value,
+                                unavailable: !template.is_available,
+                            }"
+                            @click="selectTemplate(template)"
+                        >
+                            <div class="template-preview">
+                                <div v-if="template.thumbnail" class="template-thumb">
+                                    <img :src="template.thumbnail" :alt="template.label" />
+                                </div>
+                                <div v-else class="template-thumb placeholder">
+                                    <i class="pi pi-palette"></i>
+                                </div>
+                                <div v-if="selectedTemplate === template.value && templateSaving" class="template-loading">
+                                    <ProgressSpinner style="width: 20px; height: 20px" strokeWidth="3" />
+                                </div>
+                                <button
+                                    type="button"
+                                    class="template-preview-btn"
+                                    @click="openTemplatePreview(template, $event)"
+                                    title="Preview template"
+                                >
+                                    <i class="pi pi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-header">
+                                    <span class="template-name">{{ template.label }}</span>
+                                    <Tag
+                                        v-if="!template.is_available && template.required_tier"
+                                        :value="template.required_tier"
+                                        severity="warn"
+                                        class="template-tier"
+                                    />
+                                    <i
+                                        v-if="selectedTemplate === template.value"
+                                        class="pi pi-check-circle template-check"
+                                    ></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </ConsoleFormCard>
+
+                <!-- Template Preview Dialog -->
+                <Dialog
+                    v-model:visible="showTemplatePreview"
+                    :header="previewTemplate?.label || 'Template Preview'"
+                    modal
+                    :style="{ width: '90vw', maxWidth: '500px' }"
+                    :breakpoints="{ '640px': '95vw' }"
+                    class="template-preview-dialog"
+                >
+                    <div v-if="previewTemplate" class="preview-dialog-content">
+                        <div class="preview-dialog-image">
+                            <img
+                                v-if="previewTemplate.thumbnail"
+                                :src="previewTemplate.thumbnail"
+                                :alt="previewTemplate.label"
+                            />
+                            <div v-else class="preview-dialog-placeholder">
+                                <i class="pi pi-palette"></i>
+                                <span>No preview available</span>
+                            </div>
+                        </div>
+                        <p class="preview-dialog-description">{{ previewTemplate.description }}</p>
+                        <div v-if="!previewTemplate.is_available && previewTemplate.required_tier" class="preview-dialog-tier">
+                            <i class="pi pi-lock"></i>
+                            <span>Requires {{ previewTemplate.required_tier }} tier</span>
+                        </div>
+                    </div>
+                    <template #footer>
+                        <div class="preview-dialog-footer">
+                            <ConsoleButton
+                                label="Close"
+                                variant="text"
+                                severity="secondary"
+                                @click="showTemplatePreview = false"
+                            />
+                            <ConsoleButton
+                                v-if="previewTemplate?.is_available"
+                                :label="selectedTemplate === previewTemplate?.value ? 'Selected' : 'Use This Template'"
+                                :icon="selectedTemplate === previewTemplate?.value ? 'pi pi-check' : undefined"
+                                variant="primary"
+                                :disabled="selectedTemplate === previewTemplate?.value"
+                                @click="selectAndClosePreview"
+                            />
+                        </div>
+                    </template>
+                </Dialog>
+            </template>
+
+            <!-- ================================ -->
+            <!-- CONTENT SECTION -->
+            <!-- ================================ -->
+            <template v-if="activeSection === 'content'">
+                <ConsoleFormCard title="Business Identity">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="business_name" class="form-label">Business Name *</label>
+                            <InputText
+                                id="business_name"
+                                v-model="contentForm.business_name"
+                                placeholder="Your business name"
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.business_name }"
+                                maxlength="100"
+                            />
+                            <small v-if="contentForm.errors.business_name" class="p-error">
+                                {{ contentForm.errors.business_name }}
+                            </small>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="industry" class="form-label">Industry</label>
+                            <Select
+                                id="industry"
+                                v-model="contentForm.industry_id"
+                                :options="industries"
+                                optionLabel="name"
+                                optionValue="id"
+                                placeholder="Select your industry"
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.industry_id }"
+                            />
+                            <small v-if="contentForm.errors.industry_id" class="p-error">
+                                {{ contentForm.errors.industry_id }}
+                            </small>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="tagline" class="form-label">Tagline</label>
+                            <InputText
+                                id="tagline"
+                                v-model="contentForm.tagline"
+                                placeholder="A short phrase that captures your business"
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.tagline }"
+                                maxlength="150"
+                            />
+                            <div class="field-footer">
+                                <small v-if="contentForm.errors.tagline" class="p-error">
+                                    {{ contentForm.errors.tagline }}
+                                </small>
+                                <small class="char-count">{{ contentForm.tagline?.length || 0 }}/150</small>
+                            </div>
+                        </div>
+
+                        <div class="form-field full-width">
+                            <label for="bio" class="form-label">About / Bio</label>
+                            <Textarea
+                                id="bio"
+                                v-model="contentForm.bio"
+                                rows="5"
+                                placeholder="Tell clients about your business, experience, and what makes you unique..."
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.bio }"
+                                maxlength="1000"
+                            />
+                            <div class="field-footer">
+                                <small v-if="contentForm.errors.bio" class="p-error">
+                                    {{ contentForm.errors.bio }}
+                                </small>
+                                <small class="char-count">{{ contentForm.bio?.length || 0 }}/1000</small>
+                            </div>
+                        </div>
+                    </div>
+                </ConsoleFormCard>
+
+                <ConsoleFormCard title="Contact Information">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="address" class="form-label">Address</label>
+                            <InputText
+                                id="address"
+                                v-model="contentForm.address"
+                                placeholder="Your business address"
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.address }"
+                            />
+                            <small v-if="contentForm.errors.address" class="p-error">
+                                {{ contentForm.errors.address }}
+                            </small>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="website" class="form-label">Website</label>
+                            <InputText
+                                id="website"
+                                v-model="contentForm.website"
+                                type="url"
+                                placeholder="https://yourwebsite.com"
+                                class="w-full"
+                                :class="{ 'p-invalid': contentForm.errors.website }"
+                            />
+                            <small v-if="contentForm.errors.website" class="p-error">
+                                {{ contentForm.errors.website }}
+                            </small>
+                        </div>
+                    </div>
+                </ConsoleFormCard>
+
+                <ConsoleFormCard title="Social Links">
+                    <p class="section-description">
+                        Connect your social media profiles to help clients find you online.
+                    </p>
+                    <div class="social-links-grid">
+                        <div v-for="platform in socialPlatforms" :key="platform.key" class="social-field">
+                            <label :for="`social_${platform.key}`" class="form-label">
+                                <i :class="platform.icon"></i>
+                                {{ platform.label }}
+                            </label>
+                            <InputText
+                                :id="`social_${platform.key}`"
+                                v-model="(contentForm.social_links as any)[platform.key]"
+                                :placeholder="platform.placeholder"
+                                class="w-full"
+                                :class="{ 'p-invalid': (contentForm.errors as any)[`social_links.${platform.key}`] }"
+                            />
+                            <small v-if="(contentForm.errors as any)[`social_links.${platform.key}`]" class="p-error">
+                                {{ (contentForm.errors as any)[`social_links.${platform.key}`] }}
+                            </small>
+                        </div>
+                    </div>
+                </ConsoleFormCard>
+
+                <div v-if="contentForm.isDirty" class="form-actions sticky-actions">
+                    <ConsoleButton
+                        label="Discard"
+                        variant="text"
+                        severity="secondary"
+                        @click="contentForm.reset()"
+                    />
+                    <ConsoleButton
+                        label="Save Content"
+                        variant="primary"
+                        :loading="contentForm.processing"
+                        @click="saveContent"
+                    />
+                </div>
+            </template>
+
+            <!-- ================================ -->
+            <!-- DOMAIN SECTION -->
+            <!-- ================================ -->
+            <template v-if="activeSection === 'domain'">
+                <ConsoleFormCard title="Your Booking Site URL">
+                    <p class="section-description">
+                        Customize your booking site's subdomain. This is the URL your clients will use to book with you.
+                    </p>
+
+                    <div class="domain-editor">
+                        <div class="domain-input-wrapper">
+                            <InputText
+                                v-model="domainForm.domain"
+                                placeholder="your-business"
+                                class="domain-input"
+                                :class="{
+                                    'p-invalid': domainForm.errors.domain || domainAvailable === false,
+                                    'is-valid': domainAvailable === true,
+                                }"
+                            />
+                            <span class="domain-suffix">.zeenconnect.com</span>
+                            <div v-if="domainChecking" class="domain-status checking">
+                                <ProgressSpinner style="width: 16px; height: 16px" strokeWidth="4" />
+                            </div>
+                            <div v-else-if="domainAvailable === true" class="domain-status available">
+                                <i class="pi pi-check-circle"></i>
+                            </div>
+                            <div v-else-if="domainAvailable === false" class="domain-status unavailable">
+                                <i class="pi pi-times-circle"></i>
+                            </div>
+                        </div>
+
+                        <div class="domain-preview">
+                            <span class="preview-label">Your URL:</span>
+                            <span class="preview-url">https://{{ domainPreview }}</span>
+                        </div>
+
+                        <small v-if="domainForm.errors.domain" class="p-error">
+                            {{ domainForm.errors.domain }}
+                        </small>
+                        <small v-else-if="domainAvailable === false" class="p-error">
+                            This domain is already taken. Please choose another.
+                        </small>
+
+                        <Message v-if="domainForm.isDirty && domainForm.domain !== domain" severity="warn" :closable="false" class="domain-warning">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <span>Changing your domain will break any existing links to your booking site.</span>
+                        </Message>
+                    </div>
+
+                    <div class="domain-rules">
+                        <h4>Domain Requirements</h4>
+                        <ul>
+                            <li>3-30 characters long</li>
+                            <li>Lowercase letters, numbers, and hyphens only</li>
+                            <li>Cannot start or end with a hyphen</li>
+                        </ul>
+                    </div>
+
+                    <div v-if="domainForm.isDirty" class="form-actions">
+                        <ConsoleButton
+                            label="Discard"
+                            variant="text"
+                            severity="secondary"
+                            @click="domainForm.reset(); domainAvailable = null"
+                        />
+                        <ConsoleButton
+                            label="Save Domain"
+                            variant="primary"
+                            :loading="domainForm.processing"
+                            :disabled="domainAvailable === false || domainChecking"
+                            @click="saveDomain"
+                        />
+                    </div>
+                </ConsoleFormCard>
+            </template>
+
+            <!-- ================================ -->
+            <!-- PREVIEW SECTION -->
+            <!-- ================================ -->
+            <template v-if="activeSection === 'preview'">
+                <div class="preview-section">
+                    <div class="preview-header">
+                        <h3 class="preview-title">
+                            <i class="pi pi-mobile"></i>
+                            Mobile Preview
+                        </h3>
+                        <ConsoleButton
+                            label="Refresh"
+                            icon="pi pi-refresh"
+                            variant="text"
+                            severity="secondary"
+                            size="small"
+                            @click="refreshPreview"
+                        />
+                    </div>
+
+                    <div class="preview-container mobile">
+                        <div class="preview-frame">
+                            <iframe
+                                :key="previewKey"
+                                :src="previewUrl"
+                                class="preview-iframe"
+                                title="Site Preview"
+                            />
+                        </div>
+                    </div>
+
+                    <p class="preview-hint">
+                        <i class="pi pi-info-circle"></i>
+                        This is a live preview of your booking site. Changes you make will appear after saving.
+                    </p>
+                </div>
+            </template>
         </div>
     </SettingsLayout>
 </template>
@@ -894,64 +955,64 @@ onBeforeUnmount(() => {
     opacity: 0.9;
 }
 
-/* Tab Styling */
-.branding-tabs :deep(.p-tabview-panels) {
-    padding: 0;
-    background: transparent;
-}
-
-.branding-tabs :deep(.p-tabview-nav) {
-    background: transparent;
-    border: none;
-    gap: 0.125rem;
+/* Section Navigation Toggle Buttons */
+.section-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    background: var(--color-slate-100, #f1f5f9);
+    border-radius: 0.75rem;
     flex-wrap: wrap;
 }
 
 @media (min-width: 640px) {
-    .branding-tabs :deep(.p-tabview-nav) {
-        gap: 0.25rem;
+    .section-nav {
         flex-wrap: nowrap;
     }
 }
 
-.branding-tabs :deep(.p-tabview-nav-link) {
+.section-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     background: transparent;
     border: none;
     border-radius: 0.5rem;
-    padding: 0.5rem 0.625rem;
-    color: var(--color-slate-600, #475569);
+    font-size: 0.875rem;
     font-weight: 500;
-    font-size: 0.8125rem;
+    color: var(--color-slate-600, #475569);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-@media (min-width: 640px) {
-    .branding-tabs :deep(.p-tabview-nav-link) {
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-    }
+.section-btn:hover {
+    color: var(--color-slate-900, #0f172a);
+    background: rgba(255, 255, 255, 0.5);
 }
 
-.branding-tabs :deep(.p-tabview-nav-link:hover) {
-    background: var(--color-slate-100, #f1f5f9);
-}
-
-.branding-tabs :deep(.p-tabview-selected .p-tabview-nav-link) {
+.section-btn.active {
     background: white;
     color: #106B4F;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.tab-content {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding-top: 0.75rem;
+.section-btn i {
+    font-size: 1rem;
 }
 
-@media (min-width: 640px) {
-    .tab-content {
-        gap: 1.5rem;
-        padding-top: 1rem;
+@media (max-width: 639px) {
+    .section-btn {
+        flex: 1 1 calc(50% - 0.25rem);
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .section-btn i {
+        font-size: 0.875rem;
     }
 }
 
@@ -1160,25 +1221,26 @@ onBeforeUnmount(() => {
 /* Template Grid */
 .template-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
 }
 
 @media (min-width: 640px) {
     .template-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
     }
 }
 
 @media (min-width: 768px) {
     .template-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 .template-card {
     border: 2px solid var(--color-slate-200, #e2e8f0);
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -1186,6 +1248,10 @@ onBeforeUnmount(() => {
 
 .template-card:hover:not(.unavailable) {
     border-color: var(--color-slate-300, #cbd5e1);
+}
+
+.template-card:hover:not(.unavailable) .template-preview-btn {
+    opacity: 1;
 }
 
 .template-card.selected {
@@ -1199,7 +1265,7 @@ onBeforeUnmount(() => {
 
 .template-preview {
     position: relative;
-    aspect-ratio: 16/10;
+    aspect-ratio: 4/3;
     background: var(--color-slate-100, #f1f5f9);
 }
 
@@ -1222,7 +1288,7 @@ onBeforeUnmount(() => {
 }
 
 .template-thumb.placeholder i {
-    font-size: 2rem;
+    font-size: 1.5rem;
 }
 
 .template-loading {
@@ -1234,37 +1300,138 @@ onBeforeUnmount(() => {
     background: rgba(255, 255, 255, 0.8);
 }
 
+.template-preview-btn {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.375rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: 0.375rem;
+    color: var(--color-slate-600, #475569);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.15s ease;
+}
+
+.template-preview-btn:hover {
+    background: white;
+    color: #106B4F;
+    border-color: #106B4F;
+}
+
+.template-preview-btn i {
+    font-size: 0.875rem;
+}
+
+/* Always show preview button on touch devices */
+@media (hover: none) {
+    .template-preview-btn {
+        opacity: 1;
+    }
+}
+
 .template-info {
-    padding: 0.75rem;
+    padding: 0.5rem;
 }
 
 .template-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.25rem;
+    gap: 0.375rem;
 }
 
 .template-name {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-slate-900, #0f172a);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .template-tier {
-    font-size: 0.625rem;
+    font-size: 0.5rem;
+    padding: 0.125rem 0.375rem;
 }
 
 .template-check {
     margin-left: auto;
     color: #106B4F;
+    font-size: 0.875rem;
+    flex-shrink: 0;
 }
 
-.template-description {
+/* Template Preview Dialog */
+.preview-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.preview-dialog-image {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: var(--color-slate-100, #f1f5f9);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.preview-dialog-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview-dialog-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--color-slate-400, #94a3b8);
+}
+
+.preview-dialog-placeholder i {
+    font-size: 2.5rem;
+}
+
+.preview-dialog-placeholder span {
+    font-size: 0.875rem;
+}
+
+.preview-dialog-description {
     margin: 0;
-    font-size: 0.75rem;
-    color: var(--color-slate-500, #64748b);
-    line-height: 1.4;
+    font-size: 0.875rem;
+    color: var(--color-slate-600, #475569);
+    line-height: 1.5;
+}
+
+.preview-dialog-tier {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #d97706;
+}
+
+.preview-dialog-tier i {
+    font-size: 1rem;
+}
+
+.preview-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
 }
 
 /* Form Grid */
@@ -1432,70 +1599,35 @@ onBeforeUnmount(() => {
     line-height: 1.6;
 }
 
-/* Preview Tab */
-.preview-tab {
+/* Preview Section */
+.preview-section {
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
 }
 
-.preview-controls {
+.preview-header {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
     background: white;
     border: 1px solid var(--color-slate-200, #e2e8f0);
     border-radius: 0.75rem;
 }
 
-@media (min-width: 640px) {
-    .preview-controls {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 1rem;
-    }
-}
-
-.device-toggle {
-    display: flex;
-    gap: 0.25rem;
-    background: var(--color-slate-100, #f1f5f9);
-    padding: 0.25rem;
-    border-radius: 0.5rem;
-    justify-content: center;
-}
-
-.device-btn {
+.preview-title {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--color-slate-600, #475569);
-    background: transparent;
-    border: none;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    flex: 1;
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--color-slate-700, #334155);
 }
 
-@media (min-width: 640px) {
-    .device-btn {
-        flex: none;
-    }
-}
-
-.device-btn:hover {
-    color: var(--color-slate-900, #0f172a);
-}
-
-.device-btn.active {
-    background: white;
-    color: var(--color-slate-900, #0f172a);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.preview-title i {
+    color: var(--color-slate-500, #64748b);
 }
 
 .preview-container {
@@ -1520,31 +1652,15 @@ onBeforeUnmount(() => {
     border-radius: 0.75rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    transition: all 0.3s ease;
     flex-shrink: 0;
-}
-
-.preview-container.mobile .preview-frame {
     width: 320px;
     height: 568px;
 }
 
 @media (min-width: 640px) {
-    .preview-container.mobile .preview-frame {
+    .preview-frame {
         width: 375px;
         height: 667px;
-    }
-}
-
-.preview-container.desktop .preview-frame {
-    width: 100%;
-    max-width: 1024px;
-    height: 500px;
-}
-
-@media (min-width: 640px) {
-    .preview-container.desktop .preview-frame {
-        height: 600px;
     }
 }
 

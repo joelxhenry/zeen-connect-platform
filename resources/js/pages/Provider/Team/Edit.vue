@@ -4,10 +4,10 @@ import { useForm, router } from '@inertiajs/vue3';
 import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import InputText from 'primevue/inputtext';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
+import { ConsoleButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
 import Avatar from 'primevue/avatar';
-import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Tag from 'primevue/tag';
@@ -243,14 +243,15 @@ onBeforeUnmount(() => {
                     <div class="save-bar">
                         <span class="save-text">You have unsaved changes</span>
                         <div class="save-actions">
-                            <Button
+                            <ConsoleButton
                                 label="Discard"
+                                variant="text"
                                 severity="secondary"
-                                text
                                 @click="form.reset()"
                             />
-                            <Button
+                            <ConsoleButton
                                 label="Save Changes"
+                                variant="primary"
                                 :loading="form.processing"
                                 @click="save"
                             />

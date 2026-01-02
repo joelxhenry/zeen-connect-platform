@@ -3,10 +3,10 @@ import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
+import { ConsoleButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
 import InputText from 'primevue/inputtext';
-import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import RadioButton from 'primevue/radiobutton';
 import Message from 'primevue/message';
@@ -246,15 +246,16 @@ const cancel = () => {
 
             <!-- Actions -->
             <div class="form-actions">
-                <Button
+                <ConsoleButton
                     label="Cancel"
+                    variant="text"
                     severity="secondary"
-                    text
                     @click="cancel"
                 />
-                <Button
+                <ConsoleButton
                     :label="mode === 'invite' ? 'Send Invitation' : 'Create Account'"
                     :icon="mode === 'invite' ? 'pi pi-send' : 'pi pi-user-plus'"
+                    variant="primary"
                     :loading="form.processing"
                     @click="submit"
                 />

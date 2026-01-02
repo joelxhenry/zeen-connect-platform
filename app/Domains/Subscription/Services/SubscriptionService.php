@@ -298,7 +298,8 @@ class SubscriptionService
      *     deposit_amount: float|null,
      *     cancellation_policy: string,
      *     advance_booking_days: int,
-     *     min_booking_notice_hours: int
+     *     min_booking_notice_hours: int,
+     *     buffer_minutes: int
      * }
      */
     public function getEffectiveBookingSettings(Provider $provider): array
@@ -330,6 +331,7 @@ class SubscriptionService
             'cancellation_policy' => $raw['cancellation_policy'],
             'advance_booking_days' => $raw['advance_booking_days'],
             'min_booking_notice_hours' => $raw['min_booking_notice_hours'],
+            'buffer_minutes' => $raw['buffer_minutes'],
         ];
     }
 

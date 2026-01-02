@@ -18,6 +18,7 @@ class UpdateProviderBookingSettingsAction
             'cancellation_policy' => $data['cancellation_policy'],
             'advance_booking_days' => $data['advance_booking_days'],
             'min_booking_notice_hours' => $data['min_booking_notice_hours'],
+            'buffer_minutes' => $data['buffer_minutes'],
         ];
 
         // Only update fee_payer if provided

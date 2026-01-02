@@ -5,10 +5,9 @@ import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleFormCard from '@/components/console/ConsoleFormCard.vue';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
+import { ConsoleButton } from '@/components/console';
 import InputNumber from 'primevue/inputnumber';
-import Dropdown from 'primevue/dropdown';
 import InputSwitch from 'primevue/inputswitch';
-import Button from 'primevue/button';
 import Message from 'primevue/message';
 import RadioButton from 'primevue/radiobutton';
 
@@ -19,6 +18,7 @@ interface BookingSettings {
     cancellation_policy: 'flexible' | 'moderate' | 'strict';
     advance_booking_days: number;
     min_booking_notice_hours: number;
+    buffer_minutes: number;
 }
 
 interface TierRestrictions {
@@ -57,8 +57,19 @@ const form = useForm({
     cancellation_policy: props.bookingSettings.cancellation_policy,
     advance_booking_days: props.bookingSettings.advance_booking_days,
     min_booking_notice_hours: props.bookingSettings.min_booking_notice_hours,
+    buffer_minutes: props.bookingSettings.buffer_minutes,
     fee_payer: props.feePayer,
 });
+
+const bufferOptions = [
+    { label: 'No buffer', value: 0 },
+    { label: '5 minutes', value: 5 },
+    { label: '10 minutes', value: 10 },
+    { label: '15 minutes', value: 15 },
+    { label: '30 minutes', value: 30 },
+    { label: '45 minutes', value: 45 },
+    { label: '60 minutes', value: 60 },
+];
 
 const isDirty = computed(() => form.isDirty);
 
@@ -105,6 +116,7 @@ const save = () => {
                 cancellation_policy: form.cancellation_policy,
                 advance_booking_days: form.advance_booking_days,
                 min_booking_notice_hours: form.min_booking_notice_hours,
+                buffer_minutes: form.buffer_minutes,
                 fee_payer: form.fee_payer,
             });
             form.reset();
@@ -341,6 +353,30 @@ const onDepositTypeChange = (value: string) => {
                 </div>
             </ConsoleFormCard>
 
+            <!-- Buffer Time -->
+            <ConsoleFormCard title="Buffer Time">
+                <p class="section-hint">
+                    Add buffer time between appointments for preparation, cleanup, or transition time.
+                </p>
+
+                <div class="form-field">
+                    <div class="buffer-options">
+                        <div
+                            v-for="option in bufferOptions"
+                            :key="option.value"
+                            class="buffer-option"
+                            :class="{ selected: form.buffer_minutes === option.value }"
+                            @click="form.buffer_minutes = option.value"
+                        >
+                            {{ option.label }}
+                        </div>
+                    </div>
+                    <small v-if="form.errors.buffer_minutes" class="p-error">
+                        {{ form.errors.buffer_minutes }}
+                    </small>
+                </div>
+            </ConsoleFormCard>
+
             <!-- Cancellation Policy -->
             <ConsoleFormCard title="Cancellation Policy">
                 <div class="form-field">
@@ -378,14 +414,15 @@ const onDepositTypeChange = (value: string) => {
                     <div class="save-bar">
                         <span class="save-text">You have unsaved changes</span>
                         <div class="save-actions">
-                            <Button
+                            <ConsoleButton
                                 label="Discard"
+                                variant="text"
                                 severity="secondary"
-                                text
                                 @click="form.reset()"
                             />
-                            <Button
+                            <ConsoleButton
                                 label="Save Changes"
+                                variant="primary"
                                 :loading="form.processing"
                                 @click="save"
                             />
@@ -556,6 +593,33 @@ const onDepositTypeChange = (value: string) => {
 .input-with-suffix {
     display: flex;
     align-items: center;
+}
+
+/* Buffer Options */
+.buffer-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.buffer-option {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    background: var(--color-slate-100, #f1f5f9);
+    border: 1px solid var(--color-slate-200, #e2e8f0);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.buffer-option:hover {
+    border-color: var(--color-slate-300, #cbd5e1);
+}
+
+.buffer-option.selected {
+    background: #106B4F;
+    border-color: #106B4F;
+    color: white;
 }
 
 /* Policy Options */

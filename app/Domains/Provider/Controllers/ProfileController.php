@@ -25,18 +25,56 @@ class ProfileController extends Controller
         // If user is owner, create a team member record if needed
         $teamMember = $this->getOrCreateTeamMember($user, $provider);
 
-        // Load relationships for availability
-        $teamMember->load(['availability', 'breaks', 'blockedDates']);
-
-        // Get provider availability as defaults
-        $providerAvailability = $provider->availability()
+        // Get provider-level weekly availability
+        $availability = $provider->availability()
             ->orderBy('day_of_week')
             ->get()
-            ->map(fn ($a) => [
-                'day_of_week' => $a->day_of_week,
-                'is_available' => $a->is_available,
-                'start_time' => $a->start_time,
-                'end_time' => $a->end_time,
+            ->keyBy('day_of_week');
+
+        // Ensure all days have an entry for the UI
+        $weeklySchedule = collect(range(0, 6))->map(function ($day) use ($availability) {
+            if ($availability->has($day)) {
+                $slot = $availability->get($day);
+
+                return [
+                    'day_of_week' => $day,
+                    'start_time' => $slot->start_time,
+                    'end_time' => $slot->end_time,
+                    'is_available' => $slot->is_available,
+                ];
+            }
+
+            // Default values for days without schedule
+            return [
+                'day_of_week' => $day,
+                'start_time' => '09:00',
+                'end_time' => '17:00',
+                'is_available' => false,
+            ];
+        })->values();
+
+        // Get blocked dates (future only)
+        $blockedDates = $provider->blockedDates()
+            ->future()
+            ->orderBy('date')
+            ->get()
+            ->map(fn ($blocked) => [
+                'id' => $blocked->id,
+                'date' => $blocked->date->format('Y-m-d'),
+                'reason' => $blocked->reason,
+            ]);
+
+        // Get breaks organized by day
+        $breaks = $provider->breaks()
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn ($break) => [
+                'id' => $break->id,
+                'day_of_week' => $break->day_of_week,
+                'start_time' => $break->start_time,
+                'end_time' => $break->end_time,
+                'label' => $break->label,
             ]);
 
         return Inertia::render('Provider/Profile/Edit', [
@@ -54,34 +92,9 @@ class ProfileController extends Controller
                 'title' => $teamMember->title,
             ],
             'isOwner' => $provider->user_id === $user->id,
-            'availability' => [
-                'schedule' => $teamMember->availability->map(fn ($a) => [
-                    'id' => $a->id,
-                    'day_of_week' => $a->day_of_week,
-                    'is_available' => $a->is_available,
-                    'start_time' => $a->start_time,
-                    'end_time' => $a->end_time,
-                    'use_provider_defaults' => $a->use_provider_defaults,
-                ]),
-                'breaks' => $teamMember->breaks->map(fn ($b) => [
-                    'id' => $b->id,
-                    'uuid' => $b->uuid,
-                    'name' => $b->name,
-                    'day_of_week' => $b->day_of_week,
-                    'start_time' => $b->start_time,
-                    'end_time' => $b->end_time,
-                ]),
-                'blockedDates' => $teamMember->blockedDates->map(fn ($bd) => [
-                    'id' => $bd->id,
-                    'uuid' => $bd->uuid,
-                    'date' => $bd->date->format('Y-m-d'),
-                    'reason' => $bd->reason,
-                    'is_recurring' => $bd->is_recurring ?? false,
-                ]),
-            ],
-            'providerDefaults' => [
-                'availability' => $providerAvailability,
-            ],
+            'weeklySchedule' => $weeklySchedule,
+            'blockedDates' => $blockedDates,
+            'breaks' => $breaks,
         ]);
     }
 

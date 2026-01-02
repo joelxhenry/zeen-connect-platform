@@ -5,6 +5,7 @@ namespace App\Domains\Review\Models;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Provider\Models\Provider;
+use Database\Factories\ReviewFactory;
 use App\Domains\Service\Models\Service;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -38,6 +39,14 @@ class Review extends Model
         'is_flagged' => 'boolean',
         'provider_responded_at' => 'datetime',
     ];
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): ReviewFactory
+    {
+        return ReviewFactory::new();
+    }
 
     protected static function boot(): void
     {

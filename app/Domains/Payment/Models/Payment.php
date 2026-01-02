@@ -5,6 +5,7 @@ namespace App\Domains\Payment\Models;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Payment\Enums\PaymentStatus;
 use App\Domains\Provider\Models\Provider;
+use Database\Factories\PaymentFactory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,6 +63,14 @@ class Payment extends Model
         'refunded_at' => 'datetime',
         'is_refunded' => 'boolean',
     ];
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): PaymentFactory
+    {
+        return PaymentFactory::new();
+    }
 
     protected static function boot(): void
     {

@@ -111,11 +111,14 @@ class ClientBookingController extends Controller
                 'duration_display' => $service->duration_display,
                 'price' => (float) $service->price,
                 'price_display' => $service->price_display,
-                'category' => [
-                    'id' => $service->category->id,
-                    'name' => $service->category->name,
-                    'icon' => $service->category->icon,
-                ],
+                'category' => $service->getPrimaryCategory() ? [
+                    'id' => $service->getPrimaryCategory()->id,
+                    'name' => $service->getPrimaryCategory()->name,
+                ] : null,
+                'categories' => $service->categories->map(fn($cat) => [
+                    'id' => $cat->id,
+                    'name' => $cat->name,
+                ])->toArray(),
                 // Pre-calculate fees for each service (uses service's deposit settings)
                 'fees' => $this->feeCalculator->calculateFees($provider, (float) $service->price, $service)->toArray(),
             ]),

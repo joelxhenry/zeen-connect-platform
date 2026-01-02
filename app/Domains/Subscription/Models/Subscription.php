@@ -6,14 +6,16 @@ use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\ProviderPaymentMethod;
 use App\Domains\Subscription\Enums\SubscriptionStatus;
 use App\Domains\Subscription\Enums\SubscriptionTier;
+use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
-    use HasUuids;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'provider_id',
@@ -44,6 +46,14 @@ class Subscription extends Model
     public function uniqueIds(): array
     {
         return ['uuid'];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): SubscriptionFactory
+    {
+        return SubscriptionFactory::new();
     }
 
     /*

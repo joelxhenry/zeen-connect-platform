@@ -4,13 +4,15 @@ namespace App\Domains\Event\Models;
 
 use App\Domains\Event\Enums\OccurrenceStatus;
 use App\Support\Traits\HasUuid;
+use Database\Factories\EventOccurrenceFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EventOccurrence extends Model
 {
-    use HasUuid;
+    use HasFactory, HasUuid;
 
     protected $fillable = [
         'event_id',
@@ -33,6 +35,14 @@ class EventOccurrence extends Model
             'status' => OccurrenceStatus::class,
             'cancelled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): EventOccurrenceFactory
+    {
+        return EventOccurrenceFactory::new();
     }
 
     /**

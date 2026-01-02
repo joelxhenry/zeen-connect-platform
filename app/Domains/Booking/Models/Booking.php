@@ -5,6 +5,7 @@ namespace App\Domains\Booking\Models;
 use App\Domains\Booking\Enums\BookingStatus;
 use App\Domains\Payment\Models\Payment;
 use App\Domains\Provider\Models\Provider;
+use Database\Factories\BookingFactory;
 use App\Domains\Provider\Models\TeamMember;
 use App\Domains\Review\Models\Review;
 use App\Domains\Service\Models\Service;
@@ -76,6 +77,14 @@ class Booking extends Model
             'gateway_fee' => 'decimal:2',
             'convenience_fee' => 'decimal:2',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): BookingFactory
+    {
+        return BookingFactory::new();
     }
 
     /**

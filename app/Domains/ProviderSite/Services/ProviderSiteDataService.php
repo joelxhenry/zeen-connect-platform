@@ -197,21 +197,20 @@ class ProviderSiteDataService
     protected function getServicesByCategory(Provider $provider, ?int $limitPerCategory = null): Collection
     {
         return $provider->services
-            ->groupBy('category_id')
-            ->map(function ($services, $categoryId) use ($limitPerCategory) {
-                $category = $services->first()->category;
+            ->groupBy(fn ($service) => $service->getPrimaryCategory()?->id ?? 0)
+            ->map(function ($services) use ($limitPerCategory) {
+                $primaryCategory = $services->first()->getPrimaryCategory();
 
                 $serviceCollection = $limitPerCategory
                     ? $services->take($limitPerCategory)
                     : $services;
 
                 return [
-                    'category' => [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                        'icon' => $category->icon,
-                        'slug' => $category->slug,
-                    ],
+                    'category' => $primaryCategory ? [
+                        'id' => $primaryCategory->id,
+                        'name' => $primaryCategory->name,
+                        'slug' => $primaryCategory->slug,
+                    ] : null,
                     'services' => $serviceCollection->map(fn ($service) => [
                         'id' => $service->id,
                         'uuid' => $service->uuid,
@@ -222,6 +221,7 @@ class ProviderSiteDataService
                         'price' => (float) $service->price,
                         'price_display' => $service->price_display,
                         'display_image' => $service->display_image_url,
+                        'categories' => $service->getCategoryNames(),
                     ]),
                 ];
             })

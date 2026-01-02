@@ -6,6 +6,7 @@ use App\Domains\Event\Enums\EventLocationType;
 use App\Domains\Event\Enums\EventStatus;
 use App\Domains\Event\Enums\EventType;
 use App\Domains\Media\Traits\HasMedia;
+use Database\Factories\EventFactory;
 use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
@@ -55,6 +56,14 @@ class Event extends Model
             'sort_order' => 'integer',
             'settings' => 'array',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): EventFactory
+    {
+        return EventFactory::new();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Provider\Models;
 
+use Database\Factories\ProviderAvailabilityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,14 @@ class ProviderAvailability extends Model
             'day_of_week' => 'integer',
             'is_available' => 'boolean',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): ProviderAvailabilityFactory
+    {
+        return ProviderAvailabilityFactory::new();
     }
 
     public const DAYS = [

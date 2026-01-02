@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Database\Seeders\Production\CategorySeeder;
 use Database\Seeders\Production\GatewaySeeder;
 use Database\Seeders\Production\SystemSettingsSeeder;
 use Illuminate\Database\Seeder;
@@ -17,7 +16,6 @@ class ProductionSeeder extends Seeder
     {
         $this->call([
             SystemSettingsSeeder::class,
-            CategorySeeder::class,
             GatewaySeeder::class,
         ]);
     }

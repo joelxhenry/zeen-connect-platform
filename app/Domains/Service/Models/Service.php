@@ -5,6 +5,7 @@ namespace App\Domains\Service\Models;
 use App\Domains\Media\Models\Media;
 use App\Domains\Media\Traits\HasMedia;
 use App\Domains\Media\Traits\HasVideoEmbeds;
+use Database\Factories\ServiceFactory;
 use App\Domains\Booking\Models\Booking;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
@@ -44,6 +45,14 @@ class Service extends Model
             'sort_order' => 'integer',
             'settings' => 'array',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): ServiceFactory
+    {
+        return ServiceFactory::new();
     }
 
     /**

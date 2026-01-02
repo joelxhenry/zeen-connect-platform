@@ -7,6 +7,7 @@ use App\Domains\Booking\Models\Booking;
 use App\Domains\Event\Enums\EventStatus;
 use App\Domains\Event\Enums\OccurrenceStatus;
 use App\Domains\Event\Models\Event;
+use App\Domains\Provider\Enums\TeamMemberStatus;
 use App\Domains\Event\Models\EventOccurrence;
 use App\Domains\Service\Models\Category;
 use App\Domains\Service\Models\Service;
@@ -32,7 +33,7 @@ class DashboardController extends Controller
         $dateRange = $request->get('date_range', 'upcoming');
 
         // Build booking query
-        $query = Booking::with(['client', 'service.category', 'teamMember'])
+        $query = Booking::with(['client', 'service.categories', 'teamMember'])
             ->where('provider_id', $provider->id);
 
         // Apply status filter
@@ -71,8 +72,8 @@ class DashboardController extends Controller
 
         // Apply category filter
         if ($categoryId) {
-            $query->whereHas('service', function ($q) use ($categoryId) {
-                $q->where('category_id', $categoryId);
+            $query->whereHas('service.categories', function ($q) use ($categoryId) {
+                $q->where('categories.id', $categoryId);
             });
         }
 
@@ -91,7 +92,7 @@ class DashboardController extends Controller
                 ->orWhereHas('service', function ($serviceQuery) use ($search) {
                     $serviceQuery->where('name', 'like', "%{$search}%");
                 })
-                ->orWhereHas('service.category', function ($categoryQuery) use ($search) {
+                ->orWhereHas('service.categories', function ($categoryQuery) use ($search) {
                     $categoryQuery->where('name', 'like', "%{$search}%");
                 });
             });
@@ -114,8 +115,8 @@ class DashboardController extends Controller
                 'id' => $booking->service->id,
                 'name' => $booking->service->name,
                 'duration' => $booking->service->duration_minutes,
-                'category' => $booking->service->category?->name,
-                'category_id' => $booking->service->category_id,
+                'category' => $booking->service->getPrimaryCategory()?->name,
+                'categories' => $booking->service->categories->pluck('name')->toArray(),
             ],
             'team_member' => $booking->teamMember ? [
                 'id' => $booking->teamMember->id,
@@ -175,14 +176,16 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Get categories for filter dropdown
-        $categories = Category::whereHas('services', function ($query) use ($provider) {
-            $query->where('provider_id', $provider->id)->where('is_active', true);
-        })->orderBy('name')->get(['id', 'name']);
+        // Get categories for filter dropdown (provider's own categories)
+        $categories = Category::where('provider_id', $provider->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         // Get team members if provider has team feature
         $teamMembers = $provider->teamMembers()
-            ->where('is_active', true)
+            ->where('status', TeamMemberStatus::ACTIVE)
             ->orderBy('name')
             ->get(['id', 'name']);
 

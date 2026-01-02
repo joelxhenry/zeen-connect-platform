@@ -5,6 +5,7 @@ namespace App\Domains\Provider\Models;
 use App\Domains\Event\Models\Event;
 use App\Domains\Industry\Models\Industry;
 use App\Domains\Media\Traits\HasMedia;
+use Database\Factories\ProviderFactory;
 use App\Domains\Media\Traits\HasVideoEmbeds;
 use App\Domains\Payment\Models\LedgerEntry;
 use App\Domains\Payment\Models\ProviderGatewayConfig;
@@ -94,6 +95,14 @@ class Provider extends Model
             'banking_info_verified' => 'boolean',
             'banking_info_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     */
+    protected static function newFactory(): ProviderFactory
+    {
+        return ProviderFactory::new();
     }
 
     /**

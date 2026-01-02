@@ -19,16 +19,15 @@ class ProviderListingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar',
-                'services' => fn ($q) => $q->where('is_active', true)->limit(3),
-                'services.category:id,name,icon',
+                'services' => fn ($q) => $q->where('is_active', true)->with('categories')->limit(3),
             ])
             ->withCount(['services' => fn ($q) => $q->where('is_active', true)]);
 
         // Filter by category (providers who have services in this category)
         if ($request->filled('category')) {
-            $query->whereHas('services', function ($q) use ($request) {
-                $q->where('category_id', $request->category)
-                    ->where('is_active', true);
+            $query->whereHas('services.categories', function ($q) use ($request) {
+                $q->where('categories.id', $request->category)
+                    ->orWhere('categories.slug', $request->category);
             });
         }
 
@@ -80,13 +79,12 @@ class ProviderListingController extends Controller
                 'is_featured' => $provider->is_featured,
                 'is_favorited' => in_array($provider->id, $favoriteIds),
                 'categories' => $provider->services
-                    ->pluck('category')
+                    ->flatMap(fn ($service) => $service->categories)
                     ->unique('id')
                     ->values()
                     ->map(fn ($cat) => [
                         'id' => $cat->id,
                         'name' => $cat->name,
-                        'icon' => $cat->icon,
                     ]),
                 'preview_services' => $provider->services->map(fn ($service) => [
                     'id' => $service->id,
@@ -97,8 +95,15 @@ class ProviderListingController extends Controller
             ];
         });
 
-        // Get filter options
-        $categories = Category::active()->ordered()->get(['id', 'uuid', 'name', 'slug', 'icon']);
+        // Get filter options - aggregate unique category names from active providers
+        $categories = Category::query()
+            ->whereHas('provider', fn ($q) => $q->active())
+            ->where('is_active', true)
+            ->select('id', 'uuid', 'name', 'slug')
+            ->orderBy('name')
+            ->get()
+            ->unique('name')
+            ->values();
 
         return Inertia::render('Explore/Index', [
             'providers' => $providers,
@@ -121,25 +126,23 @@ class ProviderListingController extends Controller
             ->active()
             ->with([
                 'user:id,name,avatar,email',
-                'services' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order'),
-                'services.category:id,name,icon,slug',
+                'services' => fn ($q) => $q->where('is_active', true)->with('categories')->orderBy('sort_order'),
                 'availability' => fn ($q) => $q->where('is_available', true)->orderBy('day_of_week'),
             ])
             ->firstOrFail();
 
-        // Group services by category
+        // Group services by primary category
         $servicesByCategory = $provider->services
-            ->groupBy('category_id')
-            ->map(function ($services, $categoryId) {
-                $category = $services->first()->category;
+            ->groupBy(fn ($service) => $service->getPrimaryCategory()?->id ?? 0)
+            ->map(function ($services) {
+                $primaryCategory = $services->first()->getPrimaryCategory();
 
                 return [
-                    'category' => [
-                        'id' => $category->id,
-                        'name' => $category->name,
-                        'icon' => $category->icon,
-                        'slug' => $category->slug,
-                    ],
+                    'category' => $primaryCategory ? [
+                        'id' => $primaryCategory->id,
+                        'name' => $primaryCategory->name,
+                        'slug' => $primaryCategory->slug,
+                    ] : null,
                     'services' => $services->map(fn ($service) => [
                         'id' => $service->id,
                         'uuid' => $service->uuid,
@@ -149,6 +152,7 @@ class ProviderListingController extends Controller
                         'duration_display' => $service->duration_display,
                         'price' => $service->price,
                         'price_display' => $service->price_display,
+                        'categories' => $service->getCategoryNames(),
                     ]),
                 ];
             })

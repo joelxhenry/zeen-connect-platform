@@ -195,9 +195,10 @@ class SandboxEventSeeder extends Seeder
             $endDatetime = $occurrenceDate->copy()->addMinutes($event->duration_minutes);
 
             // Determine spots remaining (some events might be partially booked)
-            $capacity = $event->capacity ?? PHP_INT_MAX;
-            $booked = $capacity === PHP_INT_MAX ? 0 : fake()->numberBetween(0, (int) ($capacity * 0.6));
-            $spotsRemaining = $capacity === PHP_INT_MAX ? PHP_INT_MAX : max(0, $capacity - $booked);
+            // Use 9999 as "unlimited" since MySQL unsignedInteger can't hold PHP_INT_MAX
+            $capacity = $event->capacity ?? 9999;
+            $booked = fake()->numberBetween(0, (int) ($capacity * 0.6));
+            $spotsRemaining = max(0, $capacity - $booked);
 
             EventOccurrence::create([
                 'uuid' => Str::uuid()->toString(),

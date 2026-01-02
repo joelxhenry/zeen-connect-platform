@@ -9,9 +9,6 @@ services:
     volumes:
       # Mount source code for live sync
       - .:/var/www/html
-      # Preserve dependencies (don't overwrite with empty host folders)
-      - vendor:/var/www/html/vendor
-      - node_modules:/var/www/html/node_modules
     environment:
       # App
       APP_NAME: ${APP_NAME:-Zeen}
@@ -47,9 +44,3 @@ services:
       CACHE_STORE: ${CACHE_STORE:-redis}
       SESSION_DRIVER: ${SESSION_DRIVER:-redis}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
-
-volumes:
-  vendor:
-    driver: local
-  node_modules:
-    driver: local

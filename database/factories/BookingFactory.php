@@ -59,7 +59,7 @@ class BookingFactory extends Factory
             'zeen_fee' => round($servicePrice * 0.03, 2),
             'gateway_fee' => round($servicePrice * 0.029, 2),
             'convenience_fee' => 0,
-            'fee_payer' => fake()->randomElement(['client', 'provider', 'split']),
+            'fee_payer' => fake()->randomElement(['client', 'provider']),
             'created_at' => $bookingDate,
             'updated_at' => now(),
         ];

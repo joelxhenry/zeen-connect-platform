@@ -107,7 +107,7 @@ class ProviderFactory extends Factory
             'cancellation_policy' => fake()->randomElement(['flexible', 'moderate', 'strict']),
             'advance_booking_days' => fake()->randomElement([14, 30, 60, 90]),
             'min_booking_notice_hours' => fake()->randomElement([1, 2, 4, 24, 48]),
-            'fee_payer' => fake()->randomElement(['client', 'provider', 'split']),
+            'fee_payer' => fake()->randomElement(['client', 'provider']),
             'buffer_minutes' => fake()->randomElement([0, 5, 10, 15, 30]),
             'is_founding_member' => false,
             'founding_member_at' => null,

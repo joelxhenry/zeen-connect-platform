@@ -32,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
             request()->server->set('HTTPS', 'on');
         }
 
+        // Remove index.php from generated URLs
+        URL::forceRootUrl(config('app.url'));
+
         // Register Apple Socialite provider
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);

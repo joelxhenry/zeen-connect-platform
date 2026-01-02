@@ -25,15 +25,12 @@ class AppServiceProvider extends ServiceProvider
     {
         // Force HTTPS scheme when behind a proxy (Traefik/Dokploy)
         // Check if the request came through HTTPS proxy
-        if (request()->server('HTTP_X_FORWARDED_PROTO') === 'https' ||
-            request()->server('HTTPS') === 'on' ||
-            str_starts_with(config('app.url'), 'https://')) {
+        if (
+            request()->server('HTTP_X_FORWARDED_PROTO') === 'https' ||
+            str_starts_with(config('app.url'), 'https://')
+        ) {
             URL::forceScheme('https');
-            request()->server->set('HTTPS', 'on');
         }
-
-        // Remove index.php from generated URLs
-        URL::forceRootUrl(config('app.url'));
 
         // Register Apple Socialite provider
         Event::listen(function (SocialiteWasCalled $event) {

@@ -1,19 +1,20 @@
 {
     "name": "Zeen Connect Dev",
-    "dockerComposeFile": "../docker-compose.dev.yml",
+    "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "workspaceFolder": "/var/www/html",
-    "shutdownAction": "none",
+    "shutdownAction": "stopCompose",
     "customizations": {
         "vscode": {
             "extensions": [
+                "xdebug.php-pack",
+                "EditorConfig.EditorConfig",
                 "Vue.volar",
                 "bmewburn.vscode-intelephense-client",
                 "dbaeumer.vscode-eslint",
                 "esbenp.prettier-vscode",
                 "bradlc.vscode-tailwindcss",
-                "mikestead.dotenv",
-                "EditorConfig.EditorConfig"
+                "mikestead.dotenv"
             ],
             "settings": {
                 "php.validate.executablePath": "/usr/local/bin/php",
@@ -25,6 +26,21 @@
             }
         }
     },
-    "forwardPorts": [80, 5173],
-    "postAttachCommand": "echo 'Dev container ready! Laravel: http://localhost, Vite HMR active.'"
+    "forwardPorts": [80, 3306, 6379],
+    "portsAttributes": {
+        "80": {
+            "label": "Laravel App",
+            "onAutoForward": "notify"
+        },
+        "3306": {
+            "label": "MySQL",
+            "onAutoForward": "silent"
+        },
+        "6379": {
+            "label": "Redis",
+            "onAutoForward": "silent"
+        }
+    },
+    "postCreateCommand": "composer install && npm install && php artisan key:generate --force && php artisan migrate --force",
+    "postAttachCommand": "echo 'Dev container ready! Laravel: http://localhost, MySQL: localhost:3306, Redis: localhost:6379'"
 }

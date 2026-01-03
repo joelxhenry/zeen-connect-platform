@@ -74,7 +74,7 @@ const getInitials = (name: string) => {
                     </div>
 
                     <div class="services-list">
-                        <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
+                        <template v-for="(categoryGroup, index) in servicesByCategory" :key="categoryGroup.category?.id ?? `uncategorized-${index}`">
                             <AppLink
                                 v-for="service in categoryGroup.services"
                                 :key="service.id"

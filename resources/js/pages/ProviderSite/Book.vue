@@ -16,27 +16,66 @@ import type { TeamMemberForBooking } from '@/components/booking/TeamMemberSelect
 import TimeSlotPicker from '@/components/booking/TimeSlotPicker.vue';
 import GuestInfoForm from '@/components/booking/GuestInfoForm.vue';
 import BookingSummary from '@/components/booking/BookingSummary.vue';
+import EventBookingForm from '@/components/booking/EventBookingForm.vue';
+
+interface EventOccurrence {
+    id: number;
+    uuid: string;
+    start_datetime: string;
+    end_datetime: string;
+    formatted_date: string;
+    formatted_time: string;
+    capacity: number;
+    spots_remaining: number;
+    is_sold_out: boolean;
+    status: string;
+}
+
+interface EventData {
+    id: number;
+    uuid: string;
+    slug: string;
+    name: string;
+    description?: string;
+    price: number;
+    price_display: string;
+    duration_minutes: number;
+    duration_display: string;
+    capacity: number;
+    event_type: 'one_time' | 'recurring';
+    location_type: 'virtual' | 'in_person';
+    location?: string;
+    display_image?: string;
+}
 
 interface Props {
+    bookingType: 'service' | 'event';
     provider: {
         id: number;
         business_name: string;
         slug: string;
+        domain?: string;
         avatar?: string;
         location?: string;
-        tier: string;
-        tier_label: string;
+        tier?: string;
+        tier_label?: string;
     };
-    services: ServiceForBooking[];
-    availableDates: string[];
-    preselectedService: number | null;
+    // Service booking props
+    services?: ServiceForBooking[];
+    availableDates?: string[];
+    preselectedService?: number | null;
+    teamMembers?: TeamMemberForBooking[];
+    // Event booking props
+    event?: EventData;
+    occurrences?: EventOccurrence[];
+    preselectedOccurrence?: number | null;
+    // Common props
     isAuthenticated: boolean;
     user: {
         name: string;
         email: string;
         phone?: string;
     } | null;
-    teamMembers: TeamMemberForBooking[];
 }
 
 
@@ -54,8 +93,8 @@ const props = defineProps<Props>();
 const toast = useToast();
 const api = useApi({ showErrorToast: false });
 
-// Form state
-const preselectedServiceData = props.preselectedService
+// Service booking state (only used when bookingType === 'service')
+const preselectedServiceData = props.preselectedService && props.services
     ? props.services.find(s => s.id === props.preselectedService) || null
     : null;
 
@@ -85,7 +124,7 @@ const form = useForm({
 // Computed
 const currentFees = computed(() => selectedService.value?.fees || null);
 
-const availableDatesSet = computed(() => new Set(props.availableDates));
+const availableDatesSet = computed(() => new Set(props.availableDates || []));
 
 const minDate = computed(() => new Date());
 const maxDate = computed(() => {
@@ -220,8 +259,19 @@ const submit = () => {
 </script>
 
 <template>
-    <ProviderSiteLayout title="Book Appointment" show-banner>
-        <div class="booking-page">
+    <ProviderSiteLayout :title="bookingType === 'event' ? 'Register for Event' : 'Book Appointment'" show-banner>
+        <!-- Event Booking Flow -->
+        <EventBookingForm
+            v-if="bookingType === 'event' && event && occurrences"
+            :event="event"
+            :occurrences="occurrences"
+            :preselected-occurrence="preselectedOccurrence"
+            :is-authenticated="isAuthenticated"
+            :user="user"
+        />
+
+        <!-- Service Booking Flow -->
+        <div v-else class="booking-page">
             <div class="max-w-5xl mx-auto px-4 py-8">
                 <!-- Page Header -->
                 <div class="page-header mb-6">
@@ -234,7 +284,7 @@ const submit = () => {
                     <div class="lg:col-span-2 space-y-6">
                         <!-- Step 1: Select Service -->
                         <StepCard :step="1" title="Select Service" :active="true">
-                            <ServiceSelector v-model="selectedService" :services="services" />
+                            <ServiceSelector v-model="selectedService" :services="services || []" />
                         </StepCard>
 
                         <!-- Step 1.5: Select Team Member (optional, only shown if team members exist) -->
@@ -248,7 +298,7 @@ const submit = () => {
                         >
                             <TeamMemberSelector
                                 v-model="selectedTeamMember"
-                                :team-members="teamMembers"
+                                :team-members="teamMembers || []"
                             />
                         </StepCard>
 

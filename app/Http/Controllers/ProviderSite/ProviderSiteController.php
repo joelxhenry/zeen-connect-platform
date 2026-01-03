@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\ProviderSite;
 
+use App\Domains\Event\Models\Event;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\ProviderSite\Services\ProviderSiteDataService;
 use App\Domains\ProviderSite\Services\TemplateResolver;
@@ -66,6 +67,43 @@ class ProviderSiteController extends Controller
 
         return Inertia::render(
             $this->templateResolver->getPagePath($template, 'Reviews'),
+            $data
+        );
+    }
+
+    /**
+     * Display the provider's events listing page.
+     */
+    public function events(Request $request): Response
+    {
+        $provider = $this->getProvider();
+        $template = $this->templateResolver->resolve($provider);
+        $data = $this->dataService->getEventsPageData($provider);
+
+        return Inertia::render(
+            $this->templateResolver->getPagePath($template, 'Events'),
+            $data
+        );
+    }
+
+    /**
+     * Display a single event with its occurrences.
+     */
+    public function showEvent(Request $request, string $slug): Response
+    {
+        $provider = $this->getProvider();
+        $template = $this->templateResolver->resolve($provider);
+
+        // Find the event by slug for this provider
+        $event = Event::where('provider_id', $provider->id)
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $data = $this->dataService->getEventDetailData($provider, $event);
+
+        return Inertia::render(
+            $this->templateResolver->getPagePath($template, 'EventDetail'),
             $data
         );
     }

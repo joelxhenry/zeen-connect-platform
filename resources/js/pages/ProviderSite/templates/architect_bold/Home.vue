@@ -82,7 +82,7 @@ const hasFeatures = (props.features?.length ?? 0) > 0;
             <section v-if="hasServices" class="services-section">
                 <div class="section-container">
                     <BentoSection title="Our Services" :subtitle="provider.bio || 'Explore our range of professional services'" :columns="3" gap="md">
-                        <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
+                        <template v-for="(categoryGroup, index) in servicesByCategory" :key="categoryGroup.category?.id ?? `uncategorized-${index}`">
                             <ServiceCard
                                 v-for="service in categoryGroup.services.slice(0, 6)"
                                 :key="service.id"

@@ -29,7 +29,8 @@ class TemplateResolver
      */
     public function getPagePath(TemplateType $template, string $page): string
     {
-        return "ProviderSite/templates/{$template->value}/{$page}";
+        // templates/{$template->value}
+        return "ProviderSite/{$page}";
     }
 
     /**

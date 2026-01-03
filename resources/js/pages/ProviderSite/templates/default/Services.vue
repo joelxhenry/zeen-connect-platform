@@ -18,9 +18,8 @@ interface ServiceCategory {
     category: {
         id: number;
         name: string;
-        icon?: string;
         slug: string;
-    };
+    } | null;
     services: Service[];
 }
 
@@ -52,10 +51,9 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
 
                 <!-- Services by Category -->
                 <div class="categories-list">
-                    <div v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id" class="category-section">
+                    <div v-for="(categoryGroup, index) in servicesByCategory" :key="categoryGroup.category?.id ?? `uncategorized-${index}`" class="category-section">
                         <div class="category-header">
-                            <i v-if="categoryGroup.category.icon" :class="categoryGroup.category.icon" class="category-icon"></i>
-                            <h2>{{ categoryGroup.category.name }}</h2>
+                            <h2>{{ categoryGroup.category?.name ?? 'Other Services' }}</h2>
                             <span class="service-count">{{ categoryGroup.services.length }} {{ categoryGroup.services.length === 1 ? 'service' : 'services' }}</span>
                         </div>
                         <div class="services-list">
@@ -142,11 +140,6 @@ const getBookingUrl = (serviceId: number) => `/book?service=${serviceId}`;
     padding: 1rem 1.25rem;
     background: var(--provider-background);
     border-bottom: 1px solid var(--provider-border);
-}
-
-.category-icon {
-    font-size: 1.25rem;
-    color: var(--provider-primary);
 }
 
 .category-header h2 {

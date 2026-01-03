@@ -29,12 +29,12 @@ const getServiceBookingUrl = (serviceId: number) => {
             <div class="services-content">
                 <div class="content-container">
                     <div
-                        v-for="categoryGroup in servicesByCategory"
-                        :key="categoryGroup.category.id"
+                        v-for="(categoryGroup, index) in servicesByCategory"
+                        :key="categoryGroup.category?.id ?? `uncategorized-${index}`"
                         class="category-section"
                     >
                         <div class="category-header">
-                            <h2>{{ categoryGroup.category.name }}</h2>
+                            <h2>{{ categoryGroup.category?.name ?? 'Other Services' }}</h2>
                             <span class="service-count">{{ categoryGroup.services.length }} services</span>
                         </div>
 

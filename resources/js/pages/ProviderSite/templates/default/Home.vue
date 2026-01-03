@@ -64,7 +64,7 @@ const {
                         </AppLink>
                     </div>
                     <div class="services-grid">
-                        <template v-for="categoryGroup in servicesByCategory" :key="categoryGroup.category.id">
+                        <template v-for="(categoryGroup, index) in servicesByCategory" :key="categoryGroup.category?.id ?? `uncategorized-${index}`">
                             <ServiceCard v-for="service in categoryGroup.services" :key="service.id" :service="service"
                                 :category="categoryGroup.category" :bookingUrl="getServiceBookingUrl(service.id)" />
                         </template>

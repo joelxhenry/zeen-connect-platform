@@ -26,9 +26,9 @@
             }
         }
     },
-    "forwardPorts": [80, 3306, 6379],
+    "forwardPorts": [8080, 3306, 6379],
     "portsAttributes": {
-        "80": {
+        "8080": {
             "label": "Laravel App",
             "onAutoForward": "notify"
         },
@@ -42,5 +42,5 @@
         }
     },
     "postCreateCommand": "composer install && npm install && php artisan key:generate --force && php artisan migrate --force",
-    "postAttachCommand": "echo 'Dev container ready! Laravel: http://localhost, MySQL: localhost:3306, Redis: localhost:6379'"
+    "postAttachCommand": "echo 'Dev container ready! Laravel: http://localhost:8080, MySQL: localhost:3306, Redis: localhost:6379'"
 }

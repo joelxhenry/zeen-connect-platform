@@ -31,12 +31,14 @@ interface MediaItem {
 interface BrandSettings {
     primary_color: string | null;
     secondary_color: string | null;
+    accent_color: string | null;
     color_mode: 'light' | 'dark' | 'system';
 }
 
 interface DefaultColors {
     primary_color: string;
     secondary_color: string;
+    accent_color: string;
 }
 
 interface Template {
@@ -114,12 +116,14 @@ const galleryMedia = ref<MediaItem[]>(props.gallery || []);
 const colorForm = useForm({
     primary_color: props.brandSettings.primary_color || props.defaultColors.primary_color,
     secondary_color: props.brandSettings.secondary_color || props.defaultColors.secondary_color,
+    accent_color: props.brandSettings.accent_color || props.defaultColors.accent_color,
     color_mode: props.brandSettings.color_mode || 'system',
 });
 
 const colorFields = [
     { key: 'primary_color', label: 'Primary', description: 'Main brand color for buttons and key elements' },
     { key: 'secondary_color', label: 'Secondary', description: 'Complementary color for accents and backgrounds' },
+    { key: 'accent_color', label: 'Accent', description: 'Highlight color for special elements' },
 ] as const;
 
 const colorModeOptions: { value: 'light' | 'dark' | 'system'; label: string; icon: string }[] = [
@@ -145,6 +149,7 @@ const saveColors = () => {
             colorForm.defaults({
                 primary_color: colorForm.primary_color,
                 secondary_color: colorForm.secondary_color,
+                accent_color: colorForm.accent_color,
                 color_mode: colorForm.color_mode,
             });
             colorForm.reset();
@@ -155,6 +160,7 @@ const saveColors = () => {
 const resetColorsToDefaults = () => {
     colorForm.primary_color = props.defaultColors.primary_color;
     colorForm.secondary_color = props.defaultColors.secondary_color;
+    colorForm.accent_color = props.defaultColors.accent_color;
     colorForm.color_mode = 'system';
 };
 

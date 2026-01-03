@@ -15,9 +15,9 @@ return new class extends Migration
         // Step 1: Truncate categories table (we're starting fresh)
         // Services will be left uncategorized and providers will create their own categories
         // Disable FK checks for MySQL compatibility
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('categories')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Step 2: Drop the old unique constraint on slug
         Schema::table('categories', function (Blueprint $table) {

@@ -521,6 +521,14 @@ class Provider extends Model
     }
 
     /**
+     * Get the brand accent color.
+     */
+    public function getBrandAccentColorAttribute(): ?string
+    {
+        return $this->getBrandingValue('accent_color');
+    }
+
+    /**
      * Get the color mode (light, dark, or system).
      */
     public function getColorModeAttribute(): string
@@ -578,6 +586,55 @@ class Provider extends Model
         $b = max(0, (int) ($b * (100 - $percent) / 100));
 
         return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    /**
+     * Get the generated color palette.
+     */
+    public function getBrandPaletteAttribute(): ?array
+    {
+        return $this->getBrandingValue('palette');
+    }
+
+    /**
+     * Get the light mode palette.
+     */
+    public function getBrandPaletteLightAttribute(): ?array
+    {
+        $palette = $this->brand_palette;
+
+        return $palette['light'] ?? null;
+    }
+
+    /**
+     * Get the dark mode palette.
+     */
+    public function getBrandPaletteDarkAttribute(): ?array
+    {
+        $palette = $this->brand_palette;
+
+        return $palette['dark'] ?? null;
+    }
+
+    /**
+     * Get the appropriate palette based on color mode.
+     *
+     * @param  string|null  $preferredMode  Optional override for the mode
+     */
+    public function getActivePalette(?string $preferredMode = null): ?array
+    {
+        $mode = $preferredMode ?? $this->color_mode;
+
+        if ($mode === 'light') {
+            return $this->brand_palette_light;
+        }
+
+        if ($mode === 'dark') {
+            return $this->brand_palette_dark;
+        }
+
+        // For 'system' mode, default to light (frontend will handle switching)
+        return $this->brand_palette_light;
     }
 
     // =========================================================================

@@ -25,6 +25,7 @@ class UpdateBrandingSettingsRequest extends FormRequest
         return [
             'primary_color' => $hexColorRule,
             'secondary_color' => $hexColorRule,
+            'accent_color' => $hexColorRule,
             'color_mode' => ['nullable', 'in:light,dark,system'],
         ];
     }

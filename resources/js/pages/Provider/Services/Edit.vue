@@ -250,11 +250,7 @@ const openLiveBooking = () => {
                     <p class="page-subtitle">{{ service.name }}</p>
                 </div>
                 <div class="header-actions">
-                    <button
-                        class="action-btn live-btn"
-                        @click="openLiveBooking"
-                        title="View live booking page"
-                    >
+                    <button class="action-btn live-btn" @click="openLiveBooking" title="View live booking page">
                         <i class="pi pi-external-link"></i>
                     </button>
                     <button class="action-btn delete-btn" @click="deleteService" title="Delete service">
@@ -265,279 +261,198 @@ const openLiveBooking = () => {
 
             <div class="page-layout">
                 <form @submit.prevent="submit" class="service-form">
+
+                       <!-- Cover Image -->
+                    <ConsoleFormCard title="Cover Image">
+                        <div class="media-section">
+                            <SingleImageUpload v-model="coverImage" :upload-url="coverUploadUrl" collection="cover"
+                                shape="cover" placeholder="Upload cover image" />
+                            <p class="media-hint">
+                                Recommended size: 1200x600px. This image will be displayed on your service page.
+                            </p>
+                        </div>
+                    </ConsoleFormCard>
+
+                    <!-- Gallery & Videos -->
+                    <ConsoleFormCard title="Gallery & Videos">
+                        <div class="media-section">
+                            <GalleryUpload v-model="galleryImages" v-model:videos="serviceVideos"
+                                :upload-url="galleryUploadUrl" :video-add-url="videoAddUrl" collection="gallery"
+                                :max-files="6" :max-videos="3" :show-videos="true" />
+                            <p class="media-hint">
+                                Add images and videos to showcase your service. Maximum 6 images and 3 videos (YouTube
+                                or Vimeo).
+                            </p>
+                        </div>
+                    </ConsoleFormCard>
+
+
+                    
                     <!-- Basic Info -->
                     <ConsoleFormCard title="Basic Information">
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label for="name" class="form-label">Service Name *</label>
-                            <InputText
-                                id="name"
-                                v-model="form.name"
-                                placeholder="e.g., Haircut, Massage, Consultation"
-                                class="form-input"
-                                :class="{ 'p-invalid': form.errors.name }"
-                            />
-                            <small v-if="form.errors.name" class="p-error">{{
-                                form.errors.name
-                            }}</small>
-                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="name" class="form-label">Service Name *</label>
+                                <InputText id="name" v-model="form.name"
+                                    placeholder="e.g., Haircut, Massage, Consultation" class="form-input"
+                                    :class="{ 'p-invalid': form.errors.name }" />
+                                <small v-if="form.errors.name" class="p-error">{{
+                                    form.errors.name
+                                    }}</small>
+                            </div>
 
-                        <div class="form-field">
-                            <label for="categories" class="form-label">Categories</label>
-                            <MultiSelect
-                                id="categories"
-                                v-model="form.category_ids"
-                                :options="categories"
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder="Select categories"
-                                display="chip"
-                                class="form-input"
-                                :class="{ 'p-invalid': form.errors.category_ids }"
-                            />
-                            <small class="form-hint">Optional - organize your services</small>
-                            <small v-if="form.errors.category_ids" class="p-error">{{
-                                form.errors.category_ids
-                            }}</small>
-                        </div>
+                            <div class="form-field">
+                                <label for="categories" class="form-label">Categories</label>
+                                <MultiSelect id="categories" v-model="form.category_ids" :options="categories"
+                                    optionLabel="name" optionValue="id" placeholder="Select categories" display="chip"
+                                    class="form-input" :class="{ 'p-invalid': form.errors.category_ids }" />
+                                <small class="form-hint">Optional - organize your services</small>
+                                <small v-if="form.errors.category_ids" class="p-error">{{
+                                    form.errors.category_ids
+                                    }}</small>
+                            </div>
 
-                        <div class="form-field full-width">
-                            <label for="description" class="form-label">Description</label>
-                            <Textarea
-                                id="description"
-                                v-model="form.description"
-                                rows="3"
-                                placeholder="Describe your service..."
-                                class="form-input"
-                                :class="{ 'p-invalid': form.errors.description }"
-                            />
-                            <small v-if="form.errors.description" class="p-error">{{
-                                form.errors.description
-                            }}</small>
-                        </div>
-                    </div>
-                </ConsoleFormCard>
-
-                <!-- Pricing & Duration -->
-                <ConsoleFormCard title="Pricing & Duration">
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label for="price" class="form-label">Price *</label>
-                            <InputNumber
-                                id="price"
-                                v-model="form.price"
-                                mode="currency"
-                                currency="USD"
-                                locale="en-US"
-                                :min="0"
-                                class="form-input"
-                                :class="{ 'p-invalid': form.errors.price }"
-                            />
-                            <small v-if="form.errors.price" class="p-error">{{
-                                form.errors.price
-                            }}</small>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="duration" class="form-label">Duration *</label>
-                            <Select
-                                id="duration"
-                                v-model="form.duration_minutes"
-                                :options="durationOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="form-input"
-                                :class="{ 'p-invalid': form.errors.duration_minutes }"
-                            />
-                            <small v-if="form.errors.duration_minutes" class="p-error">{{
-                                form.errors.duration_minutes
-                            }}</small>
-                        </div>
-
-                        <div class="form-field">
-                            <label class="form-label">Active</label>
-                            <div class="switch-field">
-                                <ToggleSwitch v-model="form.is_active" />
-                                <span class="switch-label">{{
-                                    form.is_active ? 'Service is visible' : 'Service is hidden'
-                                }}</span>
+                            <div class="form-field full-width">
+                                <label for="description" class="form-label">Description</label>
+                                <Textarea id="description" v-model="form.description" rows="3"
+                                    placeholder="Describe your service..." class="form-input"
+                                    :class="{ 'p-invalid': form.errors.description }" />
+                                <small v-if="form.errors.description" class="p-error">{{
+                                    form.errors.description
+                                    }}</small>
                             </div>
                         </div>
-                    </div>
-                </ConsoleFormCard>
+                    </ConsoleFormCard>
 
-                <!-- Cover Image -->
-                <ConsoleFormCard title="Cover Image">
-                    <div class="media-section">
-                        <SingleImageUpload
-                            v-model="coverImage"
-                            :upload-url="coverUploadUrl"
-                            collection="cover"
-                            shape="cover"
-                            placeholder="Upload cover image"
-                        />
-                        <p class="media-hint">
-                            Recommended size: 1200x600px. This image will be displayed on your service page.
-                        </p>
-                    </div>
-                </ConsoleFormCard>
-
-                <!-- Gallery & Videos -->
-                <ConsoleFormCard title="Gallery & Videos">
-                    <div class="media-section">
-                        <GalleryUpload
-                            v-model="galleryImages"
-                            v-model:videos="serviceVideos"
-                            :upload-url="galleryUploadUrl"
-                            :video-add-url="videoAddUrl"
-                            collection="gallery"
-                            :max-files="6"
-                            :max-videos="3"
-                            :show-videos="true"
-                        />
-                        <p class="media-hint">
-                            Add images and videos to showcase your service. Maximum 6 images and 3 videos (YouTube or Vimeo).
-                        </p>
-                    </div>
-                </ConsoleFormCard>
-
-                <!-- Advanced Settings -->
-                <ConsoleFormCard>
-                    <template #header>
-                        <div class="advanced-header">
-                            <div class="advanced-title">
-                                <h3>Booking Settings</h3>
-                                <p class="advanced-subtitle">
-                                    Override your default booking settings for this service
-                                </p>
+                    <!-- Pricing & Duration -->
+                    <ConsoleFormCard title="Pricing & Duration">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="price" class="form-label">Price *</label>
+                                <InputNumber id="price" v-model="form.price" mode="currency" currency="USD"
+                                    locale="en-US" :min="0" class="form-input"
+                                    :class="{ 'p-invalid': form.errors.price }" />
+                                <small v-if="form.errors.price" class="p-error">{{
+                                    form.errors.price
+                                    }}</small>
                             </div>
-                            <ToggleSwitch v-model="showAdvancedSettings" />
-                        </div>
-                    </template>
 
-                    <div v-if="showAdvancedSettings" class="form-grid">
-                        <div class="form-field">
-                            <label class="form-label">Requires Approval</label>
-                            <div class="switch-field">
-                                <ToggleSwitch v-model="form.requires_approval" />
-                                <span class="switch-label">{{
-                                    form.requires_approval
-                                        ? 'Manual approval required'
-                                        : 'Auto-confirm bookings'
-                                }}</span>
+                            <div class="form-field">
+                                <label for="duration" class="form-label">Duration *</label>
+                                <Select id="duration" v-model="form.duration_minutes" :options="durationOptions"
+                                    optionLabel="label" optionValue="value" class="form-input"
+                                    :class="{ 'p-invalid': form.errors.duration_minutes }" />
+                                <small v-if="form.errors.duration_minutes" class="p-error">{{
+                                    form.errors.duration_minutes
+                                    }}</small>
+                            </div>
+
+                            <div class="form-field">
+                                <label class="form-label">Active</label>
+                                <div class="switch-field">
+                                    <ToggleSwitch v-model="form.is_active" />
+                                    <span class="switch-label">{{
+                                        form.is_active ? 'Service is visible' : 'Service is hidden'
+                                        }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </ConsoleFormCard>
+
+                 
+
+                    <!-- Advanced Settings -->
+                    <ConsoleFormCard>
+                        <template #header>
+                            <div class="advanced-header">
+                                <div class="advanced-title">
+                                    <h3>Booking Settings</h3>
+                                    <p class="advanced-subtitle">
+                                        Override your default booking settings for this service
+                                    </p>
+                                </div>
+                                <ToggleSwitch v-model="showAdvancedSettings" />
+                            </div>
+                        </template>
+
+                        <div v-if="showAdvancedSettings" class="form-grid">
+                            <div class="form-field">
+                                <label class="form-label">Requires Approval</label>
+                                <div class="switch-field">
+                                    <ToggleSwitch v-model="form.requires_approval" />
+                                    <span class="switch-label">{{
+                                        form.requires_approval
+                                            ? 'Manual approval required'
+                                            : 'Auto-confirm bookings'
+                                        }}</span>
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="deposit_type" class="form-label">Deposit Type</label>
+                                <Select id="deposit_type" v-model="form.deposit_type" :options="depositTypeOptions"
+                                    optionLabel="label" optionValue="value" class="form-input" />
+                            </div>
+
+                            <div v-if="form.deposit_type === 'fixed' || form.deposit_type === 'percentage'"
+                                class="form-field">
+                                <label for="deposit_amount" class="form-label">
+                                    {{ form.deposit_type === 'percentage' ? 'Deposit %' : 'Deposit Amount' }}
+                                </label>
+                                <InputNumber id="deposit_amount" v-model="form.deposit_amount"
+                                    :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
+                                    :currency="form.deposit_type === 'fixed' ? 'USD' : undefined"
+                                    :locale="form.deposit_type === 'fixed' ? 'en-US' : undefined"
+                                    :suffix="form.deposit_type === 'percentage' ? '%' : undefined" :min="0"
+                                    :max="form.deposit_type === 'percentage' ? 100 : undefined" class="form-input" />
+                            </div>
+
+                            <div class="form-field">
+                                <label for="cancellation_policy" class="form-label">Cancellation Policy</label>
+                                <Select id="cancellation_policy" v-model="form.cancellation_policy"
+                                    :options="cancellationPolicyOptions" optionLabel="label" optionValue="value"
+                                    class="form-input" />
+                            </div>
+
+                            <div class="form-field">
+                                <label for="advance_booking_days" class="form-label">Advance Booking (days)</label>
+                                <InputNumber id="advance_booking_days" v-model="form.advance_booking_days" :min="1"
+                                    :max="365" class="form-input" />
+                                <small class="form-hint">How far in advance can clients book?</small>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="min_booking_notice_hours" class="form-label">Minimum Notice (hours)</label>
+                                <InputNumber id="min_booking_notice_hours" v-model="form.min_booking_notice_hours"
+                                    :min="0" :max="168" class="form-input" />
+                                <small class="form-hint">Minimum hours before appointment</small>
                             </div>
                         </div>
 
-                        <div class="form-field">
-                            <label for="deposit_type" class="form-label">Deposit Type</label>
-                            <Select
-                                id="deposit_type"
-                                v-model="form.deposit_type"
-                                :options="depositTypeOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="form-input"
-                            />
+                        <div v-else class="defaults-info">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Using your default booking settings</span>
                         </div>
-
-                        <div
-                            v-if="form.deposit_type === 'fixed' || form.deposit_type === 'percentage'"
-                            class="form-field"
-                        >
-                            <label for="deposit_amount" class="form-label">
-                                {{ form.deposit_type === 'percentage' ? 'Deposit %' : 'Deposit Amount' }}
-                            </label>
-                            <InputNumber
-                                id="deposit_amount"
-                                v-model="form.deposit_amount"
-                                :mode="form.deposit_type === 'percentage' ? 'decimal' : 'currency'"
-                                :currency="form.deposit_type === 'fixed' ? 'USD' : undefined"
-                                :locale="form.deposit_type === 'fixed' ? 'en-US' : undefined"
-                                :suffix="form.deposit_type === 'percentage' ? '%' : undefined"
-                                :min="0"
-                                :max="form.deposit_type === 'percentage' ? 100 : undefined"
-                                class="form-input"
-                            />
-                        </div>
-
-                        <div class="form-field">
-                            <label for="cancellation_policy" class="form-label"
-                                >Cancellation Policy</label
-                            >
-                            <Select
-                                id="cancellation_policy"
-                                v-model="form.cancellation_policy"
-                                :options="cancellationPolicyOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="form-input"
-                            />
-                        </div>
-
-                        <div class="form-field">
-                            <label for="advance_booking_days" class="form-label"
-                                >Advance Booking (days)</label
-                            >
-                            <InputNumber
-                                id="advance_booking_days"
-                                v-model="form.advance_booking_days"
-                                :min="1"
-                                :max="365"
-                                class="form-input"
-                            />
-                            <small class="form-hint">How far in advance can clients book?</small>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="min_booking_notice_hours" class="form-label"
-                                >Minimum Notice (hours)</label
-                            >
-                            <InputNumber
-                                id="min_booking_notice_hours"
-                                v-model="form.min_booking_notice_hours"
-                                :min="0"
-                                :max="168"
-                                class="form-input"
-                            />
-                            <small class="form-hint">Minimum hours before appointment</small>
-                        </div>
-                    </div>
-
-                    <div v-else class="defaults-info">
-                        <i class="pi pi-info-circle"></i>
-                        <span>Using your default booking settings</span>
-                    </div>
-                </ConsoleFormCard>
+                    </ConsoleFormCard>
 
                     <!-- Spacer for floating footer -->
                     <div class="form-footer-spacer"></div>
                 </form>
 
                 <!-- Team Member Sidebar -->
-                <aside  v-if="teamMembers.length > 0"  class="team-sidebar">
+                <aside v-if="teamMembers.length > 0" class="team-sidebar">
                     <div class="sidebar-card">
                         <h3 class="sidebar-title">Team Assignment</h3>
                         <p class="sidebar-description">
                             Select who can perform this service
                         </p>
                         <div class="team-member-list">
-                            <label
-                                v-for="member in teamMembers"
-                                :key="member.id"
-                                class="team-member-item"
-                                :class="{ selected: form.team_member_ids.includes(member.id) }"
-                            >
-                                <Checkbox
-                                    v-model="form.team_member_ids"
-                                    :value="member.id"
-                                    :inputId="`team-member-${member.id}`"
-                                />
+                            <label v-for="member in teamMembers" :key="member.id" class="team-member-item"
+                                :class="{ selected: form.team_member_ids.includes(member.id) }">
+                                <Checkbox v-model="form.team_member_ids" :value="member.id"
+                                    :inputId="`team-member-${member.id}`" />
                                 <div class="member-avatar">
-                                    <img
-                                        v-if="member.avatar"
-                                        :src="member.avatar"
-                                        :alt="member.name"
-                                    />
+                                    <img v-if="member.avatar" :src="member.avatar" :alt="member.name" />
                                     <span v-else class="avatar-placeholder">
                                         {{ member.name.charAt(0).toUpperCase() }}
                                     </span>
@@ -562,22 +477,10 @@ const openLiveBooking = () => {
                             Unsaved changes
                         </span>
                         <div class="floating-buttons">
-                            <ConsoleButton
-                                type="button"
-                                label="Discard"
-                                variant="secondary"
-                                size="small"
-                                @click="cancel"
-                            />
-                            <ConsoleButton
-                                type="button"
-                                label="Save Changes"
-                                icon="pi pi-check"
-                                variant="primary"
-                                size="small"
-                                :loading="form.processing"
-                                @click="submit"
-                            />
+                            <ConsoleButton type="button" label="Discard" variant="secondary" size="small"
+                                @click="cancel" />
+                            <ConsoleButton type="button" label="Save Changes" icon="pi pi-check" variant="primary"
+                                size="small" :loading="form.processing" @click="submit" />
                         </div>
                     </div>
                 </div>
@@ -872,7 +775,8 @@ const openLiveBooking = () => {
 /* Team Sidebar */
 .team-sidebar {
     position: sticky;
-    top: 5rem; /* Account for topbar height */
+    top: 5rem;
+    /* Account for topbar height */
     height: fit-content;
 }
 

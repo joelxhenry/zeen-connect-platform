@@ -45,15 +45,17 @@ class BrandingController extends Controller
             'currentTier' => $currentTier->value,
             'currentTierLabel' => $currentTier->label(),
 
-            // Visuals - Colors (simplified: primary, secondary, and color mode)
+            // Visuals - Colors (primary, secondary, accent, and color mode)
             'brandSettings' => [
                 'primary_color' => $provider->brand_primary_color,
                 'secondary_color' => $provider->brand_secondary_color,
+                'accent_color' => $provider->brand_accent_color,
                 'color_mode' => $provider->color_mode ?? 'system',
             ],
             'defaultColors' => [
                 'primary_color' => '#106B4F',
                 'secondary_color' => '#6B7280',
+                'accent_color' => '#8B5CF6',
             ],
 
             // Visuals - Media

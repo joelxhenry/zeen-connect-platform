@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "@inertiajs/vue3": "^2.0.0",
+        "@palettebro/theme-generator": "^1.0.0",
         "@primevue/themes": "^4.5.2",
         "@sentry/vue": "^10.32.1",
         "@tailwindcss/vite": "^4.1.11",

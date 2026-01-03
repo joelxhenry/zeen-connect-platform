@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import DefaultLayout from './components/DefaultLayout.vue';
 import Avatar from 'primevue/avatar';
 import Button from 'primevue/button';
@@ -6,18 +7,49 @@ import Tag from 'primevue/tag';
 import type { Booking } from '@/types/models/booking';
 import payment from '@/routes/payment';
 
+// Event booking interface
+interface EventBookingData {
+    id: number;
+    uuid: string;
+    status: string;
+    status_label: string;
+    spots_booked: number;
+    total_amount: number;
+    total_amount_display: string;
+    deposit_amount?: number | null;
+    deposit_amount_display?: string | null;
+    deposit_paid: boolean;
+    requires_deposit: boolean;
+    client_notes?: string;
+    booker: { name: string; email?: string; phone?: string };
+    event: {
+        id: number; uuid: string; name: string; slug: string;
+        price: number; price_display: string; duration_display: string;
+        location_type: 'virtual' | 'in_person'; location?: string;
+    };
+    occurrence: { formatted_date: string; formatted_time: string };
+    provider: { id: number; business_name: string; slug: string; address?: string; avatar?: string };
+}
+
 interface Props {
-    booking: Booking;
+    bookingType?: 'service' | 'event';
+    booking: Booking | EventBookingData;
 }
 
 const props = defineProps<Props>();
+
+const isEventBooking = computed(() => props.bookingType === 'event');
+const serviceBooking = computed(() => props.booking as Booking);
+const eventBooking = computed(() => props.booking as EventBookingData);
 
 const getStatusSeverity = (status: string) => {
     switch (status) {
         case 'pending': return 'warn';
         case 'confirmed': return 'success';
         case 'completed': return 'info';
+        case 'attended': return 'success';
         case 'cancelled': return 'danger';
+        case 'no_show': return 'danger';
         default: return 'secondary';
     }
 };
@@ -25,6 +57,13 @@ const getStatusSeverity = (status: string) => {
 const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
+
+const getBookerEmail = computed(() => {
+    if (isEventBooking.value) return eventBooking.value.booker?.email;
+    return serviceBooking.value.client?.email;
+});
+
+const needsDeposit = computed(() => props.booking.requires_deposit && !props.booking.deposit_paid);
 </script>
 
 <template>
@@ -36,11 +75,13 @@ const getInitials = (name: string) => {
                     <div class="success-icon">
                         <i class="pi pi-check text-3xl text-[var(--provider-primary)]"></i>
                     </div>
-                    <h1 class="text-2xl font-semibold text-[var(--provider-text)] m-0">Booking Submitted!</h1>
+                    <h1 class="text-2xl font-semibold text-[var(--provider-text)] m-0">
+                        {{ isEventBooking ? 'Registration Confirmed!' : 'Booking Submitted!' }}
+                    </h1>
                     <p class="text-gray-500 mt-2">
-                        {{ booking.requires_deposit && !booking.deposit_paid
+                        {{ needsDeposit
                             ? 'Complete your deposit payment to secure your booking.'
-                            : 'We\'ve sent a confirmation email to ' + booking.client?.email
+                            : 'We\'ve sent a confirmation email to ' + getBookerEmail
                         }}
                     </p>
                 </div>
@@ -75,32 +116,75 @@ const getInitials = (name: string) => {
                             </div>
                         </div>
 
-                        <!-- Service & Time -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Service</label>
-                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.service.name }}</p>
+                        <!-- Event Booking Details -->
+                        <template v-if="isEventBooking">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="text-sm text-gray-500 block mb-1">Event</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.event.name }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Date</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.occurrence.formatted_date }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Time</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.occurrence.formatted_time }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Duration</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.event.duration_display }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Spots Booked</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.spots_booked }}</p>
+                                </div>
+                                <div v-if="eventBooking.event.location_type === 'in_person' && eventBooking.event.location">
+                                    <label class="text-sm text-gray-500 block mb-1">Location</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.event.location }}</p>
+                                </div>
+                                <div v-else-if="eventBooking.event.location_type === 'virtual'">
+                                    <label class="text-sm text-gray-500 block mb-1">Location</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">Virtual Event</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Duration</label>
-                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.service.duration_minutes }} minutes</p>
-                            </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Date</label>
-                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.formatted_date }}</p>
-                            </div>
-                            <div>
-                                <label class="text-sm text-gray-500 block mb-1">Time</label>
-                                <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.formatted_time }}</p>
-                            </div>
-                        </div>
 
-                        <!-- Your Info -->
-                        <div class="pt-4 border-t border-gray-100">
-                            <label class="text-sm text-gray-500 block mb-1">Booked by</label>
-                            <p class="font-medium text-[var(--provider-text)] m-0">{{ booking.client?.name }}</p>
-                            <p class="text-sm text-gray-500 m-0">{{ booking.client?.email }}</p>
-                        </div>
+                            <!-- Booker Info -->
+                            <div class="pt-4 border-t border-gray-100">
+                                <label class="text-sm text-gray-500 block mb-1">Registered by</label>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ eventBooking.booker.name }}</p>
+                                <p class="text-sm text-gray-500 m-0">{{ eventBooking.booker.email }}</p>
+                            </div>
+                        </template>
+
+                        <!-- Service Booking Details -->
+                        <template v-else>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Service</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ serviceBooking.service.name }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Duration</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ serviceBooking.service.duration_minutes }} minutes</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Date</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ serviceBooking.formatted_date }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-gray-500 block mb-1">Time</label>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">{{ serviceBooking.formatted_time }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Your Info -->
+                            <div class="pt-4 border-t border-gray-100">
+                                <label class="text-sm text-gray-500 block mb-1">Booked by</label>
+                                <p class="font-medium text-[var(--provider-text)] m-0">{{ serviceBooking.client?.name }}</p>
+                                <p class="text-sm text-gray-500 m-0">{{ serviceBooking.client?.email }}</p>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
@@ -110,24 +194,41 @@ const getInitials = (name: string) => {
                         <h2 class="text-base font-semibold text-[var(--provider-text)] m-0">Payment</h2>
                     </div>
                     <div class="p-5">
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Service Total</span>
-                                <span class="font-medium">${{ booking.service_price.toFixed(2) }}</span>
+                        <!-- Event Booking Payment -->
+                        <template v-if="isEventBooking">
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Total Amount</span>
+                                    <span class="font-medium">{{ eventBooking.total_amount_display }}</span>
+                                </div>
+                                <div class="flex justify-between text-[var(--provider-primary)]">
+                                    <span>Deposit Required</span>
+                                    <span class="font-medium">{{ eventBooking.deposit_amount_display }}</span>
+                                </div>
                             </div>
-                            <div v-if="booking.fee_payer === 'client' && booking.convenience_fee > 0" class="flex justify-between">
-                                <span class="text-gray-600">Service Fee</span>
-                                <span class="font-medium">${{ booking.convenience_fee.toFixed(2) }}</span>
+                        </template>
+
+                        <!-- Service Booking Payment -->
+                        <template v-else>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Service Total</span>
+                                    <span class="font-medium">${{ serviceBooking.service_price.toFixed(2) }}</span>
+                                </div>
+                                <div v-if="serviceBooking.fee_payer === 'client' && serviceBooking.convenience_fee > 0" class="flex justify-between">
+                                    <span class="text-gray-600">Service Fee</span>
+                                    <span class="font-medium">${{ serviceBooking.convenience_fee.toFixed(2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-[var(--provider-primary)]">
+                                    <span>Deposit Required</span>
+                                    <span class="font-medium">${{ serviceBooking.deposit_amount.toFixed(2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-500">
+                                    <span>Balance Due at Appointment</span>
+                                    <span>${{ serviceBooking.balance_amount.toFixed(2) }}</span>
+                                </div>
                             </div>
-                            <div class="flex justify-between text-[var(--provider-primary)]">
-                                <span>Deposit Required</span>
-                                <span class="font-medium">${{ booking.deposit_amount.toFixed(2) }}</span>
-                            </div>
-                            <div class="flex justify-between text-gray-500">
-                                <span>Balance Due at Appointment</span>
-                                <span>${{ booking.balance_amount.toFixed(2) }}</span>
-                            </div>
-                        </div>
+                        </template>
 
                         <hr class="my-4 border-gray-200" />
 
@@ -144,7 +245,7 @@ const getInitials = (name: string) => {
                                 />
                             </AppLink>
                             <p class="text-xs text-center text-gray-400 mt-2 m-0">
-                                Pay your deposit to secure your appointment
+                                Pay your deposit to secure your {{ isEventBooking ? 'registration' : 'appointment' }}
                             </p>
                         </div>
                     </div>
@@ -157,38 +258,51 @@ const getInitials = (name: string) => {
                     </div>
                     <div class="p-5">
                         <ul class="space-y-3 m-0 p-0 list-none">
-                            <li v-if="booking.requires_deposit && !booking.deposit_paid" class="flex items-start gap-3">
+                            <li v-if="needsDeposit" class="flex items-start gap-3">
                                 <span class="w-6 h-6 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center shrink-0 text-sm">1</span>
                                 <div>
                                     <p class="font-medium text-[var(--provider-text)] m-0">Complete your deposit payment</p>
-                                    <p class="text-sm text-gray-500 m-0">Pay the deposit to secure your booking</p>
+                                    <p class="text-sm text-gray-500 m-0">Pay the deposit to secure your {{ isEventBooking ? 'registration' : 'booking' }}</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="step-indicator">
-                                    {{ booking.requires_deposit && !booking.deposit_paid ? '2' : '1' }}
+                                    {{ needsDeposit ? '2' : '1' }}
                                 </span>
                                 <div>
                                     <p class="font-medium text-[var(--provider-text)] m-0">Check your email</p>
-                                    <p class="text-sm text-gray-500 m-0">We've sent booking details to {{ booking.client?.email }}</p>
+                                    <p class="text-sm text-gray-500 m-0">We've sent {{ isEventBooking ? 'registration' : 'booking' }} details to {{ getBookerEmail }}</p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="step-indicator">
-                                    {{ booking.requires_deposit && !booking.deposit_paid ? '3' : '2' }}
+                                    {{ needsDeposit ? '3' : '2' }}
                                 </span>
                                 <div>
                                     <p class="font-medium text-[var(--provider-text)] m-0">Save the date</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.formatted_date }} at {{ booking.formatted_time }}</p>
+                                    <p class="text-sm text-gray-500 m-0">
+                                        {{ isEventBooking ? eventBooking.occurrence.formatted_date : serviceBooking.formatted_date }}
+                                        at
+                                        {{ isEventBooking ? eventBooking.occurrence.formatted_time : serviceBooking.formatted_time }}
+                                    </p>
                                 </div>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="step-indicator">
-                                    {{ booking.requires_deposit && !booking.deposit_paid ? '4' : '3' }}
+                                    {{ needsDeposit ? '4' : '3' }}
                                 </span>
                                 <div>
-                                    <p class="font-medium text-[var(--provider-text)] m-0">Arrive on time</p>
-                                    <p class="text-sm text-gray-500 m-0">{{ booking.provider?.address }}</p>
+                                    <p class="font-medium text-[var(--provider-text)] m-0">
+                                        {{ isEventBooking && eventBooking.event.location_type === 'virtual' ? 'Join the event' : 'Arrive on time' }}
+                                    </p>
+                                    <p class="text-sm text-gray-500 m-0">
+                                        <template v-if="isEventBooking">
+                                            {{ eventBooking.event.location_type === 'virtual' ? 'Virtual event - check email for details' : eventBooking.event.location || eventBooking.provider?.address }}
+                                        </template>
+                                        <template v-else>
+                                            {{ serviceBooking.provider?.address }}
+                                        </template>
+                                    </p>
                                 </div>
                             </li>
                         </ul>
@@ -200,8 +314,8 @@ const getInitials = (name: string) => {
                     <AppLink href="/">
                         <Button label="Back to Home" severity="secondary" />
                     </AppLink>
-                    <AppLink href="/services">
-                        <Button label="Browse Services" outlined class="btn-outlined" />
+                    <AppLink :href="isEventBooking ? '/events' : '/services'">
+                        <Button :label="isEventBooking ? 'Browse Events' : 'Browse Services'" outlined class="btn-outlined" />
                     </AppLink>
                 </div>
             </div>

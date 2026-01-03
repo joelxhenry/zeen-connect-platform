@@ -99,6 +99,20 @@ const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
+const eventsUrl = computed(() => {
+    return site.events({ provider: __provider?.domain ?? '' }).url;
+});
+
+const myBookingsUrl = computed(() => {
+    return site.myBookings({ provider: __provider?.domain ?? '' }).url;
+});
+
+// Check if provider has events
+const hasEvents = computed(() => {
+    const pageProps = page.props as { hasEvents?: boolean };
+    return pageProps.hasEvents ?? false;
+});
+
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
@@ -135,11 +149,14 @@ onMounted(() => {
                 <!-- Navigation -->
                 <nav class="main-nav">
                     <AppLink :href="homeUrl" class="nav-link"
-                        :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
+                        :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') && !isActive('/events') }">
                         Home
                     </AppLink>
                     <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
                         Services
+                    </AppLink>
+                    <AppLink v-if="hasEvents" :href="eventsUrl" class="nav-link" :class="{ active: isActive('/events') }">
+                        Events
                     </AppLink>
                     <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
                         Reviews
@@ -152,7 +169,7 @@ onMounted(() => {
                 <!-- Right Side (auth) -->
                 <div class="header-right">
                     <template v-if="user">
-                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="text-link">
+                        <AppLink :href="myBookingsUrl" class="text-link">
                             My Bookings
                         </AppLink>
                     </template>
@@ -178,12 +195,15 @@ onMounted(() => {
                     <AppLink :href="servicesUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
                         Services
                     </AppLink>
+                    <AppLink v-if="hasEvents" :href="eventsUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                        Events
+                    </AppLink>
                     <AppLink :href="reviewsUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
                         Reviews
                     </AppLink>
                     <div class="mobile-nav-divider"></div>
                     <template v-if="user">
-                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="mobile-nav-link" @click="mobileMenuOpen = false">
+                        <AppLink :href="myBookingsUrl" class="mobile-nav-link" @click="mobileMenuOpen = false">
                             My Bookings
                         </AppLink>
                     </template>

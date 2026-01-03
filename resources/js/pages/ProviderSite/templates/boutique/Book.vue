@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import BoutiqueLayout from './components/BoutiqueLayout.vue';
 import Calendar from 'primevue/calendar';
 import Button from 'primevue/button';
@@ -7,25 +8,29 @@ import Textarea from 'primevue/textarea';
 import Avatar from 'primevue/avatar';
 import type { BookingPageProps } from '@/types/providersite';
 import { useProviderSiteBooking } from '@/composables/providersite';
+import EventBookingForm from '@/components/booking/EventBookingForm.vue';
 
 const props = defineProps<BookingPageProps>();
 
-const {
-    selectedService,
-    selectedTeamMember,
-    selectedDate,
-    selectedSlot,
-    availableSlots,
-    loadingSlots,
-    form,
-    hasTeamMembers,
-    currentFees,
-    minDate,
-    maxDate,
-    disabledDates,
-    canSubmit,
-    submit,
-} = useProviderSiteBooking(props);
+const isEventBooking = computed(() => props.bookingType === 'event');
+
+// Only use service booking composable for service bookings
+const booking = props.bookingType === 'service' ? useProviderSiteBooking(props) : null;
+
+const selectedService = computed(() => booking?.selectedService.value ?? null);
+const selectedTeamMember = computed(() => booking?.selectedTeamMember.value ?? null);
+const selectedDate = computed(() => booking?.selectedDate.value ?? null);
+const selectedSlot = computed(() => booking?.selectedSlot.value ?? null);
+const availableSlots = computed(() => booking?.availableSlots.value ?? []);
+const loadingSlots = computed(() => booking?.loadingSlots.value ?? false);
+const form = booking?.form ?? null;
+const hasTeamMembers = computed(() => booking?.hasTeamMembers.value ?? false);
+const currentFees = computed(() => booking?.currentFees.value ?? null);
+const minDate = computed(() => booking?.minDate.value ?? new Date());
+const maxDate = computed(() => booking?.maxDate.value ?? new Date());
+const disabledDates = computed(() => booking?.disabledDates.value ?? []);
+const canSubmit = computed(() => booking?.canSubmit.value ?? false);
+const submit = () => booking?.submit();
 
 const handleSubmit = () => {
     submit();
@@ -47,8 +52,19 @@ const formatSlotTime = (startTime: string): string => {
 </script>
 
 <template>
-    <BoutiqueLayout title="Book">
-        <div class="booking-page">
+    <BoutiqueLayout :title="isEventBooking ? 'Register' : 'Book'">
+        <!-- Event Booking Flow -->
+        <EventBookingForm
+            v-if="isEventBooking && event && occurrences"
+            :event="event"
+            :occurrences="occurrences"
+            :preselected-occurrence="preselectedOccurrence"
+            :is-authenticated="isAuthenticated"
+            :user="user"
+        />
+
+        <!-- Service Booking Flow -->
+        <div v-else class="booking-page">
             <!-- Page Header -->
             <div class="page-header">
                 <div class="header-container">

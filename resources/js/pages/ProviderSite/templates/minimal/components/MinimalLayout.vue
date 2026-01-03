@@ -110,6 +110,20 @@ const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
+const eventsUrl = computed(() => {
+    return site.events({ provider: __provider?.domain ?? '' }).url;
+});
+
+const myBookingsUrl = computed(() => {
+    return site.myBookings({ provider: __provider?.domain ?? '' }).url;
+});
+
+// Check if provider has events
+const hasEvents = computed(() => {
+    const pageProps = page.props as { hasEvents?: boolean };
+    return pageProps.hasEvents ?? false;
+});
+
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
@@ -126,7 +140,7 @@ const getBookingUrl = () => {
                 <!-- Left: Auth -->
                 <div class="header-left">
                     <template v-if="user">
-                        <AppLink :href="resolveUrl(client.bookings.index().url)" class="text-link">
+                        <AppLink :href="myBookingsUrl" class="text-link">
                             My Bookings
                         </AppLink>
                     </template>
@@ -154,13 +168,19 @@ const getBookingUrl = () => {
             <!-- Minimal Navigation: Simple text links below header -->
             <nav class="minimal-nav">
                 <AppLink :href="homeUrl" class="nav-link"
-                    :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
+                    :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') && !isActive('/events') }">
                     Home
                 </AppLink>
                 <span class="nav-divider">·</span>
                 <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
                     Services
                 </AppLink>
+                <template v-if="hasEvents">
+                    <span class="nav-divider">·</span>
+                    <AppLink :href="eventsUrl" class="nav-link" :class="{ active: isActive('/events') }">
+                        Events
+                    </AppLink>
+                </template>
                 <span class="nav-divider">·</span>
                 <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
                     Reviews

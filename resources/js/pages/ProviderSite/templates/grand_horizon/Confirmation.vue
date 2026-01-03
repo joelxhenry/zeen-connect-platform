@@ -1,21 +1,64 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import GrandHorizonLayout from './components/GrandHorizonLayout.vue';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
-import type { ConfirmationPageProps } from '@/types/providersite';
+import type { Booking } from '@/types/models/booking';
 import payment from '@/routes/payment';
 
-const props = defineProps<ConfirmationPageProps>();
+// Event booking interface
+interface EventBookingData {
+    id: number;
+    uuid: string;
+    status: string;
+    status_label: string;
+    spots_booked: number;
+    total_amount: number;
+    total_amount_display: string;
+    deposit_amount?: number | null;
+    deposit_amount_display?: string | null;
+    deposit_paid: boolean;
+    requires_deposit: boolean;
+    client_notes?: string;
+    booker: { name: string; email?: string; phone?: string };
+    event: {
+        id: number; uuid: string; name: string; slug: string;
+        price: number; price_display: string; duration_display: string;
+        location_type: 'virtual' | 'in_person'; location?: string;
+    };
+    occurrence: { formatted_date: string; formatted_time: string };
+    provider: { id: number; business_name: string; slug: string; address?: string; avatar?: string };
+}
+
+interface Props {
+    bookingType?: 'service' | 'event';
+    booking: Booking | EventBookingData;
+}
+
+const props = defineProps<Props>();
+
+const isEventBooking = computed(() => props.bookingType === 'event');
+const serviceBooking = computed(() => props.booking as Booking);
+const eventBooking = computed(() => props.booking as EventBookingData);
 
 const getStatusSeverity = (status: string) => {
     switch (status) {
         case 'pending': return 'warn';
         case 'confirmed': return 'success';
         case 'completed': return 'info';
+        case 'attended': return 'success';
         case 'cancelled': return 'danger';
+        case 'no_show': return 'danger';
         default: return 'secondary';
     }
 };
+
+const getBookerEmail = computed(() => {
+    if (isEventBooking.value) return eventBooking.value.booker?.email;
+    return serviceBooking.value.client?.email;
+});
+
+const needsDeposit = computed(() => props.booking.requires_deposit && !props.booking.deposit_paid);
 </script>
 
 <template>
@@ -27,12 +70,12 @@ const getStatusSeverity = (status: string) => {
                     <div class="success-icon">
                         <i class="pi pi-check"></i>
                     </div>
-                    <h4 class="header-label">Reservation Complete</h4>
+                    <h4 class="header-label">{{ isEventBooking ? 'Registration Complete' : 'Reservation Complete' }}</h4>
                     <h1>Thank You</h1>
                     <p>
-                        {{ booking.requires_deposit && !booking.deposit_paid
+                        {{ needsDeposit
                             ? 'Complete your deposit to secure your reservation.'
-                            : 'Your booking has been confirmed. Details have been sent to your email.'
+                            : 'Your ' + (isEventBooking ? 'registration' : 'booking') + ' has been confirmed. Details have been sent to your email.'
                         }}
                     </p>
                 </div>
@@ -44,36 +87,75 @@ const getStatusSeverity = (status: string) => {
                     <!-- Booking Details Card -->
                     <div class="detail-card">
                         <div class="card-header">
-                            <h2>Reservation Details</h2>
+                            <h2>{{ isEventBooking ? 'Registration Details' : 'Reservation Details' }}</h2>
                             <Tag :value="booking.status_label" :severity="getStatusSeverity(booking.status)" />
                         </div>
 
                         <div class="card-body">
                             <div class="detail-grid">
-                                <div class="detail-item">
-                                    <span class="detail-label">Experience</span>
-                                    <span class="detail-value">{{ booking.service.name }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Duration</span>
-                                    <span class="detail-value">{{ booking.service.duration_minutes }} minutes</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Date</span>
-                                    <span class="detail-value">{{ booking.formatted_date }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Time</span>
-                                    <span class="detail-value">{{ booking.formatted_time }}</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Location</span>
-                                    <span class="detail-value">{{ booking.provider?.business_name }}</span>
-                                </div>
-                                <div v-if="booking.provider?.address" class="detail-item">
-                                    <span class="detail-label">Address</span>
-                                    <span class="detail-value">{{ booking.provider.address }}</span>
-                                </div>
+                                <!-- Event Booking Details -->
+                                <template v-if="isEventBooking">
+                                    <div class="detail-item" style="grid-column: span 2;">
+                                        <span class="detail-label">Event</span>
+                                        <span class="detail-value">{{ eventBooking.event.name }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Date</span>
+                                        <span class="detail-value">{{ eventBooking.occurrence.formatted_date }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Time</span>
+                                        <span class="detail-value">{{ eventBooking.occurrence.formatted_time }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Duration</span>
+                                        <span class="detail-value">{{ eventBooking.event.duration_display }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Spots Reserved</span>
+                                        <span class="detail-value">{{ eventBooking.spots_booked }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Host</span>
+                                        <span class="detail-value">{{ eventBooking.provider?.business_name }}</span>
+                                    </div>
+                                    <div v-if="eventBooking.event.location_type === 'in_person' && eventBooking.event.location" class="detail-item">
+                                        <span class="detail-label">Venue</span>
+                                        <span class="detail-value">{{ eventBooking.event.location }}</span>
+                                    </div>
+                                    <div v-else-if="eventBooking.event.location_type === 'virtual'" class="detail-item">
+                                        <span class="detail-label">Format</span>
+                                        <span class="detail-value">Virtual Event</span>
+                                    </div>
+                                </template>
+
+                                <!-- Service Booking Details -->
+                                <template v-else>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Experience</span>
+                                        <span class="detail-value">{{ serviceBooking.service.name }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Duration</span>
+                                        <span class="detail-value">{{ serviceBooking.service.duration_minutes }} minutes</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Date</span>
+                                        <span class="detail-value">{{ serviceBooking.formatted_date }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Time</span>
+                                        <span class="detail-value">{{ serviceBooking.formatted_time }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Location</span>
+                                        <span class="detail-value">{{ serviceBooking.provider?.business_name }}</span>
+                                    </div>
+                                    <div v-if="serviceBooking.provider?.address" class="detail-item">
+                                        <span class="detail-label">Address</span>
+                                        <span class="detail-value">{{ serviceBooking.provider.address }}</span>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -86,22 +168,37 @@ const getStatusSeverity = (status: string) => {
 
                         <div class="card-body">
                             <div class="payment-rows">
-                                <div class="payment-row">
-                                    <span class="payment-label">Service total</span>
-                                    <span class="payment-value">${{ booking.service_price.toFixed(2) }}</span>
-                                </div>
-                                <div v-if="booking.fee_payer === 'client' && booking.convenience_fee > 0" class="payment-row">
-                                    <span class="payment-label">Service fee</span>
-                                    <span class="payment-value">${{ booking.convenience_fee.toFixed(2) }}</span>
-                                </div>
-                                <div class="payment-row payment-row--highlight">
-                                    <span class="payment-label">Deposit required</span>
-                                    <span class="payment-value">${{ booking.deposit_amount.toFixed(2) }}</span>
-                                </div>
-                                <div class="payment-row payment-row--muted">
-                                    <span class="payment-label">Balance due at appointment</span>
-                                    <span class="payment-value">${{ booking.balance_amount.toFixed(2) }}</span>
-                                </div>
+                                <!-- Event Booking Payment -->
+                                <template v-if="isEventBooking">
+                                    <div class="payment-row">
+                                        <span class="payment-label">Total amount</span>
+                                        <span class="payment-value">{{ eventBooking.total_amount_display }}</span>
+                                    </div>
+                                    <div class="payment-row payment-row--highlight">
+                                        <span class="payment-label">Deposit required</span>
+                                        <span class="payment-value">{{ eventBooking.deposit_amount_display }}</span>
+                                    </div>
+                                </template>
+
+                                <!-- Service Booking Payment -->
+                                <template v-else>
+                                    <div class="payment-row">
+                                        <span class="payment-label">Service total</span>
+                                        <span class="payment-value">${{ serviceBooking.service_price.toFixed(2) }}</span>
+                                    </div>
+                                    <div v-if="serviceBooking.fee_payer === 'client' && serviceBooking.convenience_fee > 0" class="payment-row">
+                                        <span class="payment-label">Service fee</span>
+                                        <span class="payment-value">${{ serviceBooking.convenience_fee.toFixed(2) }}</span>
+                                    </div>
+                                    <div class="payment-row payment-row--highlight">
+                                        <span class="payment-label">Deposit required</span>
+                                        <span class="payment-value">${{ serviceBooking.deposit_amount.toFixed(2) }}</span>
+                                    </div>
+                                    <div class="payment-row payment-row--muted">
+                                        <span class="payment-label">Balance due at appointment</span>
+                                        <span class="payment-value">${{ serviceBooking.balance_amount.toFixed(2) }}</span>
+                                    </div>
+                                </template>
                             </div>
 
                             <div v-if="booking.deposit_paid" class="deposit-status deposit-status--paid">
@@ -120,32 +217,49 @@ const getStatusSeverity = (status: string) => {
                     <div class="next-steps">
                         <h3>What's Next</h3>
                         <div class="steps-grid">
-                            <div v-if="booking.requires_deposit && !booking.deposit_paid" class="step-item">
+                            <div v-if="needsDeposit" class="step-item">
                                 <span class="step-number">01</span>
                                 <div class="step-content">
                                     <strong>Pay Your Deposit</strong>
-                                    <p>Secure your reservation with the required deposit payment.</p>
+                                    <p>Secure your {{ isEventBooking ? 'registration' : 'reservation' }} with the required deposit payment.</p>
                                 </div>
                             </div>
                             <div class="step-item">
-                                <span class="step-number">{{ booking.requires_deposit && !booking.deposit_paid ? '02' : '01' }}</span>
+                                <span class="step-number">{{ needsDeposit ? '02' : '01' }}</span>
                                 <div class="step-content">
                                     <strong>Check Your Email</strong>
                                     <p>Confirmation details have been sent to your inbox.</p>
                                 </div>
                             </div>
                             <div class="step-item">
-                                <span class="step-number">{{ booking.requires_deposit && !booking.deposit_paid ? '03' : '02' }}</span>
+                                <span class="step-number">{{ needsDeposit ? '03' : '02' }}</span>
                                 <div class="step-content">
                                     <strong>Mark Your Calendar</strong>
-                                    <p>{{ booking.formatted_date }} at {{ booking.formatted_time }}</p>
+                                    <p>
+                                        {{ isEventBooking ? eventBooking.occurrence.formatted_date : serviceBooking.formatted_date }}
+                                        at
+                                        {{ isEventBooking ? eventBooking.occurrence.formatted_time : serviceBooking.formatted_time }}
+                                    </p>
                                 </div>
                             </div>
-                            <div v-if="booking.provider?.address" class="step-item">
-                                <span class="step-number">{{ booking.requires_deposit && !booking.deposit_paid ? '04' : '03' }}</span>
+                            <div v-if="isEventBooking" class="step-item">
+                                <span class="step-number">{{ needsDeposit ? '04' : '03' }}</span>
+                                <div class="step-content">
+                                    <template v-if="eventBooking.event.location_type === 'virtual'">
+                                        <strong>Join the Event</strong>
+                                        <p>Check your email for virtual event details.</p>
+                                    </template>
+                                    <template v-else-if="eventBooking.event.location">
+                                        <strong>Plan Your Visit</strong>
+                                        <p>{{ eventBooking.event.location }}</p>
+                                    </template>
+                                </div>
+                            </div>
+                            <div v-else-if="serviceBooking.provider?.address" class="step-item">
+                                <span class="step-number">{{ needsDeposit ? '04' : '03' }}</span>
                                 <div class="step-content">
                                     <strong>Plan Your Visit</strong>
-                                    <p>{{ booking.provider.address }}</p>
+                                    <p>{{ serviceBooking.provider.address }}</p>
                                 </div>
                             </div>
                         </div>
@@ -156,8 +270,8 @@ const getStatusSeverity = (status: string) => {
                         <AppLink href="/">
                             <Button label="Back to Home" severity="secondary" outlined class="action-btn" />
                         </AppLink>
-                        <AppLink href="/services">
-                            <Button label="Browse More Experiences" outlined class="action-btn action-btn--primary" />
+                        <AppLink :href="isEventBooking ? '/events' : '/services'">
+                            <Button :label="isEventBooking ? 'Browse More Events' : 'Browse More Experiences'" outlined class="action-btn action-btn--primary" />
                         </AppLink>
                     </div>
                 </div>

@@ -15,7 +15,7 @@ const props = defineProps<HomePageProps>();
 const page = usePage();
 const __provider = page.props.__provider as { domain: string } | null;
 
-const { stats, bookingUrl, servicesUrl, reviewsUrl, hasPortfolio, hasServices, hasReviews } = useProviderSiteHome(props);
+const { stats, bookingUrl, servicesUrl, reviewsUrl, eventsUrl, hasPortfolio, hasServices, hasReviews, hasEvents } = useProviderSiteHome(props);
 
 const flatServices = props.servicesByCategory.flatMap(cat => cat.services);
 const featuredServices = flatServices.slice(0, 6);
@@ -136,6 +136,22 @@ const featuredReviews = props.reviews.slice(0, 3);
                     :images="provider.gallery?.slice(0, 8)"
                     :videos="provider.videos?.slice(0, 2)"
                 />
+            </div>
+        </section>
+
+        <!-- Events Section -->
+        <section v-if="hasEvents" class="events-section">
+            <div class="section-container">
+                <div class="events-banner">
+                    <div class="events-content">
+                        <h4 class="section-label">Exclusive</h4>
+                        <h2 class="events-title">Upcoming Events</h2>
+                        <p class="events-description">Join us for exclusive events, workshops, and special experiences</p>
+                    </div>
+                    <AppLink :href="eventsUrl">
+                        <Button label="Explore Events" class="btn-primary" />
+                    </AppLink>
+                </div>
             </div>
         </section>
 
@@ -497,6 +513,38 @@ const featuredReviews = props.reviews.slice(0, 3);
 .gallery-section {
     padding: 6rem 0;
     background: var(--provider-surface, #ffffff);
+}
+
+/* Events Section */
+.events-section {
+    padding: 5rem 0;
+    background: var(--provider-surface, #ffffff);
+}
+
+.events-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3rem;
+    background: var(--provider-dark, #1a1a1a);
+}
+
+.events-content {
+    color: white;
+}
+
+.events-title {
+    font-family: var(--font-heading, 'Playfair Display', serif);
+    font-size: 2rem;
+    font-weight: 500;
+    color: #ffffff;
+    margin: 0 0 0.75rem 0;
+}
+
+.events-description {
+    margin: 0;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Testimonials Section */

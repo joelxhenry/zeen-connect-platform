@@ -217,18 +217,55 @@ export interface ReviewsPageProps {
     reviewStats: ReviewStats;
 }
 
+export interface EventOccurrenceForBooking {
+    id: number;
+    uuid: string;
+    start_datetime: string;
+    end_datetime: string;
+    formatted_date: string;
+    formatted_time: string;
+    capacity: number;
+    spots_remaining: number;
+    is_sold_out: boolean;
+    status: string;
+}
+
+export interface EventForBooking {
+    id: number;
+    uuid: string;
+    slug: string;
+    name: string;
+    description?: string;
+    price: number;
+    price_display: string;
+    duration_minutes: number;
+    duration_display: string;
+    capacity: number;
+    event_type: 'one_time' | 'recurring';
+    location_type: 'virtual' | 'in_person';
+    location?: string;
+    display_image?: string;
+}
+
 export interface BookingPageProps {
+    bookingType: 'service' | 'event';
     provider: ProviderForBooking;
-    services: ServiceForBooking[];
-    availableDates: string[];
-    preselectedService: number | null;
+    // Service booking props
+    services?: ServiceForBooking[];
+    availableDates?: string[];
+    preselectedService?: number | null;
+    teamMembers?: TeamMemberForBooking[];
+    // Event booking props
+    event?: EventForBooking;
+    occurrences?: EventOccurrenceForBooking[];
+    preselectedOccurrence?: number | null;
+    // Common props
     isAuthenticated: boolean;
     user: {
         name: string;
         email: string;
         phone?: string;
     } | null;
-    teamMembers: TeamMemberForBooking[];
 }
 
 export interface ConfirmationPageProps {

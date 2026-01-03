@@ -20,11 +20,13 @@ const {
     bookingUrl,
     servicesUrl,
     reviewsUrl,
+    eventsUrl,
     getServiceBookingUrl,
     hasPortfolio,
     hasServices,
     hasAvailability,
     hasReviews,
+    hasEvents,
 } = useProviderSiteHome(props);
 
 // Build hero stats from actual provider data
@@ -132,6 +134,21 @@ const hasFeatures = (props.features?.length ?? 0) > 0;
                         <div v-if="provider.cover_image" class="about-image">
                             <img :src="provider.cover_image" :alt="provider.business_name" />
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section v-if="hasEvents" class="events-section">
+                <div class="section-container">
+                    <div class="events-banner">
+                        <div class="events-content">
+                            <h2>UPCOMING EVENTS</h2>
+                            <p>Join our exclusive events, workshops, and sessions</p>
+                        </div>
+                        <AppLink :href="eventsUrl">
+                            <Button label="VIEW EVENTS" icon="pi pi-arrow-right" iconPos="right" class="events-btn" />
+                        </AppLink>
                     </div>
                 </div>
             </section>
@@ -370,6 +387,47 @@ const hasFeatures = (props.features?.length ?? 0) > 0;
     width: 100%;
     height: 400px;
     object-fit: cover;
+}
+
+/* Events Section */
+.events-section {
+    padding: 3rem 0;
+    background: var(--provider-background, #f5f5f5);
+}
+
+.events-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background: var(--provider-surface, #fff);
+    border: 2px solid var(--provider-text, #1a1a1a);
+}
+
+.events-content h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--provider-text, #1a1a1a);
+}
+
+.events-content p {
+    margin: 0;
+    color: var(--provider-secondary, #6b7280);
+}
+
+:deep(.events-btn) {
+    background-color: var(--provider-primary, #1a1a1a) !important;
+    border-color: var(--provider-primary, #1a1a1a) !important;
+    border-radius: 0 !important;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+:deep(.events-btn:hover) {
+    background-color: var(--provider-primary-hover, #333) !important;
+    border-color: var(--provider-primary-hover, #333) !important;
 }
 
 /* Reviews Section */

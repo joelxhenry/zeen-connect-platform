@@ -15,7 +15,7 @@ const props = defineProps<HomePageProps>();
 const page = usePage();
 const __provider = page.props.__provider as { domain: string } | null;
 
-const { stats, bookingUrl, servicesUrl, reviewsUrl, getServiceBookingUrl, hasPortfolio, hasServices, hasReviews } = useProviderSiteHome(props);
+const { stats, bookingUrl, servicesUrl, reviewsUrl, eventsUrl, getServiceBookingUrl, hasPortfolio, hasServices, hasReviews, hasEvents } = useProviderSiteHome(props);
 
 const featuredServices = props.servicesByCategory
     .flatMap(cat => cat.services)
@@ -108,6 +108,22 @@ const featuredReviews = props.reviews.slice(0, 3);
                     :videos="provider.videos?.slice(0, 3)"
                     :columns="3"
                 />
+            </div>
+        </section>
+
+        <!-- Events -->
+        <section v-if="hasEvents" class="events-section">
+            <div class="section-container">
+                <div class="events-card">
+                    <i class="pi pi-calendar-plus events-icon"></i>
+                    <div class="events-text">
+                        <h3>Upcoming Events</h3>
+                        <p>Discover our exclusive events and workshops</p>
+                    </div>
+                    <AppLink :href="eventsUrl">
+                        <Button label="View Events" class="btn-primary" />
+                    </AppLink>
+                </div>
             </div>
         </section>
 
@@ -377,6 +393,44 @@ const featuredReviews = props.reviews.slice(0, 3);
 /* Gallery Section */
 .gallery-section {
     padding: 4rem 0;
+}
+
+/* Events Section */
+.events-section {
+    padding: 4rem 0;
+}
+
+.events-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: var(--provider-surface, #fff);
+    border: 1px solid var(--provider-border, #ebe8e4);
+    border-radius: 1rem;
+}
+
+.events-icon {
+    font-size: 2.5rem;
+    color: var(--provider-primary, #8b7355);
+}
+
+.events-text {
+    flex: 1;
+}
+
+.events-text h3 {
+    margin: 0 0 0.25rem 0;
+    font-family: var(--font-heading, 'Cormorant Garamond', serif);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--provider-text, #3d3d3d);
+}
+
+.events-text p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--provider-secondary, #8a8a8a);
 }
 
 /* Reviews Section */

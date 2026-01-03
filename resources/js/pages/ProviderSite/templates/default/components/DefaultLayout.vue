@@ -115,6 +115,20 @@ const reviewsUrl = computed(() => {
     return site.reviews({ provider: __provider?.domain ?? '' }).url;
 });
 
+const eventsUrl = computed(() => {
+    return site.events({ provider: __provider?.domain ?? '' }).url;
+});
+
+const myBookingsUrl = computed(() => {
+    return site.myBookings({ provider: __provider?.domain ?? '' }).url;
+});
+
+// Check if provider has events
+const hasEvents = computed(() => {
+    const pageProps = page.props as { hasEvents?: boolean };
+    return pageProps.hasEvents ?? false;
+});
+
 const getBookingUrl = () => {
     return ProviderSiteBookingController.create({ provider: __provider?.domain ?? '' }).url;
 };
@@ -140,11 +154,14 @@ const getBookingUrl = () => {
                 <!-- Main Navigation -->
                 <nav class="main-nav">
                     <AppLink :href="homeUrl" class="nav-link"
-                        :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') }">
+                        :class="{ active: isActive('/') && !isActive('/services') && !isActive('/reviews') && !isActive('/book') && !isActive('/events') }">
                         Home
                     </AppLink>
                     <AppLink :href="servicesUrl" class="nav-link" :class="{ active: isActive('/services') }">
                         Services
+                    </AppLink>
+                    <AppLink v-if="hasEvents" :href="eventsUrl" class="nav-link" :class="{ active: isActive('/events') }">
+                        Events
                     </AppLink>
                     <AppLink :href="reviewsUrl" class="nav-link" :class="{ active: isActive('/reviews') }">
                         Reviews
@@ -159,7 +176,7 @@ const getBookingUrl = () => {
 
                     <div class="auth-nav">
                         <template v-if="user">
-                            <AppLink :href="resolveUrl(client.bookings.index().url)" class="nav-link text-sm">
+                            <AppLink :href="myBookingsUrl" class="nav-link text-sm">
                                 My Bookings
                             </AppLink>
                         </template>

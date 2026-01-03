@@ -13,9 +13,11 @@ const {
     bookingUrl,
     servicesUrl,
     reviewsUrl,
+    eventsUrl,
     getServiceBookingUrl,
     hasServices,
     hasReviews,
+    hasEvents,
 } = useProviderSiteHome(props);
 
 const getInitials = (name: string) => {
@@ -88,6 +90,24 @@ const getInitials = (name: string) => {
                                 <span class="service-price">{{ service.price_display }}</span>
                             </AppLink>
                         </template>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Events Section -->
+            <section v-if="hasEvents" class="content-section events-section">
+                <div class="section-container">
+                    <div class="events-banner">
+                        <div class="events-text">
+                            <i class="pi pi-calendar-plus"></i>
+                            <div>
+                                <h3>Upcoming Events</h3>
+                                <p>Join our events and workshops</p>
+                            </div>
+                        </div>
+                        <AppLink :href="eventsUrl" class="events-link">
+                            View Events <i class="pi pi-arrow-right"></i>
+                        </AppLink>
                     </div>
                 </div>
             </section>
@@ -350,6 +370,58 @@ const getInitials = (name: string) => {
 .review-author {
     font-size: 0.875rem;
     color: #9ca3af;
+}
+
+.events-section {
+    background: #fafafa;
+}
+
+.events-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+}
+
+.events-text {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.events-text i {
+    font-size: 1.5rem;
+    color: var(--provider-primary);
+}
+
+.events-text h3 {
+    margin: 0 0 0.125rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--provider-text);
+}
+
+.events-text p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.events-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--provider-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.events-link:hover {
+    text-decoration: underline;
 }
 
 .contact-section {

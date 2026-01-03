@@ -15,6 +15,7 @@ use App\Domains\Event\Models\EventOccurrence;
 use App\Domains\Payment\Controllers\PaymentController;
 use App\Domains\Provider\Models\Provider;
 use App\Domains\Provider\Models\TeamMember;
+use App\Domains\ProviderSite\Enums\TemplateType;
 use App\Domains\ProviderSite\Services\ProviderSiteDataService;
 use App\Domains\ProviderSite\Services\TemplateResolver;
 use App\Domains\Service\Models\Service;
@@ -75,7 +76,7 @@ class ProviderSiteBookingController extends Controller
     /**
      * Show the event booking page.
      */
-    protected function createEventBooking(Request $request, Provider $provider, string $template): Response
+    protected function createEventBooking(Request $request, Provider $provider, TemplateType $template): Response
     {
         $event = Event::where('provider_id', $provider->id)
             ->where('id', (int) $request->event)

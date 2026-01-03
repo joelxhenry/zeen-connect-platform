@@ -16,7 +16,7 @@ const props = defineProps<HomePageProps>();
 const page = usePage();
 const __provider = page.props.__provider as { domain: string } | null;
 
-const { stats, bookingUrl, servicesUrl, reviewsUrl, getServiceBookingUrl, hasPortfolio, hasServices, hasReviews } = useProviderSiteHome(props);
+const { stats, bookingUrl, servicesUrl, reviewsUrl, eventsUrl, getServiceBookingUrl, hasPortfolio, hasServices, hasReviews, hasEvents } = useProviderSiteHome(props);
 
 const featuredServices = props.servicesByCategory
     .flatMap(cat => cat.services)
@@ -126,6 +126,22 @@ const startingPriceDisplay = lowestPrice !== null
                             </AppLink>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Events Section -->
+        <section v-if="hasEvents" class="events-section">
+            <div class="section-container">
+                <div class="events-banner">
+                    <div class="events-text">
+                        <span class="events-label mono-text">UPCOMING</span>
+                        <h2>EVENTS & WORKSHOPS</h2>
+                        <p>Join our exclusive sessions and special events</p>
+                    </div>
+                    <AppLink :href="eventsUrl">
+                        <Button label="VIEW EVENTS" icon="pi pi-arrow-right" iconPos="right" class="btn-events" />
+                    </AppLink>
                 </div>
             </div>
         </section>
@@ -482,6 +498,60 @@ const startingPriceDisplay = lowestPrice !== null
 :deep(.btn-book:hover) {
     background-color: var(--provider-primary-hover, #333) !important;
     border-color: var(--provider-primary-hover, #333) !important;
+}
+
+/* Events Section */
+.events-section {
+    padding: 4rem 0;
+    background: var(--provider-surface, #fff);
+}
+
+.events-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2.5rem;
+    background: var(--provider-text, #1a1a1a);
+}
+
+.events-text {
+    color: white;
+}
+
+.events-label {
+    display: block;
+    font-size: 0.625rem;
+    letter-spacing: 0.15em;
+    color: var(--provider-primary, #fff);
+    margin-bottom: 0.5rem;
+}
+
+.events-banner h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.75rem;
+    color: white;
+}
+
+.events-banner p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+:deep(.btn-events) {
+    font-family: var(--font-mono, 'Space Mono', monospace) !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    background-color: #fff !important;
+    border-color: #fff !important;
+    color: var(--provider-text, #1a1a1a) !important;
+    border-radius: 0 !important;
+}
+
+:deep(.btn-events:hover) {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* Reviews Section */

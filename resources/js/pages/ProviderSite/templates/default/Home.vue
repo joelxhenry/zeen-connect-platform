@@ -20,11 +20,13 @@ const {
     bookingUrl,
     servicesUrl,
     reviewsUrl,
+    eventsUrl,
     getServiceBookingUrl,
     hasPortfolio,
     hasServices,
     hasAvailability,
     hasReviews,
+    hasEvents,
 } = useProviderSiteHome(props);
 </script>
 
@@ -77,6 +79,24 @@ const {
                 <div class="section-container">
                     <h2>Business Hours</h2>
                     <BusinessHours :hours="availability" :bookingUrl="bookingUrl" />
+                </div>
+            </section>
+
+            <!-- Events Preview -->
+            <section v-if="hasEvents" class="events-section">
+                <div class="section-container">
+                    <div class="events-promo">
+                        <div class="events-promo-content">
+                            <i class="pi pi-calendar-plus"></i>
+                            <div>
+                                <h2>Upcoming Events</h2>
+                                <p>Join us for exclusive events, workshops, and special sessions.</p>
+                            </div>
+                        </div>
+                        <AppLink :href="eventsUrl">
+                            <Button label="View Events" icon="pi pi-arrow-right" iconPos="right" class="events-btn" />
+                        </AppLink>
+                    </div>
                 </div>
             </section>
 
@@ -207,6 +227,55 @@ const {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--provider-text);
+}
+
+.events-section {
+    padding: 3rem 0;
+    background: var(--provider-surface);
+}
+
+.events-promo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background: var(--provider-primary-10);
+    border-radius: 0.75rem;
+    border: 1px solid var(--provider-primary-20);
+}
+
+.events-promo-content {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.events-promo-content i {
+    font-size: 2.5rem;
+    color: var(--provider-primary);
+}
+
+.events-promo h2 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--provider-text);
+}
+
+.events-promo p {
+    margin: 0;
+    color: var(--provider-text-muted);
+    font-size: 0.9375rem;
+}
+
+:deep(.events-btn) {
+    background-color: var(--provider-primary) !important;
+    border-color: var(--provider-primary) !important;
+}
+
+:deep(.events-btn:hover) {
+    background-color: var(--provider-primary-hover) !important;
+    border-color: var(--provider-primary-hover) !important;
 }
 
 .reviews-section {

@@ -1,0 +1,75 @@
+# Zeen Connect - Development Caddy Configuration
+# Copy this file to /etc/caddy/Caddyfile and update with your domain
+#
+# Usage:
+#   sudo cp Caddyfile.dev /etc/caddy/Caddyfile
+#   sudo nano /etc/caddy/Caddyfile  # Update domain and email
+#   sudo systemctl restart caddy
+
+{
+    # Your email for Let's Encrypt SSL certificates
+    email admin@yourdomain.com
+}
+
+# Main development domain
+dev.yourdomain.com {
+    # Proxy to Laravel app container
+    reverse_proxy localhost:80 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+
+    # Vite HMR WebSocket connections
+    @vite_ws {
+        path /@vite/*
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    handle @vite_ws {
+        reverse_proxy localhost:5173
+    }
+
+    # Vite assets and HMR paths
+    @vite_assets {
+        path /@vite/*
+        path /@id/*
+        path /@fs/*
+        path /node_modules/*
+        path /resources/*
+    }
+    handle @vite_assets {
+        reverse_proxy localhost:5173
+    }
+}
+
+# Admin subdomain (optional - uncomment if using)
+# admin-dev.yourdomain.com {
+#     reverse_proxy localhost:80 {
+#         header_up X-Forwarded-Proto {scheme}
+#         header_up X-Forwarded-Host {host}
+#     }
+# }
+
+# Console subdomain (optional - uncomment if using)
+# console-dev.yourdomain.com {
+#     reverse_proxy localhost:80 {
+#         header_up X-Forwarded-Proto {scheme}
+#         header_up X-Forwarded-Host {host}
+#     }
+# }
+
+# Auth subdomain (optional - uncomment if using)
+# auth-dev.yourdomain.com {
+#     reverse_proxy localhost:80 {
+#         header_up X-Forwarded-Proto {scheme}
+#         header_up X-Forwarded-Host {host}
+#     }
+# }
+
+# Wildcard for all subdomains (alternative to individual configs above)
+# *.dev.yourdomain.com {
+#     reverse_proxy localhost:80 {
+#         header_up X-Forwarded-Proto {scheme}
+#         header_up X-Forwarded-Host {host}
+#     }
+# }

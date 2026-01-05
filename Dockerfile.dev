@@ -1,84 +1,70 @@
-# =============================================================================
-# Development Dockerfile - Live reload with Vite HMR
-# =============================================================================
-FROM php:8.4-cli-alpine
+FROM php:8.4-fpm-alpine
+
+# Environment variables
+ENV APP_ENV=local
+ENV APP_DEBUG=true
 
 # Install system dependencies
 RUN apk add --no-cache \
-    nodejs \
-    npm \
-    git \
-    unzip \
-    curl \
     nginx \
     supervisor \
-    libpng \
-    libjpeg-turbo \
-    libwebp \
-    freetype \
-    libzip \
-    icu-libs \
-    oniguruma \
-    postgresql-libs \
-    sqlite-libs
-
-# Install PHP extension build dependencies and compile extensions
-RUN apk add --no-cache --virtual .build-deps \
+    git \
+    curl \
+    zip \
+    unzip \
     libpng-dev \
     libjpeg-turbo-dev \
-    libwebp-dev \
     freetype-dev \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
-    postgresql-dev \
-    sqlite-dev \
-    linux-headers \
-    $PHPIZE_DEPS \
-    && docker-php-ext-configure gd \
-        --with-freetype \
-        --with-jpeg \
-        --with-webp \
+    mysql-client \
+    nodejs \
+    npm \
+    $PHPIZE_DEPS
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
-        pdo_pgsql \
-        pdo_sqlite \
         gd \
-        exif \
         zip \
-        intl \
-        pcntl \
         bcmath \
+        opcache \
+        intl \
         mbstring \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apk del .build-deps
+        pcntl \
+        exif
+
+# Install Redis extension via PECL
+RUN pecl install redis \
+    && docker-php-ext-enable redis
+
+# Clean up build dependencies
+RUN apk del $PHPIZE_DEPS
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Install Claude Code CLI globally
-RUN npm install -g @anthropic-ai/claude-code
+# Create necessary directories
+RUN mkdir -p /var/log/supervisor \
+    && mkdir -p /run/nginx \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/bootstrap/cache
+
+# Copy configuration files
+COPY docker/nginx.dev.conf /etc/nginx/http.d/default.conf
+COPY docker/php.dev.ini /usr/local/etc/php/conf.d/99-dev.ini
+COPY docker/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy nginx dev configuration
-COPY docker/nginx.dev.conf /etc/nginx/http.d/default.conf
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Copy supervisord dev configuration
-COPY docker/supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copy PHP dev configuration
-COPY docker/php.dev.ini /usr/local/etc/php/conf.d/app.ini
-
-# Create necessary directories
-RUN mkdir -p /var/log/supervisor \
-    && mkdir -p /run/nginx
-
-# Expose ports
-# 80 - Nginx (proxies to Laravel + Vite)
-EXPOSE 80
+# Expose ports: 80 (nginx), 5173 (vite HMR)
+EXPOSE 80 5173
 
 # Start supervisord
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

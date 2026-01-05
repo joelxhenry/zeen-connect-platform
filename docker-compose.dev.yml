@@ -3,46 +3,103 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    container_name: zeen-app-dev
     restart: unless-stopped
-    expose:
-      - "80"
+    stdin_open: true
+    tty: true
+    ports:
+      - "80:80"
+      - "5173:5173"
     volumes:
-      # Mount source code for live sync
-      - .:/var/www/html
+      - .:/var/www/html:cached
+      - /var/www/html/node_modules
     environment:
-      # App
       APP_NAME: ${APP_NAME:-Zeen}
       APP_ENV: ${APP_ENV:-local}
       APP_KEY: ${APP_KEY}
       APP_DEBUG: ${APP_DEBUG:-true}
-      APP_URL: ${APP_URL}
-
-      # Vite HMR
-      VITE_HMR_HOST: ${VITE_HMR_HOST}
-      VITE_DEV_SERVER_URL: ${APP_URL}
-      ASSET_URL: ${APP_URL}
-
-      # Domains
-      MAIN_DOMAIN: ${MAIN_DOMAIN}
-      AUTH_DOMAIN: ${AUTH_DOMAIN}
-      ADMIN_DOMAIN: ${ADMIN_DOMAIN}
-      CONSOLE_DOMAIN: ${CONSOLE_DOMAIN}
-      PAYMENTS_DOMAIN: ${PAYMENTS_DOMAIN}
-
-      # Database (external service)
-      DB_CONNECTION: ${DB_CONNECTION:-mysql}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-      # Redis (external service)
-      REDIS_HOST: ${REDIS_HOST}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.localhost}
+      CONSOLE_DOMAIN: ${CONSOLE_DOMAIN:-console.localhost}
+      AUTH_DOMAIN: ${AUTH_DOMAIN:-auth.localhost}
+      PAYMENTS_DOMAIN: ${PAYMENTS_DOMAIN:-payments.localhost}
+      SESSION_DOMAIN: ${SESSION_DOMAIN:-.localhost}
+      VITE_HMR_HOST: ${VITE_HMR_HOST:-localhost}
+      VITE_DEV_SERVER_URL: ${VITE_DEV_SERVER_URL:-http://localhost:5173}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-zeen}
+      DB_USERNAME: ${DB_USERNAME:-zeen}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - zeen-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-      # Cache & Queue
-      CACHE_STORE: ${CACHE_STORE:-redis}
-      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+  mysql:
+    image: mysql:8.0
+    container_name: zeen-mysql-dev
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE: ${DB_DATABASE:-zeen}
+      MYSQL_USER: ${DB_USERNAME:-zeen}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - zeen-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: zeen-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - zeen-network
+
+networks:
+  zeen-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

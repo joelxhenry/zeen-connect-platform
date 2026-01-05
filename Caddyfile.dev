@@ -8,13 +8,14 @@
 
 {
     # Your email for Let's Encrypt SSL certificates
-    email admin@yourdomain.com
+    email joel.henry.023@gmail.com
 }
 
 # Main development domain
-dev.yourdomain.com {
+dev.zeenconnect.com, auth.dev.zeenconnect.com, console.dev.zeenconnect.com, *.dev.zeenconnect.com {
+
     # Proxy to Laravel app container
-    reverse_proxy localhost:80 {
+    reverse_proxy localhost:8080 {
         header_up X-Forwarded-Proto {scheme}
         header_up X-Forwarded-Host {host}
     }
@@ -26,7 +27,7 @@ dev.yourdomain.com {
         header Upgrade websocket
     }
     handle @vite_ws {
-        reverse_proxy localhost:5173
+        reverse_proxy localhost:5174
     }
 
     # Vite assets and HMR paths
@@ -38,38 +39,7 @@ dev.yourdomain.com {
         path /resources/*
     }
     handle @vite_assets {
-        reverse_proxy localhost:5173
+        reverse_proxy localhost:5174
     }
 }
 
-# Admin subdomain (optional - uncomment if using)
-# admin-dev.yourdomain.com {
-#     reverse_proxy localhost:80 {
-#         header_up X-Forwarded-Proto {scheme}
-#         header_up X-Forwarded-Host {host}
-#     }
-# }
-
-# Console subdomain (optional - uncomment if using)
-# console-dev.yourdomain.com {
-#     reverse_proxy localhost:80 {
-#         header_up X-Forwarded-Proto {scheme}
-#         header_up X-Forwarded-Host {host}
-#     }
-# }
-
-# Auth subdomain (optional - uncomment if using)
-# auth-dev.yourdomain.com {
-#     reverse_proxy localhost:80 {
-#         header_up X-Forwarded-Proto {scheme}
-#         header_up X-Forwarded-Host {host}
-#     }
-# }
-
-# Wildcard for all subdomains (alternative to individual configs above)
-# *.dev.yourdomain.com {
-#     reverse_proxy localhost:80 {
-#         header_up X-Forwarded-Proto {scheme}
-#         header_up X-Forwarded-Host {host}
-#     }
-# }

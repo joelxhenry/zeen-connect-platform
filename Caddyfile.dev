@@ -87,17 +87,25 @@ payments.dev.zeenconnect.com {
 }
 
 # Wildcard subdomain for provider sites (e.g., {provider}.dev.zeenconnect.com)
-# Note: Wildcard SSL requires DNS challenge. Configure your DNS provider:
-# https://caddyserver.com/docs/automatic-https#dns-challenge
-*.dev.zeenconnect.com {
-    import vite_hmr
-
-    reverse_proxy localhost:8080 {
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Host {host}
-    }
-
-    tls {
-        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-    }
-}
+# Note: Wildcard SSL requires DNS challenge and Caddy with DNS plugin.
+#
+# To enable:
+# 1. Build Caddy with Cloudflare plugin:
+#    go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+#    ~/go/bin/xcaddy build --with github.com/caddy-dns/cloudflare
+#    sudo mv caddy /usr/bin/caddy
+# 2. Set CLOUDFLARE_API_TOKEN environment variable
+# 3. Uncomment the block below and restart Caddy
+#
+# *.dev.zeenconnect.com {
+#     import vite_hmr
+#
+#     reverse_proxy localhost:8080 {
+#         header_up X-Forwarded-Proto {scheme}
+#         header_up X-Forwarded-Host {host}
+#     }
+#
+#     tls {
+#         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+#     }
+# }

@@ -58,6 +58,24 @@ apt-get install -y caddy
 echo -e "${YELLOW}Installing additional tools...${NC}"
 apt-get install -y git htop vim nano
 
+# Install Node.js (required for Claude Code)
+if ! command -v node &> /dev/null; then
+    echo -e "${YELLOW}Installing Node.js...${NC}"
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt-get install -y nodejs
+else
+    echo -e "${GREEN}Node.js already installed${NC}"
+fi
+
+# Install Claude Code CLI
+if ! command -v claude &> /dev/null; then
+    echo -e "${YELLOW}Installing Claude Code CLI...${NC}"
+    npm install -g @anthropic-ai/claude-code
+    echo -e "${GREEN}Claude Code installed. Run 'claude' to start.${NC}"
+else
+    echo -e "${GREEN}Claude Code already installed${NC}"
+fi
+
 # Create project directory
 PROJECT_DIR="/var/www/zeen"
 echo -e "${YELLOW}Creating project directory: $PROJECT_DIR${NC}"

@@ -8,18 +8,11 @@
 
 {
     # Your email for Let's Encrypt SSL certificates
-    email joel.henry.023@gmail.com
+    email admin@zeenconnect.com
 }
 
-# Main development domain
-dev.zeenconnect.com, auth.dev.zeenconnect.com, console.dev.zeenconnect.com, *.dev.zeenconnect.com {
-
-    # Proxy to Laravel app container
-    reverse_proxy localhost:8080 {
-        header_up X-Forwarded-Proto {scheme}
-        header_up X-Forwarded-Host {host}
-    }
-
+# Shared snippet for Vite HMR support
+(vite_hmr) {
     # Vite HMR WebSocket connections
     @vite_ws {
         path /@vite/*
@@ -43,3 +36,68 @@ dev.zeenconnect.com, auth.dev.zeenconnect.com, console.dev.zeenconnect.com, *.de
     }
 }
 
+# Main development domain
+dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+# Admin subdomain
+admin.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+# Console subdomain
+console.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+# Auth subdomain
+auth.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+# Payments subdomain
+payments.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}
+
+# Wildcard subdomain for provider sites (e.g., {provider}.dev.zeenconnect.com)
+# Note: Wildcard SSL requires DNS challenge. Configure your DNS provider:
+# https://caddyserver.com/docs/automatic-https#dns-challenge
+*.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}

@@ -3,3 +3,7 @@ export { default as ConsoleFormCard } from './ConsoleFormCard.vue';
 export { default as ConsolePageHeader } from './ConsolePageHeader.vue';
 export { default as ConsoleEmptyState } from './ConsoleEmptyState.vue';
 export { default as InstallPrompt } from './InstallPrompt.vue';
+export { default as FloatingActionButton } from './FloatingActionButton.vue';
+export { default as ServiceListItem } from './ServiceListItem.vue';
+export { default as EventListItem } from './EventListItem.vue';
+export { default as InlinePageTitle } from './InlinePageTitle.vue';

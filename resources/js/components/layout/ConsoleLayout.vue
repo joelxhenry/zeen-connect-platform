@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 import provider from '@/routes/provider';
 import { logout } from '@/routes';
@@ -22,6 +22,40 @@ const isStarterPlan = computed(() => !subscription.value || subscription.value?.
 const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
 
+// Scroll detection for floating menu button
+const showFloatingMenu = ref(false);
+const lastScrollTop = ref(0);
+
+// Check if page is scrollable
+const isPageScrollable = () => {
+    return document.documentElement.scrollHeight > window.innerHeight;
+};
+
+// Update floating menu visibility
+const updateFloatingMenuVisibility = () => {
+    // If page is not scrollable, always show the button on mobile
+    if (!isPageScrollable()) {
+        showFloatingMenu.value = true;
+        return;
+    }
+
+    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+
+    // Always show when at the top of the page (within 80px)
+    if (currentScroll <= 80) {
+        showFloatingMenu.value = true;
+    } else {
+        // When scrolled down, show when scrolling up, hide when scrolling down
+        if (currentScroll < lastScrollTop.value) {
+            showFloatingMenu.value = true;
+        } else {
+            showFloatingMenu.value = false;
+        }
+    }
+
+    lastScrollTop.value = currentScroll <= 0 ? 0 : currentScroll;
+};
+
 // Register service worker for PWA
 onMounted(() => {
     if ('serviceWorker' in navigator) {
@@ -35,6 +69,21 @@ onMounted(() => {
     if (saved !== null) {
         sidebarCollapsed.value = saved === 'true';
     }
+
+    // Initial check for non-scrollable pages
+    updateFloatingMenuVisibility();
+
+    // Setup scroll listener
+    window.addEventListener('scroll', updateFloatingMenuVisibility, { passive: true });
+
+    // Also check on resize (content might change)
+    window.addEventListener('resize', updateFloatingMenuVisibility, { passive: true });
+});
+
+// Cleanup on unmount
+onUnmounted(() => {
+    window.removeEventListener('scroll', updateFloatingMenuVisibility);
+    window.removeEventListener('resize', updateFloatingMenuVisibility);
 });
 
 // Main Menu Items
@@ -184,6 +233,23 @@ const copySiteUrl = async () => {
 
             <!-- Sidebar Footer -->
             <div class="sidebar-footer">
+                <!-- Profile Section -->
+                <div class="profile-section">
+                    <button class="profile-btn" @click="toggleProfileMenu">
+                        <Avatar
+                            :image="user?.avatar"
+                            :label="user?.name?.charAt(0).toUpperCase()"
+                            shape="circle"
+                            class="profile-avatar"
+                        />
+                        <div class="profile-info">
+                            <span class="profile-name">{{ user?.name }}</span>
+                            <span class="profile-email">{{ user?.email }}</span>
+                        </div>
+                    </button>
+                    <Menu ref="profileMenu" :model="profileMenuItems" :popup="true" />
+                </div>
+
                 <!-- Copy Site URL Button -->
                 <button class="footer-action-btn" @click="copySiteUrl"
                     :title="sidebarCollapsed ? 'Copy site URL' : undefined">
@@ -223,41 +289,21 @@ const copySiteUrl = async () => {
 
         <!-- Main Content -->
         <div class="main-wrapper">
-            <!-- Top Header -->
-            <header class="top-header">
-                <div class="header-left">
-                    <button class="mobile-menu-btn" @click="toggleSidebar">
-                        <i class="pi pi-bars"></i>
-                    </button>
-                    <h1 class="page-title">{{ title || 'Dashboard' }}</h1>
-                </div>
-
-                <div class="header-right">
-                    <!-- Copy Site URL Button -->
-                    <button class="header-action-btn" @click="copySiteUrl" title="Copy booking site URL">
-                        <i class="pi pi-link"></i>
-                    </button>
-
-                    <!-- Profile -->
-                    <div class="profile-section">
-                        <button class="profile-btn" @click="toggleProfileMenu">
-                            <Avatar :image="user?.avatar" :label="user?.name?.charAt(0).toUpperCase()" shape="circle"
-                                class="profile-avatar" />
-                            <div class="profile-info">
-                                <span class="profile-name">{{ user?.name }}</span>
-                                <span class="profile-email">{{ user?.email }}</span>
-                            </div>
-                        </button>
-                        <Menu ref="profileMenu" :model="profileMenuItems" :popup="true" />
-                    </div>
-                </div>
-            </header>
-
             <!-- Main Content Area -->
             <main class="main-content">
                 <slot />
             </main>
         </div>
+
+        <!-- Floating Menu Button (appears on scroll) -->
+        <button
+            v-show="showFloatingMenu"
+            class="floating-menu-btn"
+            @click="toggleSidebar"
+            aria-label="Open menu"
+        >
+            <i class="pi pi-bars"></i>
+        </button>
 
         <!-- PWA Install Prompt -->
         <InstallPrompt />
@@ -681,152 +727,128 @@ const copySiteUrl = async () => {
     }
 }
 
-/* Top header */
-.top-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.875rem 1rem;
-    background-color: white;
-    border-bottom: 1px solid var(--color-slate-200, #e2e8f0);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-
-@media (min-width: 1024px) {
-    .top-header {
-        padding: 1rem 1.5rem;
-    }
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.mobile-menu-btn {
+/* Floating menu button (appears on scroll) */
+.floating-menu-btn {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: none;
+    background: linear-gradient(135deg, #1ABC9C 0%, #106B4F 100%);
     border: none;
-    color: var(--color-slate-500, #64748b);
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(16, 107, 79, 0.3),
+                0 2px 4px rgba(16, 107, 79, 0.2);
+    color: white;
     cursor: pointer;
-    border-radius: 0.5rem;
-    transition: all 0.15s;
+    z-index: 45;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInLeft 0.3s ease-out;
 }
 
-.mobile-menu-btn:hover {
-    background-color: var(--color-slate-100, #f1f5f9);
-    color: var(--color-slate-700, #334155);
+.floating-menu-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(16, 107, 79, 0.4),
+                0 3px 6px rgba(16, 107, 79, 0.25);
+}
+
+.floating-menu-btn:active {
+    transform: scale(1.05);
+}
+
+.floating-menu-btn i {
+    font-size: 1.25rem;
 }
 
 @media (min-width: 1024px) {
-    .mobile-menu-btn {
+    .floating-menu-btn {
         display: none;
     }
 }
 
-.page-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--color-slate-900, #0f172a);
-}
-
-@media (min-width: 1024px) {
-    .page-title {
-        font-size: 1.375rem;
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.header-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: var(--color-slate-100, #f1f5f9);
-    border: none;
-    border-radius: 0.5rem;
-    color: var(--color-slate-500, #64748b);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.header-action-btn:hover {
-    background-color: var(--color-slate-200, #e2e8f0);
-    color: var(--color-slate-700, #334155);
-}
-
-.profile-section {
+/* Profile section in sidebar footer */
+.sidebar-footer .profile-section {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-slate-100, #f1f5f9);
     position: relative;
 }
 
-.profile-btn {
+.sidebar-footer .profile-btn {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.375rem;
+    width: 100%;
+    padding: 0.5rem;
     background: none;
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
 }
 
-.profile-btn:hover {
+.sidebar-footer .profile-btn:hover {
     background-color: var(--color-slate-50, #f8fafc);
 }
 
-.profile-avatar {
+.sidebar-footer .profile-avatar {
     width: 40px !important;
     height: 40px !important;
     background-color: #106B4F !important;
     color: white !important;
     font-size: 1rem !important;
+    flex-shrink: 0;
 }
 
-.profile-info {
-    display: none;
+.sidebar-footer .profile-info {
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0;
+    gap: 0.125rem;
     text-align: left;
+    flex: 1;
+    min-width: 0;
+    transition: opacity 0.2s ease;
 }
 
-@media (min-width: 768px) {
-    .profile-info {
-        display: flex;
-    }
+.sidebar.collapsed .profile-info {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
 }
 
-.profile-name {
+.sidebar-footer .profile-name {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--color-slate-900, #0f172a);
     line-height: 1.2;
-}
-
-.profile-email {
-    font-size: 0.75rem;
-    color: var(--color-slate-500, #64748b);
-    line-height: 1.2;
-    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 100%;
+}
+
+.sidebar-footer .profile-email {
+    font-size: 0.75rem;
+    color: var(--color-slate-500, #64748b);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
 }
 
 /* Main content */

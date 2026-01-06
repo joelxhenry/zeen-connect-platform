@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useWindowSize } from '@vueuse/core';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
 import {
     ConsoleEmptyState,
-    ConsoleButton,
+    FloatingActionButton,
+    ServiceListItem,
+    InlinePageTitle,
 } from '@/components/console';
 import InputText from 'primevue/inputtext';
-import ToggleSwitch from 'primevue/toggleswitch';
 import ConfirmDialog from 'primevue/confirmdialog';
 import { useConfirm } from 'primevue/useconfirm';
 import providerRoutes from '@/routes/provider';
@@ -52,6 +54,10 @@ interface Props {
 
 const props = defineProps<Props>();
 const confirm = useConfirm();
+
+// Mobile detection
+const { width } = useWindowSize();
+const isMobile = computed(() => width.value < 640);
 
 // Filters
 const searchQuery = ref('');
@@ -166,18 +172,11 @@ const createService = () => {
 
         <div class="services-page">
             <!-- Header -->
-            <div class="page-header">
-                <div class="header-info">
-                    <h1 class="page-title">Services</h1>
-                    <p class="service-count">{{ stats.total }} services</p>
-                </div>
-                <ConsoleButton
-                    label="Add Service"
-                    icon="pi pi-plus"
-                    variant="primary"
-                    @click="createService"
-                />
-            </div>
+            <InlinePageTitle
+                title="Services"
+                :count="stats.total"
+                count-label="services"
+            />
 
             <!-- Search -->
             <div class="search-section">
@@ -258,68 +257,27 @@ const createService = () => {
                             <span class="group-count">{{ group.services.length }}</span>
                         </div>
 
-                        <div class="service-cards">
-                            <div
+                        <div class="service-list">
+                            <ServiceListItem
                                 v-for="service in group.services"
                                 :key="service.uuid"
-                                class="service-card"
-                                :class="{ inactive: !service.is_active }"
-                            >
-                                <div class="card-main" @click="editService(service)">
-                                    <div
-                                        v-if="service.cover_thumbnail"
-                                        class="service-image"
-                                        :style="{
-                                            backgroundImage: `url(${service.cover_thumbnail})`,
-                                        }"
-                                    ></div>
-                                    <div v-else class="service-image-placeholder">
-                                        <i class="pi pi-image"></i>
-                                    </div>
-                                    <div class="card-info">
-                                        <span class="service-name">{{ service.name }}</span>
-                                        <div class="service-meta">
-                                            <span class="service-duration">
-                                                <i class="pi pi-clock"></i>
-                                                {{ service.duration_display }}
-                                            </span>
-                                            <span class="service-bookings">
-                                                <i class="pi pi-calendar"></i>
-                                                {{ service.total_bookings }} bookings
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card-actions">
-                                    <span class="service-price">{{ service.price_display }}</span>
-                                    <div class="action-buttons">
-                                        <ToggleSwitch
-                                            :modelValue="service.is_active"
-                                            @update:modelValue="toggleServiceActive(service)"
-                                            class="active-switch"
-                                        />
-                                        <button
-                                            class="action-btn edit-btn"
-                                            @click="editService(service)"
-                                            title="Edit service"
-                                        >
-                                            <i class="pi pi-pencil"></i>
-                                        </button>
-                                        <button
-                                            class="action-btn delete-btn"
-                                            @click="deleteService(service)"
-                                            title="Delete service"
-                                        >
-                                            <i class="pi pi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                                :service="service"
+                                :compact="isMobile"
+                                @edit="editService"
+                                @delete="deleteService"
+                                @toggle="toggleServiceActive"
+                            />
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Floating Action Button -->
+            <FloatingActionButton
+                icon="pi pi-plus"
+                label="Add Service"
+                @click="createService"
+            />
         </div>
     </ConsoleLayout>
 </template>
@@ -328,34 +286,7 @@ const createService = () => {
 .services-page {
     max-width: 800px;
     margin: 0 auto;
-}
-
-/* Header */
-.page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.header-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.page-title {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-slate-900, #0f172a);
-}
-
-.service-count {
-    margin: 0;
-    font-size: 0.875rem;
-    color: var(--color-slate-500, #64748b);
+    padding-bottom: 5rem; /* Space for FAB */
 }
 
 /* Search Section */
@@ -552,180 +483,10 @@ const createService = () => {
     color: var(--color-slate-600, #475569);
 }
 
-/* Service Cards */
-.service-cards {
+/* Service List */
+.service-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.service-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.875rem;
-    background-color: white;
-    border: 1px solid var(--color-slate-100, #f1f5f9);
-    border-radius: 0.75rem;
-    transition: all 0.15s ease;
-}
-
-.service-card:hover {
-    border-color: var(--color-slate-200, #e2e8f0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.service-card.inactive {
-    opacity: 0.7;
-}
-
-.service-card.inactive .service-name {
-    color: var(--color-slate-500, #64748b);
-}
-
-.card-main {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-}
-
-.service-image {
-    width: 56px;
-    height: 56px;
-    border-radius: 0.5rem;
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
-}
-
-.service-image-placeholder {
-    width: 56px;
-    height: 56px;
-    border-radius: 0.5rem;
-    background-color: var(--color-slate-100, #f1f5f9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.service-image-placeholder i {
-    font-size: 1.25rem;
-    color: var(--color-slate-400, #94a3b8);
-}
-
-.card-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.service-name {
-    font-weight: 500;
-    font-size: 0.9375rem;
-    color: var(--color-slate-900, #0f172a);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.service-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.service-duration,
-.service-bookings {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    color: var(--color-slate-500, #64748b);
-}
-
-.service-duration i,
-.service-bookings i {
-    font-size: 0.6875rem;
-}
-
-.card-actions {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--color-slate-100, #f1f5f9);
-}
-
-.service-price {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #106b4f;
-}
-
-.action-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.active-switch {
-    margin-right: 0.5rem;
-}
-
-.action-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: 1px solid var(--color-slate-200, #e2e8f0);
-    border-radius: 0.375rem;
-    color: var(--color-slate-500, #64748b);
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.action-btn:hover {
-    background-color: var(--color-slate-50, #f8fafc);
-    color: var(--color-slate-700, #334155);
-}
-
-.action-btn.edit-btn:hover {
-    border-color: #106b4f;
-    color: #106b4f;
-}
-
-.action-btn.delete-btn:hover {
-    border-color: #ef4444;
-    color: #ef4444;
-}
-
-/* Mobile optimizations */
-@media (max-width: 639px) {
-    .page-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .service-image,
-    .service-image-placeholder {
-        width: 48px;
-        height: 48px;
-    }
-
-    .service-name {
-        font-size: 0.875rem;
-    }
-
-    .card-actions {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
 }
 </style>

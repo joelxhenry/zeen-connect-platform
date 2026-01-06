@@ -96,16 +96,12 @@ payments.dev.zeenconnect.com {
 #    sudo mv caddy /usr/bin/caddy
 # 2. Set CLOUDFLARE_API_TOKEN environment variable
 # 3. Uncomment the block below and restart Caddy
-#
-# *.dev.zeenconnect.com {
-#     import vite_hmr
-#
-#     reverse_proxy localhost:8080 {
-#         header_up X-Forwarded-Proto {scheme}
-#         header_up X-Forwarded-Host {host}
-#     }
-#
-#     tls {
-#         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-#     }
-# }
+
+premium-wellness.dev.zeenconnect.com {
+    import vite_hmr
+
+    reverse_proxy localhost:8080 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}

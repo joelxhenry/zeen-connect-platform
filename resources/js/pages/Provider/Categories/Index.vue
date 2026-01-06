@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import ConsoleLayout from '@/components/layout/ConsoleLayout.vue';
-import { ConsoleButton, ConsoleFormCard } from '@/components/console';
+import { FloatingActionButton, ConsoleFormCard } from '@/components/console';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import ToggleSwitch from 'primevue/toggleswitch';
@@ -183,13 +183,6 @@ const typeLabel = computed(() => activeTab.value === 'service' ? 'Service' : 'Ev
                     <h1 class="page-title">Categories</h1>
                     <p class="page-subtitle">Organize your services and events into categories</p>
                 </div>
-                <ConsoleButton
-                    label="Add Category"
-                    icon="pi pi-plus"
-                    variant="primary"
-                    size="small"
-                    @click="openCreateModal"
-                />
             </div>
 
             <!-- View Toggle -->
@@ -331,6 +324,13 @@ const typeLabel = computed(() => activeTab.value === 'service' ? 'Service' : 'Ev
                 </div>
             </template>
         </Dialog>
+
+        <!-- Floating Action Button -->
+        <FloatingActionButton
+            icon="pi pi-plus"
+            label="Add Category"
+            @click="openCreateModal"
+        />
     </ConsoleLayout>
 </template>
 

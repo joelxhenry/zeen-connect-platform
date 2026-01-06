@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import SettingsLayout from '@/components/layout/SettingsLayout.vue';
 import ConsoleEmptyState from '@/components/console/ConsoleEmptyState.vue';
-import { ConsoleButton } from '@/components/console';
+import { FloatingActionButton } from '@/components/console';
 import provider from '@/routes/provider';
 import { resolveUrl } from '@/utils/url';
 import Avatar from 'primevue/avatar';
@@ -167,15 +167,6 @@ const confirmDelete = (member: TeamMember) => {
 
 <template>
     <SettingsLayout title="Team">
-        <template #header-actions>
-            <ConsoleButton
-                label="Add Team Member"
-                icon="pi pi-plus"
-                variant="primary"
-                @click="router.visit(resolveUrl(provider.team.create.url()))"
-            />
-        </template>
-
         <div class="team-page">
             <!-- Team Info Banner -->
             <div class="team-info-banner">
@@ -269,6 +260,14 @@ const confirmDelete = (member: TeamMember) => {
         </div>
 
         <ConfirmDialog />
+
+        <!-- Floating Action Button -->
+        <FloatingActionButton
+            v-if="teamInfo.supports_team && !teamInfo.would_exceed_free_slots"
+            icon="pi pi-plus"
+            label="Add Team Member"
+            @click="router.visit(resolveUrl(provider.team.create.url()))"
+        />
     </SettingsLayout>
 </template>
 
